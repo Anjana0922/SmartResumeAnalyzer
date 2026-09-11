@@ -14,7 +14,8 @@ router.post("/", (req, res) => {
         full_name,
         email,
         password,
-        phone
+        phone,
+        user_category
     } = req.body;
 
     // Check required fields
@@ -25,6 +26,8 @@ router.post("/", (req, res) => {
         });
 
     }
+
+    const category = user_category === "Job Seeker" ? "Job Seeker" : "Student";
 
     // Check whether email already exists
     const checkSQL = `
@@ -63,9 +66,10 @@ router.post("/", (req, res) => {
                 email,
                 password,
                 phone,
+                user_category,
                 created_at
             )
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?)
         `;
 
         const created_at = new Date().toISOString();
@@ -77,6 +81,7 @@ router.post("/", (req, res) => {
                 email,
                 password,
                 phone || "",
+                category,
                 created_at
             ],
             function (err) {
@@ -100,7 +105,8 @@ router.post("/", (req, res) => {
                         user_id: this.lastID,
                         full_name: full_name,
                         email: email,
-                        phone: phone || ""
+                        phone: phone || "",
+                        user_category: category
                     }
 
                 });
@@ -139,7 +145,8 @@ router.post("/login", (req, res) => {
             user_id,
             full_name,
             email,
-            phone
+            phone,
+            user_category
         FROM Users
         WHERE email = ?
         AND password = ?

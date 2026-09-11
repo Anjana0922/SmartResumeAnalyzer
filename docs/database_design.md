@@ -8,6 +8,7 @@ Attributes:
 - email
 - password
 - phone
+- user_category
 - created_at
 
 
@@ -36,8 +37,11 @@ Attributes:
 - experience
 - certifications
 - achievements
+- languages
 - github
 - linkedin
+- about
+- custom_sections
 
 
 4. Resume Analysis Table

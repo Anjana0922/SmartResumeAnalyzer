@@ -34,11 +34,16 @@ const {
     parseExperience,
 } = require("./parsers/experienceParser");
 
+const {
+    parseWithAI,
+    normalizeResumeData,
+} = require("./aiParserService");
+
 // ==========================================
-// MAIN RESUME PARSER
+// LEGACY RULE-BASED PARSER (FALLBACK)
 // ==========================================
 
-function parseResume(text) {
+function parseResumeRuleBased(text) {
     if (!text || typeof text !== "string") {
         return {
             personal: {
@@ -178,6 +183,29 @@ function parseResume(text) {
     return result;
 }
 
+// ==========================================
+// MAIN ASYNC PARSER (AI + FALLBACK)
+// ==========================================
+
+async function parseResume(text) {
+    if (!text || typeof text !== "string") {
+        return normalizeResumeData({}, "");
+    }
+
+    try {
+        const aiResult = await parseWithAI(text);
+        return aiResult;
+    } catch (error) {
+        console.warn(`[Parser Service] AI Parser note: ${error.message}`);
+        console.warn("[Parser Service] Falling back to rule-based parser...");
+
+        const ruleBasedResult = parseResumeRuleBased(text);
+        return normalizeResumeData(ruleBasedResult, text);
+    }
+}
+
 module.exports = {
     parseResume,
+    parseResumeRuleBased,
+    normalizeResumeData,
 };

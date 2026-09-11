@@ -10,6 +10,7 @@ const Auth = () => {
     email: "",
     password: "",
     phone: "",
+    user_category: "Student",
   });
 
   const [message, setMessage] = useState("");
@@ -52,7 +53,7 @@ const Auth = () => {
         setMessage("Login successful!");
 
         setTimeout(() => {
-          navigate("/upload");
+          navigate("/dashboard");
         }, 500);
       } else {
         const response = await axios.post(
@@ -62,6 +63,7 @@ const Auth = () => {
             email: formData.email,
             password: formData.password,
             phone: formData.phone,
+            user_category: formData.user_category,
           }
         );
 
@@ -78,6 +80,7 @@ const Auth = () => {
           email: "",
           password: "",
           phone: "",
+          user_category: "Student",
         });
       }
     } catch (err) {
@@ -109,6 +112,7 @@ const Auth = () => {
       email: "",
       password: "",
       phone: "",
+      user_category: "Student",
     });
   };
 
@@ -308,6 +312,32 @@ const Auth = () => {
                     required
                     className="mt-2 w-full px-4 py-3.5 rounded-xl bg-black/20 border border-white/10 text-white placeholder:text-slate-600 outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/10 transition"
                   />
+
+                </div>
+              )}
+
+              {/* Category */}
+
+              {!isLogin && (
+                <div>
+
+                  <label className="text-sm text-slate-400">
+                    Category
+                  </label>
+
+                  <select
+                    name="user_category"
+                    value={formData.user_category}
+                    onChange={handleChange}
+                    className="mt-2 w-full px-4 py-3.5 rounded-xl bg-black/20 border border-white/10 text-white outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/10 transition cursor-pointer"
+                  >
+                    <option value="Student" className="bg-[#11101a] text-white">
+                      Student
+                    </option>
+                    <option value="Job Seeker" className="bg-[#11101a] text-white">
+                      Job Seeker
+                    </option>
+                  </select>
 
                 </div>
               )}

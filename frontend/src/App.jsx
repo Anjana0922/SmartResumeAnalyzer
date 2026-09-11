@@ -7,6 +7,7 @@ import {
 
 import Home from "./pages/Home";
 import Auth from "./pages/Auth";
+import Dashboard from "./pages/Dashboard";
 import UploadResume from "./pages/UploadResume";
 import Portfolio from "./pages/Portfolio";
 import PortfolioEditor from "./pages/PortfolioEditor";
@@ -37,6 +38,12 @@ function App() {
       <Route
         path="/login"
         element={<Auth />}
+      />
+
+
+      <Route
+        path="/dashboard"
+         element={<Dashboard />}
       />
 
       {/* ==================================================

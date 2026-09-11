@@ -100,7 +100,7 @@ router.post("/upload", upload.single("resume"), async (req, res) => {
         // Parse Resume
         // =================================
 
-        const parsedResume = parseResume(resumeText);
+        const parsedResume = await parseResume(resumeText);
 
 
         // =================================
@@ -234,13 +234,16 @@ router.post("/upload", upload.single("resume"), async (req, res) => {
                         education,
                         skills,
                         projects,
+                        experience,
                         certifications,
                         achievements,
                         languages,
                         github,
-                        linkedin
+                        linkedin,
+                        about,
+                        custom_sections
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 `;
 
 
@@ -252,39 +255,49 @@ router.post("/upload", upload.single("resume"), async (req, res) => {
 
                         resumeID,
 
-                        parsedResume.personal.name,
+                        parsedResume.personal?.name || "",
 
-                        parsedResume.personal.email,
+                        parsedResume.personal?.email || "",
 
-                        parsedResume.personal.phone,
+                        parsedResume.personal?.phone || "",
 
                         JSON.stringify(
-                            parsedResume.education
+                            parsedResume.education || []
                         ),
 
                         JSON.stringify(
-                            parsedResume.skills
+                            parsedResume.skills || []
                         ),
 
                         JSON.stringify(
-                            parsedResume.projects
+                            parsedResume.projects || []
                         ),
 
                         JSON.stringify(
-                            parsedResume.certificates
+                            parsedResume.experience || []
                         ),
 
                         JSON.stringify(
-                            parsedResume.achievements
+                            parsedResume.certificates || []
                         ),
 
                         JSON.stringify(
-                            parsedResume.languages
+                            parsedResume.achievements || []
                         ),
 
-                        "", // GitHub
+                        JSON.stringify(
+                            parsedResume.languages || []
+                        ),
 
-                        ""  // LinkedIn
+                        parsedResume.personal?.github || "",
+
+                        parsedResume.personal?.linkedin || "",
+
+                        parsedResume.about || parsedResume.summary || "",
+
+                        JSON.stringify(
+                            parsedResume.custom_sections || []
+                        )
 
                     ],
 
@@ -428,11 +441,14 @@ router.get("/:resumeId", (req, res) => {
             // =================================
 
             let education = [];
-            let skills = {};
+            let skills = [];
             let projects = [];
+            let experience = [];
             let certificates = [];
             let achievements = [];
             let languages = [];
+            let custom_sections = [];
+            let about = row.about || "";
 
 
             try {
@@ -444,12 +460,17 @@ router.get("/:resumeId", (req, res) => {
 
                 skills =
                     JSON.parse(
-                        row.skills || "{}"
+                        row.skills || "[]"
                     );
 
                 projects =
                     JSON.parse(
                         row.projects || "[]"
+                    );
+
+                experience =
+                    JSON.parse(
+                        row.experience || "[]"
                     );
 
                 certificates =
@@ -465,6 +486,11 @@ router.get("/:resumeId", (req, res) => {
                 languages =
                     JSON.parse(
                         row.languages || "[]"
+                    );
+
+                custom_sections =
+                    JSON.parse(
+                        row.custom_sections || "[]"
                     );
 
             }
@@ -516,7 +542,14 @@ router.get("/:resumeId", (req, res) => {
                 },
 
 
+                about,
+
+                summary:
+                    about,
+
                 education,
+
+                experience,
 
                 skills,
 
@@ -527,6 +560,8 @@ router.get("/:resumeId", (req, res) => {
                 achievements,
 
                 languages,
+
+                custom_sections,
 
 
                 github:
