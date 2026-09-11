@@ -9,6 +9,7 @@ import Home from "./pages/Home";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import UploadResume from "./pages/UploadResume";
+import CreateResume from "./pages/CreateResume";
 import Portfolio from "./pages/Portfolio";
 import PortfolioEditor from "./pages/PortfolioEditor";
 import TemplateSelection from "./components/portfolio/TemplateSelection";
@@ -47,12 +48,17 @@ function App() {
       />
 
       {/* ==================================================
-          RESUME UPLOAD
+          RESUME UPLOAD & CREATION
       ================================================== */}
 
       <Route
         path="/upload"
         element={<UploadResume />}
+      />
+
+      <Route
+        path="/resume/create"
+        element={<CreateResume />}
       />
 
       {/* ==================================================

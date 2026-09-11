@@ -285,7 +285,7 @@ function TechTemplate({
 
     const skills = Array.isArray(resume.skills)
       ? resume.skills
-      : [];
+      : (resume.skills?.all || resume.flat_skills || Object.values(resume.skills).flat());
 
     if (!skills.length) return null;
 

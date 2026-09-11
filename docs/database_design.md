@@ -42,6 +42,7 @@ Attributes:
 - linkedin
 - about
 - custom_sections
+- metadata
 
 
 4. Resume Analysis Table
