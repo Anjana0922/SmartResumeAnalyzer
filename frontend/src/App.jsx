@@ -10,6 +10,8 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import UploadResume from "./pages/UploadResume";
 import CreateResume from "./pages/CreateResume";
+import ResumePreview from "./pages/ResumePreview";
+import ResumeTemplates from "./pages/ResumeTemplates";
 import Portfolio from "./pages/Portfolio";
 import PortfolioEditor from "./pages/PortfolioEditor";
 import TemplateSelection from "./components/portfolio/TemplateSelection";
@@ -59,6 +61,21 @@ function App() {
       <Route
         path="/resume/create"
         element={<CreateResume />}
+      />
+
+      <Route
+        path="/resume/edit/:resumeId"
+        element={<CreateResume />}
+      />
+
+      <Route
+        path="/resume/preview/:resumeId"
+        element={<ResumePreview />}
+      />
+
+      <Route
+        path="/resume/templates/:resumeId"
+        element={<ResumeTemplates />}
       />
 
       {/* ==================================================

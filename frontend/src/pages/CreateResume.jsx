@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import axios from "axios";
 import {
   ArrowLeft,
@@ -17,11 +17,16 @@ import {
   Languages,
   Layers,
   Save,
-  Info
+  Info,
+  Eye,
+  Camera,
+  Upload,
+  Loader2
 } from "lucide-react";
 
 function CreateResume() {
   const navigate = useNavigate();
+  const { resumeId: urlResumeId } = useParams();
 
   // -------------------------------------------------------------
   // Read Logged-In User
@@ -48,6 +53,7 @@ function CreateResume() {
     github: "",
     linkedin: "",
     portfolio_url: "",
+    photo: "",
   });
 
   const [summary, setSummary] = useState("");
@@ -126,9 +132,280 @@ function CreateResume() {
 
   // UI state
   const [submitting, setSubmitting] = useState(false);
+  const [submitAction, setSubmitAction] = useState(null); // 'save' | 'preview' | null
   const [error, setError] = useState("");
-  const [savedResumeId, setSavedResumeId] = useState(null);
+  const [savedResumeId, setSavedResumeId] = useState(urlResumeId || null);
   const [activeTab, setActiveTab] = useState("personal");
+  const [loadingEdit, setLoadingEdit] = useState(false);
+
+  // Profile Photo state
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState("");
+
+  // AI About Generator state
+  const [aboutStyle, setAboutStyle] = useState("professional");
+  const [generatingAbout, setGeneratingAbout] = useState(false);
+  const [aboutSuccess, setAboutSuccess] = useState("");
+
+  const location = useLocation();
+  const editData = location.state?.resumeData;
+  const isEditMode = Boolean(urlResumeId || location.state?.isEdit || savedResumeId);
+
+  // Helper to prefill form state from canonical resume object
+  const populateFromResume = (data) => {
+    if (!data) return;
+
+    if (data.personal) {
+      setPersonal({
+        name: data.personal.name || storedUser?.full_name || "",
+        title: data.personal.title || "",
+        email: data.personal.email || storedUser?.email || "",
+        phone: data.personal.phone || storedUser?.phone || "",
+        location: data.personal.location || "",
+        github: data.personal.github || "",
+        linkedin: data.personal.linkedin || "",
+        portfolio_url: data.personal.portfolio_url || "",
+        photo: data.personal.photo || data.photo_path || data.metadata?.photo_path || "",
+      });
+    }
+
+    if (data.summary || data.about) {
+      setSummary(data.summary || data.about || "");
+    }
+
+    if (Array.isArray(data.education) && data.education.length > 0) {
+      setEducation(
+        data.education.map((e) => ({
+          degree: e.degree || e.course || "",
+          institution: e.institution || e.university || e.college || "",
+          location: e.location || "",
+          year: e.year || e.duration || "",
+          score: typeof e.score === "object" ? e.score?.value || "" : e.score || e.gpa || "",
+          coursework: Array.isArray(e.coursework)
+            ? e.coursework.join(", ")
+            : typeof e.coursework === "string"
+            ? e.coursework
+            : "",
+        }))
+      );
+    }
+
+    if (Array.isArray(data.experience) && data.experience.length > 0) {
+      setExperience(
+        data.experience.map((exp) => ({
+          role: exp.role || exp.title || "",
+          company: exp.company || exp.organization || "",
+          location: exp.location || "",
+          duration: exp.duration || exp.year || "",
+          is_current: Boolean(exp.is_current),
+          is_internship: Boolean(exp.is_internship),
+          description: exp.description || "",
+          highlights:
+            Array.isArray(exp.highlights) && exp.highlights.length > 0
+              ? exp.highlights
+              : [""],
+          technologies: Array.isArray(exp.technologies)
+            ? exp.technologies.join(", ")
+            : typeof exp.technologies === "string"
+            ? exp.technologies
+            : "",
+        }))
+      );
+    }
+
+    if (data.skills) {
+      const s = data.skills;
+      if (typeof s === "object" && !Array.isArray(s)) {
+        setSkills({
+          technical: Array.isArray(s.technical) ? s.technical : [],
+          frameworks: Array.isArray(s.frameworks) ? s.frameworks : [],
+          tools: Array.isArray(s.tools) ? s.tools : [],
+          soft: Array.isArray(s.soft) ? s.soft : [],
+        });
+      } else if (Array.isArray(s)) {
+        setSkills({
+          technical: s,
+          frameworks: [],
+          tools: [],
+          soft: [],
+        });
+      }
+    }
+
+    if (Array.isArray(data.projects) && data.projects.length > 0) {
+      setProjects(
+        data.projects.map((p) => ({
+          title: p.title || p.name || "",
+          subtitle: p.subtitle || "",
+          description: p.description || "",
+          technologies: Array.isArray(p.technologies)
+            ? p.technologies.join(", ")
+            : typeof p.technologies === "string"
+            ? p.technologies
+            : "",
+          link: p.link || p.url || "",
+          github: p.github || "",
+          duration: p.duration || "",
+        }))
+      );
+    }
+
+    if (Array.isArray(data.certificates) && data.certificates.length > 0) {
+      setCertificates(
+        data.certificates.map((c) => ({
+          name: c.name || c.title || "",
+          issuer: c.issuer || c.organization || "",
+          year: c.year || "",
+          link: c.link || "",
+        }))
+      );
+    }
+
+    if (Array.isArray(data.achievements) && data.achievements.length > 0) {
+      setAchievements(
+        data.achievements.map((a) =>
+          typeof a === "string" ? a : a?.title || ""
+        )
+      );
+    }
+
+    if (Array.isArray(data.languages) && data.languages.length > 0) {
+      setLanguagesList(
+        data.languages.map((l) => ({
+          name: l.name || (typeof l === "string" ? l : ""),
+          level: l.level || "Professional Working",
+        }))
+      );
+    }
+
+    if (Array.isArray(data.custom_sections) && data.custom_sections.length > 0) {
+      setCustomSections(data.custom_sections);
+    }
+  };
+
+  useEffect(() => {
+    if (editData) {
+      populateFromResume(editData);
+      if (editData.resume_id) {
+        setSavedResumeId(editData.resume_id);
+      }
+    } else if (urlResumeId) {
+      setLoadingEdit(true);
+      axios
+        .get(`http://localhost:5000/api/resume/${urlResumeId}`)
+        .then((res) => {
+          if (res.data?.resume) {
+            populateFromResume(res.data.resume);
+            setSavedResumeId(urlResumeId);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load resume for editing:", err);
+          setError("Failed to load resume details. Please verify the resume ID.");
+        })
+        .finally(() => {
+          setLoadingEdit(false);
+        });
+    }
+  }, [urlResumeId, editData]);
+
+  // Profile Photo Upload Handlers
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+    if (!allowed.includes(file.type.toLowerCase())) {
+      setPhotoError("Please select a JPEG, PNG, or WEBP image file.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoError("Image file size must be less than 5MB.");
+      return;
+    }
+
+    try {
+      setUploadingPhoto(true);
+      setPhotoError("");
+      const formData = new FormData();
+      formData.append("photo", file);
+
+      const res = await axios.post(
+        "http://localhost:5000/api/resume/upload-photo",
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+
+      if (res.data?.photo_path) {
+        setPersonal((prev) => ({ ...prev, photo: res.data.photo_path }));
+      }
+    } catch (err) {
+      console.error("Failed to upload photo:", err);
+      setPhotoError(err.response?.data?.message || "Failed to upload photo. Please try again.");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setPersonal((prev) => ({ ...prev, photo: "" }));
+    setPhotoError("");
+  };
+
+  // AI About Generator Handler
+  const handleGenerateAbout = async () => {
+    try {
+      setGeneratingAbout(true);
+      setError("");
+      setAboutSuccess("");
+
+      const allSkills = Array.from(
+        new Set([
+          ...skills.technical,
+          ...skills.frameworks,
+          ...skills.tools,
+          ...skills.soft,
+        ])
+      );
+
+      const resumeDataPayload = {
+        personal,
+        education: education.filter((e) => e.degree.trim() || e.institution.trim()),
+        experience: experience.filter((exp) => exp.role.trim() || exp.company.trim()),
+        projects: projects.filter((p) => p.title.trim()),
+        skills: {
+          all: allSkills,
+          technical: skills.technical,
+          frameworks: skills.frameworks,
+          tools: skills.tools,
+          soft: skills.soft,
+        },
+      };
+
+      const targetEndpoint = urlResumeId
+        ? `http://localhost:5000/api/resume/${urlResumeId}/generate-about`
+        : `http://localhost:5000/api/resume/generate-about`;
+
+      const res = await axios.post(targetEndpoint, {
+        style: aboutStyle,
+        user_category: userCategory,
+        resumeData: resumeDataPayload,
+      });
+
+      if (res.data?.about) {
+        setSummary(res.data.about);
+        setAboutSuccess(
+          `Generated ${aboutStyle} summary (${res.data.source === "ai" ? "Gemini AI" : "Structured"}). You can edit this freely before saving!`
+        );
+      }
+    } catch (err) {
+      console.error("Failed to generate About:", err);
+      setError(err.response?.data?.message || "Failed to generate About summary.");
+    } finally {
+      setGeneratingAbout(false);
+    }
+  };
 
   // -------------------------------------------------------------
   // Education Handlers
@@ -398,8 +675,9 @@ function CreateResume() {
   // -------------------------------------------------------------
   // Form Submission
   // -------------------------------------------------------------
-  const handleSaveResume = async (e) => {
-    if (e) e.preventDefault();
+  const handleSaveResume = async (previewAfterSave = false, e = null) => {
+    if (e && typeof e.preventDefault === "function") e.preventDefault();
+    if (submitting) return; // Prevent double-clicks / duplicate saves
     setError("");
 
     if (!storedUser?.user_id) {
@@ -420,6 +698,7 @@ function CreateResume() {
     }
 
     setSubmitting(true);
+    setSubmitAction(previewAfterSave ? "preview" : "save");
 
     try {
       // Normalize skills
@@ -439,6 +718,7 @@ function CreateResume() {
           metadata: {
             source: "scratch",
             user_category: userCategory,
+            photo_path: personal.photo || "",
           },
           personal: {
             name: personal.name.trim(),
@@ -449,6 +729,7 @@ function CreateResume() {
             github: personal.github.trim(),
             linkedin: personal.linkedin.trim(),
             portfolio_url: personal.portfolio_url.trim(),
+            photo: personal.photo || "",
           },
           summary: summary.trim(),
           about: summary.trim(),
@@ -542,19 +823,36 @@ function CreateResume() {
         },
       };
 
-      const response = await axios.post(
-        "http://localhost:5000/api/resume/create",
-        payload
-      );
+      let response;
+      const targetId = savedResumeId || urlResumeId;
 
-      console.log("Resume create response:", response.data);
+      if (targetId) {
+        console.log("Updating existing resume via PUT:", targetId);
+        response = await axios.put(
+          `http://localhost:5000/api/resume/${targetId}`,
+          payload
+        );
+      } else {
+        console.log("Creating new resume via POST");
+        response = await axios.post(
+          "http://localhost:5000/api/resume/create",
+          payload
+        );
+      }
 
-      const resumeId = response.data.resume_id;
+      console.log("Resume save response:", response.data);
+
+      const resumeId = response.data.resume_id || targetId;
       if (resumeId) {
         localStorage.setItem("resume_id", String(resumeId));
         setSavedResumeId(resumeId);
+
+        if (previewAfterSave) {
+          navigate(`/resume/preview/${resumeId}`);
+          return;
+        }
       } else {
-        throw new Error("Resume was created, but no resume ID was returned.");
+        throw new Error("Resume was saved, but no resume ID was returned.");
       }
     } catch (err) {
       console.error("Error saving resume:", err);
@@ -565,6 +863,7 @@ function CreateResume() {
       );
     } finally {
       setSubmitting(false);
+      setSubmitAction(null);
     }
   };
 
@@ -596,26 +895,37 @@ function CreateResume() {
             </button>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold tracking-tight text-white">
-                Create Resume from Scratch
+                {isEditMode ? "Edit Resume" : "Create Resume from Scratch"}
               </h1>
               <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-300 border border-purple-500/20">
                 {userCategory} Mode
               </span>
+              {savedResumeId && (
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-mono bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                  ID: #{savedResumeId}
+                </span>
+              )}
             </div>
             <p className="text-slate-400 text-sm mt-1">
-              Build your structured resume. This data will power your resume and portfolio generator.
+              {isEditMode
+                ? "Update your resume details in place. Changes are saved to your existing record with zero duplicates."
+                : "Build your structured resume. This data will power your resume templates and portfolio generator."}
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={handleSaveResume}
-              disabled={submitting}
+              onClick={() => handleSaveResume(false)}
+              disabled={submitting || loadingEdit}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-medium text-sm transition shadow-lg shadow-purple-600/25 disabled:opacity-50 cursor-pointer"
             >
               <Save size={16} />
-              {submitting ? "Saving..." : "Save Resume"}
+              {submitting && submitAction === "save"
+                ? "Saving..."
+                : isEditMode
+                ? "Update Resume"
+                : "Save Resume"}
             </button>
           </div>
         </div>
@@ -668,14 +978,21 @@ function CreateResume() {
 
                 <div className="flex flex-wrap items-center gap-3 mt-5">
                   <button
+                    onClick={() => navigate(`/resume/preview/${savedResumeId}`)}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-medium text-sm transition cursor-pointer shadow-lg shadow-purple-600/30"
+                  >
+                    <Eye size={16} />
+                    Preview Resume
+                  </button>
+                  <button
                     onClick={() => navigate("/dashboard")}
-                    className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-medium text-sm transition cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-sm font-medium transition cursor-pointer"
                   >
                     Go to Dashboard
                   </button>
                   <button
                     onClick={() => setSavedResumeId(null)}
-                    className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-sm transition cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl bg-transparent hover:bg-white/5 text-slate-400 hover:text-slate-200 text-sm transition cursor-pointer"
                   >
                     Keep Editing
                   </button>
@@ -744,6 +1061,75 @@ function CreateResume() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Profile Photo Uploader */}
+                <div className="md:col-span-2 pb-4 mb-2 border-b border-white/5">
+                  <label className="block text-xs font-medium text-slate-300 mb-2">
+                    Profile Photo <span className="text-slate-400 font-normal">(Optional — will be displayed on modern templates)</span>
+                  </label>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+                    {personal.photo ? (
+                      <div className="relative group">
+                        <img
+                          src={personal.photo.startsWith("http") ? personal.photo : `http://localhost:5000${personal.photo}`}
+                          alt="Profile Preview"
+                          className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border-2 border-purple-500/40 shadow-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleRemovePhoto}
+                          title="Remove Photo"
+                          className="absolute -top-2 -right-2 p-1.5 rounded-full bg-red-600 hover:bg-red-500 text-white shadow-md transition cursor-pointer"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-white/[0.04] border-2 border-dashed border-white/20 flex flex-col items-center justify-center text-slate-400">
+                        <Camera size={26} className="mb-1 text-slate-500" />
+                        <span className="text-[10px]">No Photo</span>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap items-center gap-2.5">
+                        <label className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 text-xs font-medium border border-purple-500/30 cursor-pointer transition">
+                          <Upload size={14} />
+                          {personal.photo ? "Change Photo" : "Upload Photo"}
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={handlePhotoUpload}
+                            className="hidden"
+                          />
+                        </label>
+                        {personal.photo && (
+                          <button
+                            type="button"
+                            onClick={handleRemovePhoto}
+                            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-medium border border-red-500/20 transition cursor-pointer"
+                          >
+                            <Trash2 size={13} />
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-500">
+                        Supports JPG, PNG, or WEBP (Max 5MB). Photo is excluded from ATS templates automatically.
+                      </p>
+                      {uploadingPhoto && (
+                        <p className="text-xs text-purple-400 animate-pulse flex items-center gap-1.5">
+                          <Loader2 size={12} className="animate-spin" /> Uploading image...
+                        </p>
+                      )}
+                      {photoError && (
+                        <p className="text-xs text-red-400 flex items-center gap-1">
+                          <AlertCircle size={12} /> {photoError}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-xs font-medium text-slate-300 mb-1.5">
                     Full Name <span className="text-purple-400">*</span>
@@ -910,6 +1296,70 @@ function CreateResume() {
                   )}
                 </div>
               </div>
+
+              {/* AI About Generator Toolbar */}
+              <div className="mb-4 p-4 rounded-xl bg-purple-950/20 border border-purple-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <div className="flex items-center gap-1.5 text-purple-300 text-xs font-semibold">
+                    <Sparkles size={15} />
+                    <span>AI About Generator:</span>
+                  </div>
+                  <select
+                    value={aboutStyle}
+                    onChange={(e) => setAboutStyle(e.target.value)}
+                    className="px-3 py-1.5 rounded-lg bg-white/[0.06] border border-white/10 text-xs text-white focus:border-purple-500 focus:outline-none cursor-pointer"
+                  >
+                    <option value="professional" className="bg-[#12111d] text-white">Professional</option>
+                    <option value="simple" className="bg-[#12111d] text-white">Simple</option>
+                    <option value="short" className="bg-[#12111d] text-white">Short</option>
+                    <option value="technical" className="bg-[#12111d] text-white">Technical</option>
+                    <option value="career-focused" className="bg-[#12111d] text-white">Career-focused</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleGenerateAbout}
+                    disabled={generatingAbout}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium transition shadow-sm disabled:opacity-50 cursor-pointer"
+                  >
+                    {generatingAbout ? (
+                      <>
+                        <Loader2 size={13} className="animate-spin" />
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles size={13} />
+                        {summary ? "Regenerate" : "Generate with AI"}
+                      </>
+                    )}
+                  </button>
+                  {summary && (
+                    <button
+                      type="button"
+                      onClick={() => setSummary("")}
+                      className="px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white text-xs transition cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {aboutSuccess && (
+                <div className="mb-3 px-3.5 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs flex items-center justify-between">
+                  <span>{aboutSuccess}</span>
+                  <button
+                    type="button"
+                    onClick={() => setAboutSuccess("")}
+                    className="text-emerald-400 hover:text-white ml-2 cursor-pointer"
+                  >
+                    &times;
+                  </button>
+                </div>
+              )}
 
               <textarea
                 rows={4}
@@ -2027,27 +2477,50 @@ function CreateResume() {
                   Ready to save your resume?
                 </p>
                 <p className="text-xs text-slate-400">
-                  You can edit these details at any time.
+                  You can save your progress or immediately preview your structured resume.
                 </p>
               </div>
 
-              <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
                 <button
                   type="button"
                   onClick={() => navigate("/dashboard")}
-                  className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-sm font-medium transition cursor-pointer"
+                  disabled={submitting}
+                  className="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-sm font-medium transition cursor-pointer disabled:opacity-50"
                 >
                   Cancel
                 </button>
 
                 <button
                   type="button"
-                  onClick={handleSaveResume}
+                  onClick={() => handleSaveResume(false)}
+                  disabled={submitting}
+                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium text-sm transition border border-white/10 disabled:opacity-50 cursor-pointer"
+                >
+                  <Save size={16} />
+                  {submitting && submitAction === "save"
+                    ? isEditMode
+                      ? "Updating..."
+                      : "Saving..."
+                    : isEditMode
+                    ? "Update Resume"
+                    : "Save Resume"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleSaveResume(true)}
                   disabled={submitting}
                   className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-medium text-sm transition shadow-lg shadow-purple-600/25 disabled:opacity-50 cursor-pointer"
                 >
-                  <Save size={16} />
-                  {submitting ? "Saving Structured Resume..." : "Save Resume"}
+                  <Eye size={16} />
+                  {submitting && submitAction === "preview"
+                    ? isEditMode
+                      ? "Updating & Previewing..."
+                      : "Saving & Previewing..."
+                    : isEditMode
+                    ? "Update & Preview"
+                    : "Save & Preview"}
                 </button>
               </div>
             </div>

@@ -10,6 +10,7 @@ const db = require("../db");
 const { extractText } = require("../services/pdfService");
 const { parseResume } = require("../services/parserService");
 const { normalizeResumeData } = require("../services/aiParserService");
+const { GoogleGenAI } = require("@google/genai");
 
 // =====================================
 // Upload Folder
@@ -18,11 +19,11 @@ const { normalizeResumeData } = require("../services/aiParserService");
 const uploadFolder = path.join(__dirname, "../uploads");
 
 if (!fs.existsSync(uploadFolder)) {
-    fs.mkdirSync(uploadFolder);
+    fs.mkdirSync(uploadFolder, { recursive: true });
 }
 
 // =====================================
-// Multer Storage
+// Multer Storage (Resumes)
 // =====================================
 
 const storage = multer.diskStorage({
@@ -39,6 +40,34 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage: storage
+});
+
+// =====================================
+// Multer Storage (Profile Photos)
+// =====================================
+
+const photoStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadFolder);
+    },
+    filename: function (req, file, cb) {
+        const ext = path.extname(file.originalname).toLowerCase() || ".png";
+        cb(null, "photo-" + Date.now() + ext);
+    }
+});
+
+const uploadPhoto = multer({
+    storage: photoStorage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    fileFilter: function (req, file, cb) {
+        const allowed = /jpeg|jpg|png|webp/;
+        const ext = path.extname(file.originalname).toLowerCase().replace(".", "");
+        const mime = (file.mimetype || "").toLowerCase();
+        if (allowed.test(ext) || allowed.test(mime)) {
+            return cb(null, true);
+        }
+        cb(new Error("Only JPEG, JPG, PNG, and WEBP image files under 5MB are allowed."));
+    }
 });
 
 
@@ -500,7 +529,8 @@ router.post("/create", async (req, res) => {
                     ...normalized.metadata,
                     title: normalized.personal?.title || "",
                     location: normalized.personal?.location || "",
-                    portfolio_url: normalized.personal?.portfolio_url || ""
+                    portfolio_url: normalized.personal?.portfolio_url || "",
+                    photo_path: rawResume.personal?.photo || rawResume.metadata?.photo_path || ""
                 };
 
                 const detailsSQL = `
@@ -731,9 +761,11 @@ router.get("/:resumeId", (req, res) => {
                     location: metadata.location || "",
                     github: row.github || "",
                     linkedin: row.linkedin || "",
-                    portfolio_url: metadata.portfolio_url || ""
+                    portfolio_url: metadata.portfolio_url || "",
+                    photo: metadata.photo_path || ""
                 },
 
+                photo_path: metadata.photo_path || "",
                 about,
                 summary: about,
                 education,
@@ -762,5 +794,416 @@ router.get("/:resumeId", (req, res) => {
 
 });
 
+
+// =====================================
+// Upload Profile Photo
+// POST /upload-photo
+// =====================================
+
+router.post("/upload-photo", (req, res) => {
+    uploadPhoto.single("photo")(req, res, function (err) {
+        if (err) {
+            console.error("Photo upload error:", err.message);
+            return res.status(400).json({
+                message: err.message || "Failed to upload photo."
+            });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({
+                message: "No photo file provided."
+            });
+        }
+
+        const relativePath = `/uploads/${req.file.filename}`;
+        console.log("Photo uploaded successfully:", relativePath);
+
+        return res.status(200).json({
+            message: "Profile photo uploaded successfully!",
+            photo_path: relativePath,
+            url: `http://localhost:5000${relativePath}`
+        });
+    });
+});
+
+
+// =====================================
+// Update Resume (Same-Record In-Place)
+// PUT /:resumeId
+// =====================================
+
+router.put("/:resumeId", (req, res) => {
+    try {
+        const resumeId = req.params.resumeId;
+
+        if (!resumeId) {
+            return res.status(400).json({ message: "Resume ID is required." });
+        }
+
+        db.get(
+            "SELECT * FROM Resume_Details WHERE resume_id = ?",
+            [resumeId],
+            (findErr, existingRow) => {
+                if (findErr) {
+                    console.error("Database query error:", findErr);
+                    return res.status(500).json({
+                        message: "Failed to query existing resume.",
+                        error: findErr.message
+                    });
+                }
+
+                if (!existingRow) {
+                    return res.status(404).json({
+                        message: `Resume with ID ${resumeId} not found.`
+                    });
+                }
+
+                const rawResume = req.body.resumeData || req.body;
+                const normalized = normalizeResumeData(rawResume);
+
+                if (!normalized.personal?.name) {
+                    return res.status(400).json({
+                        message: "Full Name is required."
+                    });
+                }
+
+                if (!normalized.personal?.email) {
+                    return res.status(400).json({
+                        message: "Email is required."
+                    });
+                }
+
+                let previousMetadata = {};
+                try {
+                    previousMetadata = JSON.parse(existingRow.metadata || "{}");
+                } catch (e) {
+                    previousMetadata = {};
+                }
+
+                const userCategory =
+                    req.body.user_category ||
+                    rawResume.metadata?.user_category ||
+                    previousMetadata.user_category ||
+                    "Student";
+
+                const photoPath =
+                    rawResume.personal?.photo ||
+                    rawResume.metadata?.photo_path ||
+                    previousMetadata.photo_path ||
+                    "";
+
+                const mergedMetadata = {
+                    ...previousMetadata,
+                    version: "1.0",
+                    source: previousMetadata.source || "scratch",
+                    user_category: userCategory,
+                    last_updated: new Date().toISOString(),
+                    title: normalized.personal.title || "",
+                    location: normalized.personal.location || "",
+                    portfolio_url: normalized.personal.portfolio_url || "",
+                    photo_path: photoPath
+                };
+
+                const educationJSON = JSON.stringify(normalized.education || []);
+                const skillsJSON = JSON.stringify(normalized.skills || {});
+                const projectsJSON = JSON.stringify(normalized.projects || []);
+                const experienceJSON = JSON.stringify(normalized.experience || []);
+                const certificatesJSON = JSON.stringify(normalized.certificates || []);
+                const achievementsJSON = JSON.stringify(normalized.achievements || []);
+                const languagesJSON = JSON.stringify(normalized.languages || []);
+                const customSectionsJSON = JSON.stringify(normalized.custom_sections || []);
+                const metadataJSON = JSON.stringify(mergedMetadata);
+                const aboutText = normalized.summary || normalized.about || "";
+
+                // 1. Update Resume table in-place (no new row)
+                const updateResumeSql = `
+                    UPDATE Resume
+                    SET file_name = ?,
+                        upload_date = CURRENT_TIMESTAMP
+                    WHERE resume_id = ?
+                `;
+
+                const updatedFileName = `${normalized.personal.name} - Resume (Updated)`;
+
+                db.run(updateResumeSql, [updatedFileName, resumeId], function (resErr) {
+                    if (resErr) {
+                        console.error("Resume table update error:", resErr);
+                        return res.status(500).json({
+                            message: "Failed to update Resume record.",
+                            error: resErr.message
+                        });
+                    }
+
+                    // 2. Update Resume_Details table in-place (no new row)
+                    const updateDetailsSql = `
+                        UPDATE Resume_Details
+                        SET name = ?,
+                            email = ?,
+                            phone = ?,
+                            education = ?,
+                            skills = ?,
+                            projects = ?,
+                            experience = ?,
+                            certifications = ?,
+                            achievements = ?,
+                            languages = ?,
+                            github = ?,
+                            linkedin = ?,
+                            about = ?,
+                            custom_sections = ?,
+                            metadata = ?
+                        WHERE resume_id = ?
+                    `;
+
+                    db.run(
+                        updateDetailsSql,
+                        [
+                            normalized.personal.name,
+                            normalized.personal.email,
+                            normalized.personal.phone,
+                            educationJSON,
+                            skillsJSON,
+                            projectsJSON,
+                            experienceJSON,
+                            certificatesJSON,
+                            achievementsJSON,
+                            languagesJSON,
+                            normalized.personal.github,
+                            normalized.personal.linkedin,
+                            aboutText,
+                            customSectionsJSON,
+                            metadataJSON,
+                            resumeId
+                        ],
+                        function (detailsErr) {
+                            if (detailsErr) {
+                                console.error("Resume_Details update error:", detailsErr);
+                                return res.status(500).json({
+                                    message: "Failed to update resume details.",
+                                    error: detailsErr.message
+                                });
+                            }
+
+                            console.log(`Resume #${resumeId} successfully updated in-place (0 duplicate rows).`);
+
+                            normalized.personal.photo = photoPath;
+                            normalized.metadata = mergedMetadata;
+
+                            return res.status(200).json({
+                                message: "Resume updated successfully!",
+                                resume_id: Number(resumeId),
+                                resume: normalized
+                            });
+                        }
+                    );
+                });
+            }
+        );
+    } catch (error) {
+        console.error("Error updating resume:", error);
+        return res.status(500).json({
+            message: "Internal server error while updating resume.",
+            error: error.message
+        });
+    }
+});
+
+
+// =====================================
+// AI About Generator Helper
+// =====================================
+
+async function generateAboutSummary({ style = "professional", resumeData = {}, userCategory = "Student" }) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    const normalizedStyle = String(style).toLowerCase().trim() || "professional";
+
+    const personal = resumeData.personal || {};
+    const education = Array.isArray(resumeData.education) ? resumeData.education : [];
+    const experience = Array.isArray(resumeData.experience) ? resumeData.experience : [];
+    const projects = Array.isArray(resumeData.projects) ? resumeData.projects : [];
+    const skillsObj = resumeData.skills || {};
+    const skillsList = Array.isArray(skillsObj.all)
+        ? skillsObj.all
+        : Array.isArray(skillsObj.technical)
+        ? [...skillsObj.technical, ...(skillsObj.frameworks || []), ...(skillsObj.tools || [])]
+        : Array.isArray(skillsObj)
+        ? skillsObj
+        : [];
+
+    const candidateName = personal.name || "Candidate";
+    const candidateTitle = personal.title || (userCategory === "Student" ? "Aspiring Software Developer" : "Software Professional");
+    const primaryDegree = education[0]?.degree ? `${education[0].degree}${education[0].institution ? ` from ${education[0].institution}` : ""}` : "";
+    const recentRole = experience[0]?.role ? `${experience[0].role}${experience[0].company ? ` at ${experience[0].company}` : ""}` : "";
+    const topProjects = projects.slice(0, 2).map(p => p.title).filter(Boolean).join(", ");
+    const topSkills = skillsList.slice(0, 5).join(", ");
+
+    // Grounded rule-based fallback based purely on candidate's real data
+    const generateFallback = () => {
+        switch (normalizedStyle) {
+            case "simple":
+                if (recentRole) {
+                    return `${candidateTitle} with background as ${recentRole}. Skilled in ${topSkills || "software development and problem solving"}, focused on building practical, reliable solutions.`;
+                } else if (primaryDegree) {
+                    return `${candidateTitle} with a strong foundation in ${primaryDegree}. Passionate about applying ${topSkills || "core technical skills"} to create clean, reliable software projects.`;
+                }
+                return `${candidateTitle} with a solid foundation in ${topSkills || "modern technologies"}. Dedicated to writing clean code and collaborating effectively on challenging projects.`;
+
+            case "short":
+                if (topSkills && candidateTitle) {
+                    return `${candidateTitle} proficient in ${topSkills}, focused on delivering efficient, high-quality software solutions.`;
+                }
+                return `${candidateTitle} committed to excellence in software development and technology.`;
+
+            case "technical":
+                return `Technically driven ${candidateTitle} with hands-on proficiency in ${topSkills || "modern development stacks"}${topProjects ? `, demonstrated through projects such as ${topProjects}` : ""}. Adept at algorithmic problem-solving, clean code principles, and continuous learning.`;
+
+            case "career-focused":
+                return `Results-oriented ${candidateTitle}${primaryDegree ? ` backgrounded by studies in ${primaryDegree}` : ""} eager to contribute strong problem-solving abilities and expertise in ${topSkills || "key technologies"} to a high-impact team.`;
+
+            case "professional":
+            default:
+                if (recentRole) {
+                    return `Accomplished ${candidateTitle} with experience as ${recentRole}. Proficient in ${topSkills || "software development methodologies"}, with a proven track record of delivering high-quality results.`;
+                } else if (primaryDegree) {
+                    return `Proactive ${candidateTitle} holding a qualification in ${primaryDegree}. Combines a rigorous academic background with practical proficiency in ${topSkills || "technology"} to solve real-world problems.`;
+                }
+                return `Dedicated ${candidateTitle} with strong competencies in ${topSkills || "contemporary software development"}. Committed to engineering robust solutions and driving organizational value.`;
+        }
+    };
+
+    if (!apiKey) {
+        console.log("[Generate About] No GEMINI_API_KEY found; using grounded deterministic generator.");
+        return { about: generateFallback(), style: normalizedStyle, source: "fallback" };
+    }
+
+    try {
+        const ai = new GoogleGenAI({ apiKey });
+        const modelName = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+
+        const prompt = `
+You are an expert resume writer. Generate a candidate professional summary/about statement strictly using the provided facts.
+
+CRITICAL INTEGRITY RULES:
+1. ONLY reference information present in the facts below. NEVER invent companies, years of experience, titles, or certifications.
+2. If facts are sparse, keep the statement concise, honest, and authentic.
+3. Tone and style must strictly adhere to the "${normalizedStyle}" style:
+   - "simple": Plain, friendly, authentic language, clear and accessible (2-3 sentences).
+   - "professional": Executive, well-structured, polished professional tone (2-3 sentences).
+   - "short": High-impact, concise summary (1-2 sentences maximum).
+   - "technical": Emphasize specific technical stacks, problem-solving, and tools (2-3 sentences).
+   - "career-focused": Highlight ambition, team contribution, learning agility, and career goals (2-3 sentences).
+4. Return ONLY the plain text paragraph. Do NOT include markdown quotes, headings, labels, bullet points, or conversational text.
+
+Candidate Facts:
+- Name: ${candidateName}
+- Title / Headline: ${candidateTitle}
+- Category: ${userCategory}
+- Education: ${primaryDegree || "Not specified"}
+- Recent Experience: ${recentRole || "Not specified"}
+- Key Skills: ${topSkills || "Not specified"}
+- Notable Projects: ${topProjects || "Not specified"}
+`;
+
+        const response = await ai.models.generateContent({
+            model: modelName,
+            contents: prompt
+        });
+
+        const text = response?.text?.trim();
+        if (text && text.length > 20) {
+            const cleaned = text.replace(/^["']|["']$/g, "").replace(/^#+\s*.*/gm, "").trim();
+            return { about: cleaned, style: normalizedStyle, source: "ai" };
+        }
+        return { about: generateFallback(), style: normalizedStyle, source: "fallback" };
+    } catch (err) {
+        console.warn("[Generate About] Gemini call failed, using deterministic fallback:", err.message);
+        return { about: generateFallback(), style: normalizedStyle, source: "fallback" };
+    }
+}
+
+
+// =====================================
+// AI About Generator Endpoints
+// POST /generate-about & POST /:resumeId/generate-about
+// =====================================
+
+async function handleGenerateAbout(req, res) {
+    try {
+        const resumeId = req.params.resumeId;
+        const style = req.body.style || "professional";
+        const userCategory = req.body.user_category || "Student";
+        let resumeData = req.body.resumeData || null;
+
+        if (!resumeData && resumeId && resumeId !== "new") {
+            const row = await new Promise((resolve, reject) => {
+                db.get("SELECT * FROM Resume_Details WHERE resume_id = ?", [resumeId], (err, r) => {
+                    if (err) return reject(err);
+                    resolve(r);
+                });
+            });
+
+            if (row) {
+                let parsedEducation = [];
+                let parsedSkills = [];
+                let parsedExp = [];
+                let parsedProj = [];
+                try {
+                    parsedEducation = JSON.parse(row.education || "[]");
+                    parsedSkills = JSON.parse(row.skills || "[]");
+                    parsedExp = JSON.parse(row.experience || "[]");
+                    parsedProj = JSON.parse(row.projects || "[]");
+                } catch (e) {}
+
+                let meta = {};
+                try {
+                    meta = JSON.parse(row.metadata || "{}");
+                } catch (e) {}
+
+                resumeData = {
+                    personal: {
+                        name: row.name,
+                        title: meta.title || ""
+                    },
+                    education: parsedEducation,
+                    skills: parsedSkills,
+                    experience: parsedExp,
+                    projects: parsedProj
+                };
+            }
+        }
+
+        if (!resumeData) {
+            resumeData = {
+                personal: { name: req.body.name || "" },
+                education: [],
+                skills: [],
+                experience: [],
+                projects: []
+            };
+        }
+
+        const result = await generateAboutSummary({
+            style,
+            resumeData,
+            userCategory
+        });
+
+        return res.status(200).json({
+            message: "About summary generated successfully!",
+            about: result.about,
+            style: result.style,
+            source: result.source
+        });
+    } catch (error) {
+        console.error("Error generating About section:", error);
+        return res.status(500).json({
+            message: "Failed to generate about section.",
+            error: error.message
+        });
+    }
+}
+
+router.post("/generate-about", handleGenerateAbout);
+router.post("/:resumeId/generate-about", handleGenerateAbout);
 
 module.exports = router;
