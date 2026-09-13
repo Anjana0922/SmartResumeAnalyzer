@@ -1018,56 +1018,77 @@ async function generateAboutSummary({ style = "professional", resumeData = {}, u
     const normalizedStyle = String(style).toLowerCase().trim() || "professional";
 
     const personal = resumeData.personal || {};
+    const metadata = resumeData.metadata || {};
     const education = Array.isArray(resumeData.education) ? resumeData.education : [];
     const experience = Array.isArray(resumeData.experience) ? resumeData.experience : [];
     const projects = Array.isArray(resumeData.projects) ? resumeData.projects : [];
-    const skillsObj = resumeData.skills || {};
-    const skillsList = Array.isArray(skillsObj.all)
-        ? skillsObj.all
-        : Array.isArray(skillsObj.technical)
-        ? [...skillsObj.technical, ...(skillsObj.frameworks || []), ...(skillsObj.tools || [])]
-        : Array.isArray(skillsObj)
-        ? skillsObj
+    const certificates = Array.isArray(resumeData.certificates || resumeData.certifications)
+        ? (resumeData.certificates || resumeData.certifications)
         : [];
+    const skillsObj = resumeData.skills || {};
+
+    let skillsList = [];
+    if (Array.isArray(skillsObj.all) && skillsObj.all.length > 0) {
+        skillsList = skillsObj.all;
+    } else if (Array.isArray(skillsObj)) {
+        skillsList = skillsObj;
+    } else if (typeof skillsObj === "object" && skillsObj !== null) {
+        for (const val of Object.values(skillsObj)) {
+            if (Array.isArray(val)) {
+                skillsList.push(...val);
+            }
+        }
+    }
+    skillsList = Array.from(new Set(skillsList.map(String).map(s => s.trim()).filter(Boolean)));
 
     const candidateName = personal.name || "Candidate";
-    const candidateTitle = personal.title || (userCategory === "Student" ? "Aspiring Software Developer" : "Software Professional");
-    const primaryDegree = education[0]?.degree ? `${education[0].degree}${education[0].institution ? ` from ${education[0].institution}` : ""}` : "";
-    const recentRole = experience[0]?.role ? `${experience[0].role}${experience[0].company ? ` at ${experience[0].company}` : ""}` : "";
-    const topProjects = projects.slice(0, 2).map(p => p.title).filter(Boolean).join(", ");
-    const topSkills = skillsList.slice(0, 5).join(", ");
+    const candidateTitle =
+        personal.title ||
+        metadata.title ||
+        metadata.career_target ||
+        (userCategory === "Student" ? "Aspiring Professional" : "Dedicated Professional");
 
-    // Grounded rule-based fallback based purely on candidate's real data
+    const primaryDegree = education[0]?.degree
+        ? `${education[0].degree}${education[0].institution ? ` from ${education[0].institution}` : ""}`
+        : "";
+    const recentRole = experience[0]?.role
+        ? `${experience[0].role}${experience[0].company ? ` at ${experience[0].company}` : ""}`
+        : "";
+    const topProjects = projects.slice(0, 2).map(p => p.title).filter(Boolean).join(", ");
+    const topSkills = skillsList.slice(0, 6).join(", ");
+    const topCerts = certificates.slice(0, 2).map(c => c.name || c.title).filter(Boolean).join(", ");
+
+    // Grounded rule-based fallback based purely on candidate's real data (no software bias)
     const generateFallback = () => {
         switch (normalizedStyle) {
             case "simple":
                 if (recentRole) {
-                    return `${candidateTitle} with background as ${recentRole}. Skilled in ${topSkills || "software development and problem solving"}, focused on building practical, reliable solutions.`;
+                    return `${candidateTitle} with professional background as ${recentRole}. Skilled in ${topSkills || "effective communication, planning, and execution"}, focused on delivering practical and reliable results.`;
                 } else if (primaryDegree) {
-                    return `${candidateTitle} with a strong foundation in ${primaryDegree}. Passionate about applying ${topSkills || "core technical skills"} to create clean, reliable software projects.`;
+                    return `${candidateTitle} with a strong foundation in ${primaryDegree}. Dedicated to applying ${topSkills || "core knowledge and practical competencies"} to contribute effectively to team goals.`;
                 }
-                return `${candidateTitle} with a solid foundation in ${topSkills || "modern technologies"}. Dedicated to writing clean code and collaborating effectively on challenging projects.`;
+                return `${candidateTitle} with a solid foundation in ${topSkills || "essential professional competencies"}. Dedicated to quality outcomes and collaborating effectively on impactful work.`;
 
             case "short":
                 if (topSkills && candidateTitle) {
-                    return `${candidateTitle} proficient in ${topSkills}, focused on delivering efficient, high-quality software solutions.`;
+                    return `${candidateTitle} proficient in ${topSkills}, focused on delivering high-quality outcomes and continuous improvement.`;
                 }
-                return `${candidateTitle} committed to excellence in software development and technology.`;
+                return `${candidateTitle} committed to professional excellence, dedication, and measurable impact.`;
 
             case "technical":
-                return `Technically driven ${candidateTitle} with hands-on proficiency in ${topSkills || "modern development stacks"}${topProjects ? `, demonstrated through projects such as ${topProjects}` : ""}. Adept at algorithmic problem-solving, clean code principles, and continuous learning.`;
+                return `Methodical and detail-oriented ${candidateTitle} with hands-on proficiency in ${topSkills || "specialized domain methodologies and tools"}${topProjects ? `, demonstrated through key work including ${topProjects}` : ""}. Adept at rigorous analysis, disciplined execution, and applying industry best practices.`;
 
             case "career-focused":
-                return `Results-oriented ${candidateTitle}${primaryDegree ? ` backgrounded by studies in ${primaryDegree}` : ""} eager to contribute strong problem-solving abilities and expertise in ${topSkills || "key technologies"} to a high-impact team.`;
+                return `Results-driven ${candidateTitle}${primaryDegree ? ` backgrounded by qualification in ${primaryDegree}` : ""} eager to contribute strong problem-solving abilities, teamwork, and expertise in ${topSkills || "core disciplines"} to achieve high-impact organizational objectives.`;
 
             case "professional":
             default:
                 if (recentRole) {
-                    return `Accomplished ${candidateTitle} with experience as ${recentRole}. Proficient in ${topSkills || "software development methodologies"}, with a proven track record of delivering high-quality results.`;
+                    return `Accomplished ${candidateTitle} with proven experience as ${recentRole}. Proficient in ${topSkills || "strategic execution and stakeholder collaboration"}, with a track record of delivering high-quality results.`;
                 } else if (primaryDegree) {
-                    return `Proactive ${candidateTitle} holding a qualification in ${primaryDegree}. Combines a rigorous academic background with practical proficiency in ${topSkills || "technology"} to solve real-world problems.`;
+                    return `Proactive ${candidateTitle} holding a qualification in ${primaryDegree}. Combines academic training with practical competence in ${topSkills || "essential industry standards"} to solve real-world challenges.`;
                 }
-                return `Dedicated ${candidateTitle} with strong competencies in ${topSkills || "contemporary software development"}. Committed to engineering robust solutions and driving organizational value.`;
+                return `Dedicated ${candidateTitle} with strong competencies in ${topSkills || "modern industry practices"}. Committed to operational excellence, integrity, and driving tangible organizational value.`;
         }
     };
 
@@ -1078,30 +1099,35 @@ async function generateAboutSummary({ style = "professional", resumeData = {}, u
 
     try {
         const ai = new GoogleGenAI({ apiKey });
-        const modelName = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+        const modelName = process.env.GEMINI_MODEL || "gemini-2.0-flash";
 
         const prompt = `
-You are an expert resume writer. Generate a candidate professional summary/about statement strictly using the provided facts.
+You are an expert resume writer. Generate a candidate professional summary/about statement strictly using the provided candidate facts.
+
+The candidate may belong to ANY profession (e.g. Teacher, Doctor, Nurse, Accountant, Salesperson, Marketer, Engineer, Researcher, Designer, Software Developer, Student / Fresher, Business Professional, etc.).
+NEVER assume the candidate is a software developer or IT professional unless explicitly indicated by their title, experience, or skills. Use terminology appropriate to their specific discipline.
 
 CRITICAL INTEGRITY RULES:
-1. ONLY reference information present in the facts below. NEVER invent companies, years of experience, titles, or certifications.
-2. If facts are sparse, keep the statement concise, honest, and authentic.
-3. Tone and style must strictly adhere to the "${normalizedStyle}" style:
-   - "simple": Plain, friendly, authentic language, clear and accessible (2-3 sentences).
+1. ONLY reference information present in the facts below. NEVER invent companies, years of experience, titles, metrics, or certifications.
+2. If facts are sparse, keep the statement concise, honest, authentic, and professionally relevant.
+3. Tone and style must strictly adhere to the requested "${normalizedStyle}" style:
+   - "simple": Plain, straightforward, authentic language (2-3 sentences).
    - "professional": Executive, well-structured, polished professional tone (2-3 sentences).
    - "short": High-impact, concise summary (1-2 sentences maximum).
-   - "technical": Emphasize specific technical stacks, problem-solving, and tools (2-3 sentences).
-   - "career-focused": Highlight ambition, team contribution, learning agility, and career goals (2-3 sentences).
+   - "technical": Emphasize specialized domain methodologies, techniques, and tools relevant to their specific discipline (2-3 sentences).
+   - "career-focused": Highlight ambition, growth mindset, reliability, and career goals (2-3 sentences).
 4. Return ONLY the plain text paragraph. Do NOT include markdown quotes, headings, labels, bullet points, or conversational text.
 
 Candidate Facts:
 - Name: ${candidateName}
 - Title / Headline: ${candidateTitle}
 - Category: ${userCategory}
+- Career Target: ${metadata.career_target || "General"}
 - Education: ${primaryDegree || "Not specified"}
 - Recent Experience: ${recentRole || "Not specified"}
 - Key Skills: ${topSkills || "Not specified"}
-- Notable Projects: ${topProjects || "Not specified"}
+- Notable Work / Projects: ${topProjects || "Not specified"}
+- Certifications / Training: ${topCerts || "Not specified"}
 `;
 
         const response = await ai.models.generateContent({
@@ -1147,11 +1173,13 @@ async function handleGenerateAbout(req, res) {
                 let parsedSkills = [];
                 let parsedExp = [];
                 let parsedProj = [];
+                let parsedCerts = [];
                 try {
                     parsedEducation = JSON.parse(row.education || "[]");
                     parsedSkills = JSON.parse(row.skills || "[]");
                     parsedExp = JSON.parse(row.experience || "[]");
                     parsedProj = JSON.parse(row.projects || "[]");
+                    parsedCerts = JSON.parse(row.certifications || "[]");
                 } catch (e) {}
 
                 let meta = {};
@@ -1164,10 +1192,12 @@ async function handleGenerateAbout(req, res) {
                         name: row.name,
                         title: meta.title || ""
                     },
+                    metadata: meta,
                     education: parsedEducation,
                     skills: parsedSkills,
                     experience: parsedExp,
-                    projects: parsedProj
+                    projects: parsedProj,
+                    certificates: parsedCerts
                 };
             }
         }
@@ -1175,10 +1205,12 @@ async function handleGenerateAbout(req, res) {
         if (!resumeData) {
             resumeData = {
                 personal: { name: req.body.name || "" },
+                metadata: {},
                 education: [],
                 skills: [],
                 experience: [],
-                projects: []
+                projects: [],
+                certificates: []
             };
         }
 

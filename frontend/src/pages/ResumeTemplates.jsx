@@ -46,7 +46,7 @@ const TEMPLATES = [
     icon: AlignLeft,
     accent: "from-emerald-600 to-teal-600",
     description:
-      "Minimalist design with generous whitespace, subtle dividing lines, and clean sans-serif typography. Excellent for tech and startup applications.",
+      "Minimalist design with generous whitespace, subtle dividing lines, and clean sans-serif typography. Excellent for all professional fields and modern applications.",
     features: [
       "Modern sans-serif typography",
       "Subtle timeline dividing lines",
@@ -87,23 +87,23 @@ const TEMPLATES = [
       "Deep gradient header banner",
       "Styled experience & project cards",
       "Contrasting skill badges",
-      "Great for creative, frontend & product roles"
+      "Great for creative, marketing, product, and leadership roles"
     ],
     previewBg: "bg-gradient-to-r from-slate-900 to-purple-900 text-white border-purple-500/30"
   },
   {
     key: "ats",
-    name: "Technical ATS",
+    name: "Standard ATS",
     tagline: "Engineered strictly for automated screening algorithms",
     badge: "ATS Guaranteed",
     badgeColor: "bg-green-500/10 text-green-400 border-green-500/20",
     icon: ShieldCheck,
     accent: "from-emerald-600 to-green-600",
     description:
-      "Strict single-column layout in pure black and white. Zero tables, zero images, zero complex formatting. Guaranteed 100% parseable by every ATS.",
+      "Strict single-column layout in pure black and white. Zero tables, zero images, zero complex formatting. Guaranteed 100% parseable by every ATS across all industries.",
     features: [
       "Strict single-column text flow",
-      "Categorized software tech stacks",
+      "Categorized skills & competencies",
       "Zero images or complex formatting",
       "Highest machine readability score"
     ],
@@ -244,7 +244,7 @@ export default function ResumeTemplates() {
                             {candidateName}
                           </div>
                           <div className="opacity-70 text-[7px] truncate max-w-[110px]">
-                            {resume.personal?.title || "Software Engineer"}
+                            {resume.personal?.title || "Professional"}
                           </div>
                         </div>
                         {resume.personal?.photo && tmpl.key !== "ats" && (

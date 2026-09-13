@@ -80,6 +80,7 @@ function AestheticTemplate({
   };
 
   const education = safeArray(resume?.education);
+  const experience = safeArray(resume?.experience);
   const projects = safeArray(resume?.projects);
   const certificates = safeArray(resume?.certificates);
   const achievements = safeArray(resume?.achievements);
@@ -281,6 +282,103 @@ function AestheticTemplate({
                   {resume.about ||
                     "I am a motivated professional with an interest in technology, continuous learning and building meaningful solutions."}
                 </p>
+              </div>
+            </div>
+          </section>
+        );
+
+      // =====================================================
+      // EXPERIENCE
+      // =====================================================
+
+      case "experience":
+        if (!experience.length) return null;
+
+        return (
+          <section
+            key="experience"
+            id="experience"
+            className="py-24 scroll-mt-24"
+          >
+            <SectionHeading
+              number="02"
+              title="Experience & Work History"
+              subtitle="Professional journey and career achievements"
+            />
+
+            <div className="relative">
+              {/* Timeline line */}
+              <div
+                className={`absolute left-[11px] top-2 bottom-2 w-px ${border}`}
+              />
+
+              <div className="space-y-10">
+                {experience.map((item, index) => (
+                  <div
+                    key={index}
+                    className="relative pl-12"
+                  >
+                    {/* Timeline dot */}
+                    <div
+                      className={`absolute left-0 top-1 w-[23px] h-[23px] rounded-full ${accentBg} border-4 ${page.replace(
+                        "bg-",
+                        "border-"
+                      )} ${accentBorder}`}
+                    />
+
+                    <div
+                      className={`p-7 rounded-[1.5rem] ${surface} border ${border}`}
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <span
+                          className={`font-mono text-xs ${accent}`}
+                        >
+                          0{index + 1}
+                        </span>
+
+                        <div className="flex items-center gap-2">
+                          {item?.duration && (
+                            <span
+                              className={`text-xs px-3 py-1 rounded-full ${decorative} ${muted}`}
+                            >
+                              {item.duration}
+                            </span>
+                          )}
+                          {item?.employment_type && (
+                            <span
+                              className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${accentBg} ${accent}`}
+                            >
+                              {item.employment_type}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <h3 className="font-serif text-2xl mt-4">
+                        {item?.role || item?.title || "Role"}
+                      </h3>
+
+                      <p className={`text-sm mt-1 font-medium ${accent}`}>
+                        {item?.company || item?.organization || "Organization"}
+                        {item?.location && ` · ${item.location}`}
+                      </p>
+
+                      {item?.description && (
+                        <p className={`mt-4 text-sm leading-7 ${muted}`}>
+                          {item.description}
+                        </p>
+                      )}
+
+                      {Array.isArray(item?.highlights) && item.highlights.filter(Boolean).length > 0 && (
+                        <ul className={`mt-3 space-y-1 text-xs list-disc list-inside ${muted}`}>
+                          {item.highlights.filter(Boolean).map((hl, hIdx) => (
+                            <li key={hIdx}>{hl}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </section>
@@ -774,10 +872,16 @@ function AestheticTemplate({
                 "Your Name"}
             </h1>
 
+            {personal.title && (
+              <p className={`font-serif italic text-2xl md:text-3xl mt-4 ${accent}`}>
+                {personal.title}
+              </p>
+            )}
+
             <p
-              className={`font-serif italic text-2xl md:text-3xl mt-8 max-w-2xl ${accent}`}
+              className={`font-serif italic text-xl md:text-2xl mt-6 max-w-2xl ${accent}`}
             >
-              Building ideas into thoughtful digital experiences.
+              {personal.title ? `Dedicated to excellence and innovation as a ${personal.title}.` : "Dedicated to learning, creating, and delivering meaningful work."}
             </p>
 
             <div

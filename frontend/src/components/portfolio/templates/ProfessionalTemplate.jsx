@@ -4,9 +4,11 @@ import {
   Phone,
   MapPin,
   BriefcaseBusiness,
+  Briefcase,
   GraduationCap,
   Award,
   Code2,
+  User,
   Trophy,
   Languages,
 } from "lucide-react";
@@ -101,7 +103,7 @@ function ProfessionalTemplate({
 
     return (
       <div className="w-32 h-32 rounded-full border-2 border-white/20 bg-white/10 flex items-center justify-center">
-        <Code2 size={30} className="text-white/70" />
+        <User size={36} className="text-white/70" />
       </div>
     );
   };
@@ -128,6 +130,74 @@ function ProfessionalTemplate({
         >
           {resume.about}
         </p>
+      </section>
+    );
+  };
+
+  // ==========================================================
+  // EXPERIENCE
+  // ==========================================================
+
+  const renderExperience = () => {
+    const experience = toArray(resume?.experience);
+    if (!experience.length) return null;
+
+    return (
+      <section
+        id="experience"
+        className="mb-16 scroll-mt-28"
+      >
+        <SectionTitle
+          icon={Briefcase}
+          title="Experience & Work History"
+        />
+
+        <div className="space-y-6">
+          {experience.map((item, index) => (
+            <div
+              key={index}
+              className={`p-6 rounded-xl border ${border} ${card} transition hover:shadow-lg`}
+            >
+              <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
+                <div>
+                  <h3 className="text-lg font-semibold tracking-tight">
+                    {item.role || item.title || "Role"}
+                  </h3>
+                  <p className={`text-sm font-medium ${accent} mt-0.5`}>
+                    {item.company || item.organization || "Organization"}
+                  </p>
+                </div>
+                <div className="text-xs sm:text-right">
+                  <span className={`inline-block font-mono ${muted}`}>
+                    {item.duration || item.year || ""}
+                  </span>
+                  {item.location && (
+                    <span className={`block ${faint}`}>{item.location}</span>
+                  )}
+                  {item.employment_type && (
+                    <span className={`inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${accentBg} ${accent}`}>
+                      {item.employment_type}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {item.description && (
+                <p className={`mt-3 text-sm leading-7 ${muted}`}>
+                  {item.description}
+                </p>
+              )}
+
+              {Array.isArray(item.highlights) && item.highlights.filter(Boolean).length > 0 && (
+                <ul className={`mt-3 space-y-1.5 text-xs ${muted} list-disc list-inside`}>
+                  {item.highlights.filter(Boolean).map((hl, hIdx) => (
+                    <li key={hIdx}>{hl}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
       </section>
     );
   };
@@ -535,6 +605,9 @@ function ProfessionalTemplate({
       case "about":
         return renderAbout();
 
+      case "experience":
+        return renderExperience();
+
       case "education":
         return renderEducation();
 
@@ -591,6 +664,12 @@ function ProfessionalTemplate({
                 {personal.name ||
                   "Your Name"}
               </h1>
+
+              {personal.title && (
+                <p className="mt-2 text-lg text-[#8fb7df] font-medium">
+                  {personal.title}
+                </p>
+              )}
 
               <div className="mt-4 w-20 h-1 bg-[#8fb7df]" />
 

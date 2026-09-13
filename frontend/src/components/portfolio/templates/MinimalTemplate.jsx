@@ -62,6 +62,7 @@ function MinimalTemplate({
   };
 
   const education = toArray(resume?.education);
+  const experience = toArray(resume?.experience);
   const projects = toArray(resume?.projects);
   const certificates = toArray(resume?.certificates);
   const achievements = toArray(resume?.achievements);
@@ -230,6 +231,72 @@ function MinimalTemplate({
                     {item.score.label}:{" "}
                     {item.score.value}
                   </p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  };
+
+  // =========================================================
+  // EXPERIENCE
+  // =========================================================
+
+  const renderExperience = () => {
+    if (!experience.length) return null;
+
+    return (
+      <section
+        id="experience"
+        className={`py-16 border-b ${line} scroll-mt-24`}
+      >
+        <SectionHeading number="03" title="Experience" />
+
+        <div className="space-y-10">
+          {experience.map((item, index) => (
+            <div
+              key={index}
+              className="grid md:grid-cols-[150px_1fr] gap-6"
+            >
+              <div>
+                <span className={`text-xs tracking-widest ${faint}`}>
+                  {item.duration || item.year || "—"}
+                </span>
+                {item.location && (
+                  <p className={`text-xs mt-1 ${faint}`}>
+                    {item.location}
+                  </p>
+                )}
+                {item.employment_type && (
+                  <span className={`inline-block mt-2 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded border ${line} ${faint}`}>
+                    {item.employment_type}
+                  </span>
+                )}
+              </div>
+
+              <div>
+                <h3 className="font-serif text-xl">
+                  {item.role || item.title || "Role / Position"}
+                </h3>
+
+                <p className={`mt-1 text-sm font-medium ${secondary}`}>
+                  {item.company || item.organization || "Organization"}
+                </p>
+
+                {item.description && (
+                  <p className={`mt-3 text-sm leading-relaxed ${secondary}`}>
+                    {item.description}
+                  </p>
+                )}
+
+                {Array.isArray(item.highlights) && item.highlights.filter(Boolean).length > 0 && (
+                  <ul className={`mt-3 space-y-1 text-xs list-disc list-inside ${secondary}`}>
+                    {item.highlights.filter(Boolean).map((hl, hIdx) => (
+                      <li key={hIdx}>{hl}</li>
+                    ))}
+                  </ul>
                 )}
               </div>
             </div>
@@ -507,6 +574,7 @@ function MinimalTemplate({
 
   const sectionNames = {
     about: "Profile",
+    experience: "Experience",
     education: "Education",
     skills: "Expertise",
     projects: "Work",
@@ -655,9 +723,15 @@ function MinimalTemplate({
                 "Your Name"}
             </h1>
 
+            {personal.title && (
+              <p className={`mt-3 font-serif text-xl md:text-2xl ${secondary}`}>
+                {personal.title}
+              </p>
+            )}
+
             <div
               className={`
-                mt-7
+                mt-6
                 w-16
                 h-px
                 ${accentLine}
@@ -741,6 +815,9 @@ function MinimalTemplate({
           switch (section) {
             case "about":
               return renderAbout();
+
+            case "experience":
+              return renderExperience();
 
             case "education":
               return renderEducation();

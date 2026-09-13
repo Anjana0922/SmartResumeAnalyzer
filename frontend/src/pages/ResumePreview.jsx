@@ -32,6 +32,19 @@ import TwoColumnTemplate from "../components/resume/templates/TwoColumnTemplate"
 import CreativeTemplate from "../components/resume/templates/CreativeTemplate";
 import AtsTemplate from "../components/resume/templates/AtsTemplate";
 
+const formatCategoryTitle = (key) => {
+  const k = key.toLowerCase().trim();
+  if (k === "professional") return "Professional Skills";
+  if (k === "technical") return "Technical Skills";
+  if (k === "tools") return "Tools & Systems";
+  if (k === "soft") return "Core Competencies";
+  if (k === "industry") return "Industry Knowledge";
+  if (k === "frameworks") return "Frameworks & Libraries";
+  return key
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+};
+
 function ResumePreview() {
   const { resumeId } = useParams();
   const navigate = useNavigate();
@@ -98,38 +111,84 @@ function ResumePreview() {
   // ==========================================================
   // PDF Download Handler (html2pdf.js)
   // ==========================================================
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
     const element = document.getElementById("resume-print-node");
     if (!element) {
       console.error("Print container #resume-print-node not found!");
       return;
     }
 
-    setDownloadingPdf(true);
+    try {
+      setDownloadingPdf(true);
 
-    const rawName = resume?.personal?.name || "Candidate";
-    const cleanName = rawName.trim().replace(/[^a-zA-Z0-9_-]/g, "_");
-    const filename = `${cleanName}_Resume.pdf`;
+      // 1. Ensure all custom fonts (Inter, serif, etc.) are loaded
+      if (document.fonts && document.fonts.ready) {
+        try {
+          await document.fonts.ready;
+        } catch (fontErr) {
+          console.warn("Font readiness check warning:", fontErr);
+        }
+      }
 
-    const opt = {
-      margin: [10, 10, 10, 10],
-      filename: filename,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
-    };
-
-    html2pdf()
-      .set(opt)
-      .from(element)
-      .save()
-      .then(() => {
-        setDownloadingPdf(false);
-      })
-      .catch((err) => {
-        console.error("PDF generation error:", err);
-        setDownloadingPdf(false);
+      // 2. Ensure all images inside resume-print-node are loaded
+      const images = element.querySelectorAll("img");
+      const imagePromises = Array.from(images).map((img) => {
+        if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+        return new Promise((resolve) => {
+          img.onload = () => resolve();
+          img.onerror = () => resolve(); // Avoid blocking if an image fails to load
+        });
       });
+      await Promise.all(imagePromises);
+
+      // 3. Prepare clean filename
+      const rawName = resume?.personal?.name || "Candidate";
+      const cleanName = rawName.trim().replace(/[^a-zA-Z0-9_-]/g, "_");
+      const filename = `${cleanName}_Resume.pdf`;
+
+      // 4. Calibrated A4 PDF options
+      const opt = {
+        margin: [0, 0, 0, 0],
+        filename: filename,
+        image: { type: "jpeg", quality: 0.98 },
+        enableLinks: true,
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          letterRendering: true,
+          windowWidth: 794,
+          scrollY: 0,
+          scrollX: 0
+        },
+        jsPDF: {
+          unit: "mm",
+          format: "a4",
+          orientation: "portrait",
+          compress: true
+        },
+        pagebreak: {
+          mode: ["avoid-all", "css", "legacy"],
+          avoid: [
+            ".pdf-avoid-break",
+            ".resume-entry",
+            ".resume-section-block",
+            ".resume-section-header",
+            "header",
+            "section",
+            "h1",
+            "h2",
+            "h3"
+          ]
+        }
+      };
+
+      await html2pdf().set(opt).from(element).save();
+    } catch (err) {
+      console.error("PDF generation error:", err);
+    } finally {
+      setDownloadingPdf(false);
+    }
   };
 
   // ==========================================================
@@ -221,14 +280,14 @@ function ResumePreview() {
 
   // Categorized Skills handling
   const skillsObj = resume.skills || resume.categorized_skills || {};
-  const isCategorizedSkills =
+  const skillCategories =
     typeof skillsObj === "object" &&
     skillsObj !== null &&
-    !Array.isArray(skillsObj) &&
-    (skillsObj.technical?.length > 0 ||
-      skillsObj.frameworks?.length > 0 ||
-      skillsObj.tools?.length > 0 ||
-      skillsObj.soft?.length > 0);
+    !Array.isArray(skillsObj)
+      ? Object.entries(skillsObj).filter(
+          ([key, val]) => key !== "all" && Array.isArray(val) && val.length > 0
+        )
+      : [];
 
   const flatSkills = Array.isArray(resume.skills)
     ? resume.skills
@@ -331,8 +390,13 @@ function ResumePreview() {
 
         {templateKey ? (
           <div>
-            <div id="resume-print-node" className="bg-white rounded-2xl overflow-hidden shadow-2xl">
-              {renderTemplateComponent()}
+            {/* Dedicated Responsive Center Wrapper for Preview */}
+            <div className="w-full flex justify-center overflow-x-auto pb-4">
+              <div className="rounded-2xl shadow-2xl overflow-hidden border border-white/10 bg-white">
+                <div id="resume-print-node" className="resume-print-root bg-white text-slate-900">
+                  {renderTemplateComponent()}
+                </div>
+              </div>
             </div>
 
             {/* Template Bottom Action Bar */}
@@ -516,13 +580,13 @@ function ResumePreview() {
           )}
 
           {/* ------------------------------------------------------
-              3. Experience & Internships
+              3. Experience & Work History
           ------------------------------------------------------ */}
           {experience.length > 0 && (
             <section className="space-y-6">
               <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-purple-400">
                 <Briefcase size={16} />
-                <h2>Experience & Internships</h2>
+                <h2>Experience & Work History</h2>
               </div>
 
               <div className="space-y-6 pl-1">
@@ -532,7 +596,18 @@ function ResumePreview() {
                   const duration = exp.duration || exp.year || "";
                   const location = exp.location || "";
                   const description = exp.description || "";
+                  const empType = exp.employment_type || (exp.is_internship ? "Internship" : null);
                   const highlights = Array.isArray(exp.highlights) ? exp.highlights : [];
+                  const responsibilities = Array.isArray(exp.responsibilities)
+                    ? exp.responsibilities
+                    : typeof exp.responsibilities === "string" && exp.responsibilities
+                    ? [exp.responsibilities]
+                    : [];
+                  const achievements = Array.isArray(exp.achievements)
+                    ? exp.achievements
+                    : typeof exp.achievements === "string" && exp.achievements
+                    ? [exp.achievements]
+                    : [];
                   const technologies = Array.isArray(exp.technologies)
                     ? exp.technologies
                     : typeof exp.technologies === "string" && exp.technologies
@@ -554,9 +629,9 @@ function ResumePreview() {
                               @ {company}
                             </span>
                           )}
-                          {exp.is_internship && (
+                          {empType && (
                             <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                              Internship
+                              {empType}
                             </span>
                           )}
                           {exp.is_current && (
@@ -578,6 +653,22 @@ function ResumePreview() {
                         </p>
                       )}
 
+                      {responsibilities.length > 0 && (
+                        <ul className="space-y-1 pl-1 pt-1">
+                          {responsibilities.map((resp, rIdx) => (
+                            <li
+                              key={rIdx}
+                              className="text-xs sm:text-sm text-slate-300 flex items-start gap-2"
+                            >
+                              <span className="text-purple-400 font-bold leading-none mt-1">
+                                •
+                              </span>
+                              <span>{resp}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
                       {highlights.length > 0 && (
                         <ul className="space-y-1.5 pl-1 pt-1">
                           {highlights.map((bullet, hIdx) => (
@@ -589,6 +680,22 @@ function ResumePreview() {
                                 •
                               </span>
                               <span>{bullet}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
+                      {achievements.length > 0 && (
+                        <ul className="space-y-1 pl-1 pt-1">
+                          {achievements.map((ach, aIdx) => (
+                            <li
+                              key={aIdx}
+                              className="text-xs sm:text-sm text-emerald-300 flex items-start gap-2"
+                            >
+                              <span className="text-emerald-400 font-bold leading-none mt-1">
+                                ★
+                              </span>
+                              <span><strong>Achievement:</strong> {ach}</span>
                             </li>
                           ))}
                         </ul>
@@ -628,6 +735,7 @@ function ResumePreview() {
                   const degree = edu.degree || edu.course || "Degree";
                   const institution =
                     edu.institution || edu.university || edu.college || "";
+                  const board = edu.board || "";
                   const year = edu.year || edu.duration || "";
                   const score =
                     typeof edu.score === "object"
@@ -639,6 +747,7 @@ function ResumePreview() {
                     : typeof edu.coursework === "string" && edu.coursework
                     ? edu.coursework.split(",").map((s) => s.trim()).filter(Boolean)
                     : [];
+                  const additionalDetails = edu.additional_details || "";
 
                   return (
                     <div
@@ -653,6 +762,7 @@ function ResumePreview() {
                           {institution && (
                             <p className="text-sm text-slate-300 mt-0.5">
                               {institution}
+                              {board ? ` • Board/Council: ${board}` : ""}
                               {location ? ` • ${location}` : ""}
                             </p>
                           )}
@@ -661,7 +771,7 @@ function ResumePreview() {
                         <div className="flex items-center gap-3">
                           {score && (
                             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/15 text-purple-300 border border-purple-500/30">
-                              {score}
+                              Grade: {score}
                             </span>
                           )}
                           {year && (
@@ -675,12 +785,18 @@ function ResumePreview() {
                       {coursework.length > 0 && (
                         <div className="pt-2">
                           <span className="text-xs text-slate-400 font-medium mr-2">
-                            Coursework:
+                            Coursework / Focus:
                           </span>
                           <span className="text-xs text-slate-300">
                             {coursework.join(" • ")}
                           </span>
                         </div>
+                      )}
+
+                      {additionalDetails && (
+                        <p className="text-xs text-slate-400 pt-1 leading-relaxed">
+                          {additionalDetails}
+                        </p>
                       )}
                     </div>
                   );
@@ -690,24 +806,24 @@ function ResumePreview() {
           )}
 
           {/* ------------------------------------------------------
-              5. Skills (Categorized & Unified)
+              5. Skills & Competencies
           ------------------------------------------------------ */}
-          {(isCategorizedSkills || flatSkills.length > 0) && (
+          {(skillCategories.length > 0 || flatSkills.length > 0) && (
             <section className="space-y-4">
               <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-purple-400">
                 <Code2 size={16} />
                 <h2>Skills & Competencies</h2>
               </div>
 
-              {isCategorizedSkills ? (
+              {skillCategories.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-1">
-                  {skillsObj.technical?.length > 0 && (
-                    <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                  {skillCategories.map(([catKey, skills]) => (
+                    <div key={catKey} className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
                       <p className="text-xs uppercase tracking-wider text-purple-300 font-semibold mb-2.5">
-                        Technical & Programming
+                        {formatCategoryTitle(catKey)}
                       </p>
                       <div className="flex flex-wrap gap-1.5">
-                        {skillsObj.technical.map((sk, sIdx) => (
+                        {skills.map((sk, sIdx) => (
                           <span
                             key={sIdx}
                             className="px-2.5 py-1 rounded-md text-xs bg-purple-500/15 text-purple-300 border border-purple-500/30"
@@ -717,61 +833,7 @@ function ResumePreview() {
                         ))}
                       </div>
                     </div>
-                  )}
-
-                  {skillsObj.frameworks?.length > 0 && (
-                    <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
-                      <p className="text-xs uppercase tracking-wider text-blue-300 font-semibold mb-2.5">
-                        Frameworks & Libraries
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {skillsObj.frameworks.map((sk, sIdx) => (
-                          <span
-                            key={sIdx}
-                            className="px-2.5 py-1 rounded-md text-xs bg-blue-500/15 text-blue-300 border border-blue-500/30"
-                          >
-                            {sk}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {skillsObj.tools?.length > 0 && (
-                    <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
-                      <p className="text-xs uppercase tracking-wider text-emerald-300 font-semibold mb-2.5">
-                        Tools, Databases & Platforms
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {skillsObj.tools.map((sk, sIdx) => (
-                          <span
-                            key={sIdx}
-                            className="px-2.5 py-1 rounded-md text-xs bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
-                          >
-                            {sk}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {skillsObj.soft?.length > 0 && (
-                    <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
-                      <p className="text-xs uppercase tracking-wider text-amber-300 font-semibold mb-2.5">
-                        Soft Skills & Methodologies
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {skillsObj.soft.map((sk, sIdx) => (
-                          <span
-                            key={sIdx}
-                            className="px-2.5 py-1 rounded-md text-xs bg-amber-500/15 text-amber-300 border border-amber-500/30"
-                          >
-                            {sk}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  ))}
                 </div>
               ) : (
                 <div className="flex flex-wrap gap-2 pl-1">
@@ -789,20 +851,28 @@ function ResumePreview() {
           )}
 
           {/* ------------------------------------------------------
-              6. Projects
+              6. Projects & Professional Work
           ------------------------------------------------------ */}
           {projects.length > 0 && (
             <section className="space-y-5">
               <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-purple-400">
                 <FolderGit2 size={16} />
-                <h2>Projects</h2>
+                <h2>Projects & Professional Work</h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-1">
                 {projects.map((proj, idx) => {
                   const title = proj.title || proj.name || "Project";
                   const subtitle = proj.subtitle || "";
+                  const role = proj.role || "";
+                  const organization = proj.organization || "";
                   const description = proj.description || "";
+                  const responsibilities = Array.isArray(proj.responsibilities)
+                    ? proj.responsibilities
+                    : typeof proj.responsibilities === "string" && proj.responsibilities
+                    ? [proj.responsibilities]
+                    : [];
+                  const outcomes = proj.outcomes || "";
                   const duration = proj.duration || "";
                   const link = proj.link || proj.url || "";
                   const github = proj.github || "";
@@ -835,9 +905,32 @@ function ResumePreview() {
                           </p>
                         )}
 
+                        {(role || organization) && (
+                          <p className="text-xs text-slate-300 font-medium mt-1">
+                            {role}{role && organization ? " — " : ""}{organization}
+                          </p>
+                        )}
+
                         {description && (
                           <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
                             {description}
+                          </p>
+                        )}
+
+                        {responsibilities.length > 0 && (
+                          <ul className="mt-2 space-y-1">
+                            {responsibilities.map((r, rIdx) => (
+                              <li key={rIdx} className="text-xs text-slate-300 flex items-start gap-1.5">
+                                <span className="text-purple-400">•</span>
+                                <span>{r}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+
+                        {outcomes && (
+                          <p className="text-xs text-slate-200 mt-2 leading-relaxed">
+                            <strong className="text-purple-300">Outcomes:</strong> {outcomes}
                           </p>
                         )}
                       </div>
@@ -866,7 +959,7 @@ function ResumePreview() {
                                 className="inline-flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 font-medium"
                               >
                                 <Globe size={12} />
-                                <span>Live Demo</span>
+                                <span>Link</span>
                               </a>
                             )}
                             {github && (
@@ -877,7 +970,7 @@ function ResumePreview() {
                                 className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200"
                               >
                                 <ExternalLink size={12} />
-                                <span>Repository</span>
+                                <span>Code</span>
                               </a>
                             )}
                           </div>

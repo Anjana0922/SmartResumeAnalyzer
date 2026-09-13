@@ -71,6 +71,7 @@ function DarkTemplate({
   };
 
   const education = toArray(resume?.education);
+  const experience = toArray(resume?.experience);
   const projects = toArray(resume?.projects);
   const certificates = toArray(resume?.certificates);
   const achievements = toArray(resume?.achievements);
@@ -323,6 +324,85 @@ function DarkTemplate({
                     {item.score.label}:{" "}
                     {item.score.value}
                   </span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  };
+
+  // =========================================================
+  // EXPERIENCE
+  // =========================================================
+
+  const renderExperience = () => {
+    if (!experience.length) return null;
+
+    return (
+      <section
+        id="experience"
+        className={`
+          py-20
+          border-t
+          ${border}
+          scroll-mt-24
+        `}
+      >
+        <SectionHeading
+          number="03"
+          title="Experience"
+        />
+
+        <div className="space-y-0">
+          {experience.map((item, index) => (
+            <div
+              key={index}
+              className={`
+                grid
+                md:grid-cols-[160px_1fr]
+                gap-8
+                py-8
+                border-b
+                ${border}
+              `}
+            >
+              <div>
+                <span className={`text-xs font-mono ${faint}`}>
+                  {item.duration || item.year || "—"}
+                </span>
+                {item.location && (
+                  <p className={`text-xs mt-1 ${faint}`}>{item.location}</p>
+                )}
+                {item.employment_type && (
+                  <span className={`inline-block mt-2 px-2 py-0.5 text-[9px] uppercase tracking-wider font-mono ${accentSoft} ${accent}`}>
+                    {item.employment_type}
+                  </span>
+                )}
+              </div>
+
+              <div>
+                <h3 className="text-xl font-semibold">
+                  {item.role || item.title || "Role"}
+                </h3>
+
+                <p className={`mt-1 text-sm font-medium ${secondary}`}>
+                  {item.company || item.organization || "Organization"}
+                </p>
+
+                {item.description && (
+                  <p className={`mt-3 text-sm leading-relaxed ${secondary}`}>
+                    {item.description}
+                  </p>
+                )}
+
+                {Array.isArray(item.highlights) && item.highlights.filter(Boolean).length > 0 && (
+                  <ul className={`mt-3 space-y-1 text-xs ${secondary} list-disc list-inside`}>
+                    {item.highlights.filter(Boolean).map((hl, hIdx) => (
+                      <li key={hIdx}>{hl}</li>
+                    ))}
+                  </ul>
                 )}
               </div>
             </div>
@@ -753,6 +833,7 @@ function DarkTemplate({
 
   const sectionNames = {
     about: "About",
+    experience: "Experience",
     education: "Education",
     skills: "Skills",
     projects: "Projects",
@@ -911,6 +992,12 @@ function DarkTemplate({
               "Your Name"}
           </h1>
 
+          {personal.title && (
+            <p className={`mt-4 text-xl md:text-2xl font-mono ${accent}`}>
+              {personal.title}
+            </p>
+          )}
+
           {/* ACCENT LINE */}
 
           <div
@@ -1011,6 +1098,9 @@ function DarkTemplate({
           switch (section) {
             case "about":
               return renderAbout();
+
+            case "experience":
+              return renderExperience();
 
             case "education":
               return renderEducation();

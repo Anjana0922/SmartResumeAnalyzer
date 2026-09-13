@@ -19,6 +19,7 @@ function PortfolioEditor() {
 
   const [sections, setSections] = useState([
     "about",
+    "experience",
     "education",
     "skills",
     "projects",
@@ -58,6 +59,7 @@ function PortfolioEditor() {
         setSections(
           data.section_order || [
             "about",
+            "experience",
             "education",
             "skills",
             "projects",
@@ -123,6 +125,8 @@ function PortfolioEditor() {
 
       // Content
       about: portfolio.about || "",
+
+      experience: portfolio.experience || [],
 
       education: portfolio.education || [],
 

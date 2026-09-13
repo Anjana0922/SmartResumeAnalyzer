@@ -1,5 +1,18 @@
 import React from "react";
-import { Mail, Phone, MapPin, Globe, ExternalLink, Award, BookOpen } from "lucide-react";
+import { Mail, Phone, MapPin, Globe, ExternalLink } from "lucide-react";
+
+const formatCategoryTitle = (key) => {
+  const k = key.toLowerCase().trim();
+  if (k === "professional") return "Professional Skills";
+  if (k === "technical") return "Technical Skills";
+  if (k === "tools") return "Tools & Systems";
+  if (k === "soft") return "Core Competencies";
+  if (k === "industry") return "Industry Knowledge";
+  if (k === "frameworks") return "Frameworks & Libraries";
+  return key
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+};
 
 export default function TwoColumnTemplate({ resume }) {
   if (!resume) return null;
@@ -28,6 +41,12 @@ export default function TwoColumnTemplate({ resume }) {
     ? skillsObj.all
     : [];
 
+  const skillCategories = typeof skillsObj === "object" && !Array.isArray(skillsObj)
+    ? Object.entries(skillsObj).filter(
+        ([key, val]) => key !== "all" && Array.isArray(val) && val.length > 0
+      )
+    : [];
+
   const photoUrl = personal.photo
     ? personal.photo.startsWith("http")
       ? personal.photo
@@ -35,24 +54,26 @@ export default function TwoColumnTemplate({ resume }) {
     : null;
 
   return (
-    <div className="bg-white text-slate-800 font-sans max-w-4xl mx-auto shadow-xl print:shadow-none print:max-w-none text-sm leading-normal flex flex-col md:flex-row min-h-[1050px]">
-      {/* Left Sidebar (35%) */}
-      <aside className="w-full md:w-[35%] bg-slate-50 border-r border-slate-200 p-6 sm:p-8 flex flex-col justify-between">
-        <div className="space-y-6">
-          {/* Photo & Identity for Mobile / Photo only for Desktop */}
+    <div className="resume-print-root bg-white text-slate-800 font-sans w-[794px] min-h-[1123px] mx-auto text-sm leading-normal flex flex-row box-border">
+      {/* Left Sidebar (270px) */}
+      <aside className="w-[270px] shrink-0 bg-slate-50 border-r border-slate-200 p-6 flex flex-col justify-between box-border">
+        <div className="space-y-5">
+          {/* Photo */}
           {photoUrl && (
-            <div className="flex justify-center mb-4">
+            <div className="flex justify-center mb-3">
               <img
                 src={photoUrl}
                 alt={personal.name || "Candidate"}
-                className="w-28 h-28 sm:w-32 sm:h-32 object-cover rounded-2xl border-4 border-white shadow-md"
+                crossOrigin="anonymous"
+                className="w-28 h-28 object-cover rounded-2xl border-4 border-white shadow-md"
+                style={{ width: "112px", height: "112px", objectFit: "cover" }}
               />
             </div>
           )}
 
           {/* Contact Details */}
-          <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-1.5 mb-3">
+          <div className="resume-section-block">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-1.5 mb-2.5 resume-section-header pdf-avoid-break">
               Contact Info
             </h3>
             <ul className="space-y-2 text-xs text-slate-700">
@@ -82,14 +103,6 @@ export default function TwoColumnTemplate({ resume }) {
                   </a>
                 </li>
               )}
-              {personal.github && (
-                <li className="flex items-center gap-2">
-                  <ExternalLink size={13} className="text-slate-500 shrink-0" />
-                  <a href={personal.github.startsWith("http") ? personal.github : `https://${personal.github}`} target="_blank" rel="noreferrer" className="text-purple-700 hover:underline truncate">
-                    GitHub
-                  </a>
-                </li>
-              )}
               {personal.linkedin && (
                 <li className="flex items-center gap-2">
                   <ExternalLink size={13} className="text-slate-500 shrink-0" />
@@ -98,103 +111,78 @@ export default function TwoColumnTemplate({ resume }) {
                   </a>
                 </li>
               )}
+              {personal.github && (
+                <li className="flex items-center gap-2">
+                  <ExternalLink size={13} className="text-slate-500 shrink-0" />
+                  <a href={personal.github.startsWith("http") ? personal.github : `https://${personal.github}`} target="_blank" rel="noreferrer" className="text-purple-700 hover:underline truncate">
+                    GitHub
+                  </a>
+                </li>
+              )}
             </ul>
           </div>
 
           {/* Categorized Skills */}
-          {(flatSkills.length > 0 || Object.values(skillsObj).some((arr) => arr?.length > 0)) && (
-            <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-1.5 mb-3">
-                Skills & Tech
+          {(flatSkills.length > 0 || skillCategories.length > 0) && (
+            <div className="resume-section-block">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-1.5 mb-2.5 resume-section-header pdf-avoid-break">
+                Skills & Expertise
               </h3>
-              <div className="space-y-3 text-xs">
-                {skillsObj.technical?.length > 0 && (
-                  <div>
-                    <span className="font-semibold text-slate-900 block mb-1">Languages:</span>
-                    <div className="flex flex-wrap gap-1">
-                      {skillsObj.technical.map((s, i) => (
-                        <span key={i} className="px-2 py-0.5 rounded bg-white text-slate-700 border border-slate-200 text-[11px]">
-                          {s}
-                        </span>
-                      ))}
+              <div className="space-y-2.5 text-xs">
+                {skillCategories.length > 0 ? (
+                  skillCategories.map(([catKey, skills]) => (
+                    <div key={catKey} className="resume-entry pdf-avoid-break">
+                      <span className="font-semibold text-slate-900 block mb-1">
+                        {formatCategoryTitle(catKey)}:
+                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {skills.map((s, i) => (
+                          <span key={i} className="px-2 py-0.5 rounded bg-white text-slate-700 border border-slate-200 text-[11px]">
+                            {s}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
-                {skillsObj.frameworks?.length > 0 && (
-                  <div>
-                    <span className="font-semibold text-slate-900 block mb-1">Frameworks:</span>
-                    <div className="flex flex-wrap gap-1">
-                      {skillsObj.frameworks.map((s, i) => (
-                        <span key={i} className="px-2 py-0.5 rounded bg-white text-slate-700 border border-slate-200 text-[11px]">
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {skillsObj.tools?.length > 0 && (
-                  <div>
-                    <span className="font-semibold text-slate-900 block mb-1">Tools:</span>
-                    <div className="flex flex-wrap gap-1">
-                      {skillsObj.tools.map((s, i) => (
-                        <span key={i} className="px-2 py-0.5 rounded bg-white text-slate-700 border border-slate-200 text-[11px]">
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {skillsObj.soft?.length > 0 && (
-                  <div>
-                    <span className="font-semibold text-slate-900 block mb-1">Soft Skills:</span>
-                    <div className="flex flex-wrap gap-1">
-                      {skillsObj.soft.map((s, i) => (
-                        <span key={i} className="px-2 py-0.5 rounded bg-white text-slate-700 border border-slate-200 text-[11px]">
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {!skillsObj.technical?.length && flatSkills.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
+                  ))
+                ) : flatSkills.length > 0 ? (
+                  <div className="flex flex-wrap gap-1 resume-entry pdf-avoid-break">
                     {flatSkills.map((s, i) => (
                       <span key={i} className="px-2 py-0.5 rounded bg-white text-slate-700 border border-slate-200 text-[11px]">
                         {s}
                       </span>
                     ))}
                   </div>
-                )}
+                ) : null}
               </div>
             </div>
           )}
 
           {/* Languages */}
           {languages.length > 0 && (
-            <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-1.5 mb-2.5">
+            <div className="resume-section-block">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-1.5 mb-2 resume-section-header pdf-avoid-break">
                 Languages
               </h3>
               <div className="space-y-1 text-xs text-slate-700">
                 {languages.map((l, i) => (
                   <div key={i} className="flex justify-between">
-                    <span className="font-medium">{l.name}</span>
-                    <span className="text-slate-500 text-[11px]">{l.level}</span>
+                    <span className="font-medium text-slate-900">{l.name}</span>
+                    {l.level && <span className="text-slate-500 text-[11px]">{l.level}</span>}
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Certifications (Sidebar) */}
+          {/* Certifications in sidebar */}
           {certificates.length > 0 && (
-            <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-1.5 mb-2.5">
+            <div className="resume-section-block">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-1.5 mb-2 resume-section-header pdf-avoid-break">
                 Certifications
               </h3>
               <div className="space-y-2 text-xs">
                 {certificates.map((c, i) => (
-                  <div key={i}>
+                  <div key={i} className="resume-entry pdf-avoid-break">
                     <p className="font-semibold text-slate-900">{c.name}</p>
                     <p className="text-slate-500 text-[11px]">{c.issuer} {c.year && `· ${c.year}`}</p>
                   </div>
@@ -204,20 +192,20 @@ export default function TwoColumnTemplate({ resume }) {
           )}
         </div>
 
-        <div className="pt-6 text-[10px] text-slate-600 border-t border-slate-200">
+        <div className="pt-4 text-[10px] text-slate-500 border-t border-slate-200">
           Generated via SmartResume
         </div>
       </aside>
 
-      {/* Right Content Area (65%) */}
-      <main className="w-full md:w-[65%] p-6 sm:p-10 space-y-6">
+      {/* Right Content Area (524px) */}
+      <main className="w-[524px] flex-1 p-7 space-y-5 box-border">
         {/* Name & Title Header */}
-        <div className="border-b-2 border-purple-600 pb-4">
+        <div className="border-b-2 border-purple-600 pb-3 resume-section-block pdf-avoid-break">
           <h1 className="text-3xl font-extrabold text-slate-950 tracking-tight">
             {personal.name || "Candidate Name"}
           </h1>
           {personal.title && (
-            <p className="text-base text-purple-700 font-semibold mt-1">
+            <p className="text-base text-purple-700 font-semibold mt-0.5">
               {personal.title}
             </p>
           )}
@@ -225,12 +213,12 @@ export default function TwoColumnTemplate({ resume }) {
 
         {/* Summary */}
         {summary && (
-          <section>
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-2 flex items-center gap-1.5">
+          <section className="resume-section-block">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-2 flex items-center gap-1.5 resume-section-header pdf-avoid-break">
               <span className="w-2 h-2 rounded-sm bg-purple-600"></span>
               Professional Profile
             </h2>
-            <p className="text-slate-700 text-xs sm:text-sm leading-relaxed text-justify">
+            <p className="text-slate-700 text-xs leading-relaxed text-justify">
               {summary}
             </p>
           </section>
@@ -238,70 +226,102 @@ export default function TwoColumnTemplate({ resume }) {
 
         {/* Experience */}
         {experience.length > 0 && (
-          <section>
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-3 flex items-center gap-1.5">
+          <section className="resume-section-block">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-2.5 flex items-center gap-1.5 resume-section-header pdf-avoid-break">
               <span className="w-2 h-2 rounded-sm bg-purple-600"></span>
-              Experience & Internships
+              Experience & Work History
             </h2>
-            <div className="space-y-4">
-              {experience.map((exp, idx) => (
-                <div key={idx} className="relative pl-3 border-l-2 border-purple-200">
-                  <div className="flex flex-col sm:flex-row sm:items-baseline justify-between">
-                    <div>
-                      <span className="font-bold text-slate-900 text-sm">
-                        {exp.role || "Role"}
-                      </span>
-                      {exp.company && (
-                        <span className="text-slate-600 text-xs font-medium"> @ {exp.company}</span>
-                      )}
-                      {exp.is_internship && (
-                        <span className="ml-2 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">
-                          Intern
+            <div className="space-y-3.5">
+              {experience.map((exp, idx) => {
+                const empType = exp.employment_type || (exp.is_internship ? "Intern" : null);
+                return (
+                  <div key={idx} className="relative pl-3 border-l-2 border-purple-200 resume-entry pdf-avoid-break">
+                    <div className="flex flex-row items-baseline justify-between">
+                      <div>
+                        <span className="font-bold text-slate-900 text-sm">
+                          {exp.role || "Role"}
                         </span>
-                      )}
+                        {exp.company && (
+                          <span className="text-slate-600 text-xs font-medium"> @ {exp.company}</span>
+                        )}
+                        {empType && (
+                          <span className="ml-2 text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">
+                            {empType}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-xs text-slate-500 shrink-0">
+                        {exp.duration || ""}
+                        {exp.location ? ` | ${exp.location}` : ""}
+                      </span>
                     </div>
-                    <span className="text-xs text-slate-500 shrink-0">
-                      {exp.duration || ""}
-                    </span>
+
+                    {exp.description && (
+                      <p className="text-slate-700 text-xs mt-1 leading-relaxed">
+                        {exp.description}
+                      </p>
+                    )}
+
+                    {exp.responsibilities && (
+                      <div className="mt-1 text-xs text-slate-700">
+                        {Array.isArray(exp.responsibilities) ? (
+                          <ul className="list-disc list-inside space-y-0.5">
+                            {exp.responsibilities.filter(Boolean).map((r, rIdx) => (
+                              <li key={rIdx}>{r}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p>{exp.responsibilities}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {Array.isArray(exp.highlights) && exp.highlights.length > 0 && (
+                      <ul className="list-disc list-inside mt-1 space-y-0.5 text-xs text-slate-700">
+                        {exp.highlights.filter(Boolean).map((hl, hIdx) => (
+                          <li key={hIdx}>{hl}</li>
+                        ))}
+                      </ul>
+                    )}
+
+                    {exp.achievements && (
+                      <div className="mt-1 text-xs text-slate-700">
+                        {Array.isArray(exp.achievements) ? (
+                          <ul className="list-disc list-inside space-y-0.5">
+                            {exp.achievements.filter(Boolean).map((ach, aIdx) => (
+                              <li key={aIdx}><strong className="text-slate-900">Achievement:</strong> {ach}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p><strong className="text-slate-900">Achievement:</strong> {exp.achievements}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {exp.technologies && (
+                      <p className="text-[11px] text-slate-500 mt-1">
+                        <strong>Skills / Tools:</strong>{" "}
+                        {Array.isArray(exp.technologies) ? exp.technologies.join(", ") : exp.technologies}
+                      </p>
+                    )}
                   </div>
-
-                  {exp.description && (
-                    <p className="text-slate-700 text-xs mt-1 leading-relaxed">
-                      {exp.description}
-                    </p>
-                  )}
-
-                  {Array.isArray(exp.highlights) && exp.highlights.length > 0 && (
-                    <ul className="list-disc list-inside mt-1 space-y-0.5 text-xs text-slate-700">
-                      {exp.highlights.filter(Boolean).map((hl, hIdx) => (
-                        <li key={hIdx}>{hl}</li>
-                      ))}
-                    </ul>
-                  )}
-
-                  {exp.technologies && (
-                    <p className="text-[11px] text-slate-500 mt-1">
-                      <strong>Tech:</strong>{" "}
-                      {Array.isArray(exp.technologies) ? exp.technologies.join(", ") : exp.technologies}
-                    </p>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}
 
         {/* Education */}
         {education.length > 0 && (
-          <section>
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-3 flex items-center gap-1.5">
+          <section className="resume-section-block">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-2.5 flex items-center gap-1.5 resume-section-header pdf-avoid-break">
               <span className="w-2 h-2 rounded-sm bg-purple-600"></span>
               Education
             </h2>
             <div className="space-y-3">
               {education.map((edu, idx) => (
-                <div key={idx} className="relative pl-3 border-l-2 border-purple-200">
-                  <div className="flex flex-col sm:flex-row sm:items-baseline justify-between">
+                <div key={idx} className="relative pl-3 border-l-2 border-purple-200 resume-entry pdf-avoid-break">
+                  <div className="flex flex-row items-baseline justify-between">
                     <div>
                       <span className="font-bold text-slate-900 text-sm">
                         {edu.degree || "Degree"}
@@ -309,8 +329,11 @@ export default function TwoColumnTemplate({ resume }) {
                       {edu.institution && (
                         <span className="text-slate-600 text-xs font-medium">, {edu.institution}</span>
                       )}
+                      {edu.board && (
+                        <span className="text-slate-500 text-xs ml-1">(Board: {edu.board})</span>
+                      )}
                       {edu.score && (
-                        <span className="text-xs text-slate-500 ml-1.5">({edu.score})</span>
+                        <span className="text-xs text-slate-500 ml-1.5">Grade: {edu.score}</span>
                       )}
                     </div>
                     <span className="text-xs text-slate-500 shrink-0">{edu.year || ""}</span>
@@ -320,30 +343,35 @@ export default function TwoColumnTemplate({ resume }) {
                       Coursework: {edu.coursework.join(", ")}
                     </p>
                   )}
+                  {edu.additional_details && (
+                    <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                      {edu.additional_details}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
           </section>
         )}
 
-        {/* Projects */}
+        {/* Projects / Professional Work */}
         {projects.length > 0 && (
-          <section>
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-3 flex items-center gap-1.5">
+          <section className="resume-section-block">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-2.5 flex items-center gap-1.5 resume-section-header pdf-avoid-break">
               <span className="w-2 h-2 rounded-sm bg-purple-600"></span>
-              Projects
+              Projects & Professional Work
             </h2>
             <div className="space-y-3">
               {projects.map((proj, idx) => (
-                <div key={idx} className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <div key={idx} className="bg-slate-50 p-3 rounded-xl border border-slate-200 resume-entry pdf-avoid-break">
                   <div className="flex justify-between items-baseline">
-                    <span className="font-bold text-slate-900 text-xs sm:text-sm">
+                    <span className="font-bold text-slate-900 text-xs">
                       {proj.title}
                     </span>
-                    <div className="flex gap-2 text-xs">
+                    <div className="flex gap-2 text-xs shrink-0">
                       {proj.link && (
                         <a href={proj.link} target="_blank" rel="noreferrer" className="text-purple-700 font-medium hover:underline inline-flex items-center gap-0.5 text-[11px]">
-                          Demo <ExternalLink size={9} />
+                          Link <ExternalLink size={9} />
                         </a>
                       )}
                       {proj.github && (
@@ -351,11 +379,35 @@ export default function TwoColumnTemplate({ resume }) {
                           Code <ExternalLink size={9} />
                         </a>
                       )}
+                      {proj.duration && <span className="text-slate-500 text-[11px]">{proj.duration}</span>}
                     </div>
                   </div>
+                  {(proj.role || proj.organization) && (
+                    <p className="text-xs text-purple-700 font-medium mt-0.5">
+                      {proj.role}{proj.role && proj.organization ? " — " : ""}{proj.organization}
+                    </p>
+                  )}
                   {proj.description && (
                     <p className="text-slate-700 text-xs mt-1 leading-relaxed">
                       {proj.description}
+                    </p>
+                  )}
+                  {proj.responsibilities && (
+                    <div className="mt-1 text-xs text-slate-600">
+                      {Array.isArray(proj.responsibilities) ? (
+                        <ul className="list-disc list-inside space-y-0.5">
+                          {proj.responsibilities.filter(Boolean).map((r, rIdx) => (
+                            <li key={rIdx}>{r}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p>{proj.responsibilities}</p>
+                      )}
+                    </div>
+                  )}
+                  {proj.outcomes && (
+                    <p className="text-xs text-slate-800 mt-1">
+                      <strong className="text-slate-900">Outcomes:</strong> {proj.outcomes}
                     </p>
                   )}
                   {proj.technologies && (
@@ -371,10 +423,10 @@ export default function TwoColumnTemplate({ resume }) {
 
         {/* Achievements */}
         {achievements.length > 0 && (
-          <section>
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-2 flex items-center gap-1.5">
+          <section className="resume-section-block">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-2 flex items-center gap-1.5 resume-section-header pdf-avoid-break">
               <span className="w-2 h-2 rounded-sm bg-purple-600"></span>
-              Achievements
+              Honors & Achievements
             </h2>
             <ul className="list-disc list-inside space-y-1 text-xs text-slate-700">
               {achievements.map((ach, idx) => (
@@ -388,17 +440,17 @@ export default function TwoColumnTemplate({ resume }) {
         {customSections.length > 0 && (
           <div className="space-y-4">
             {customSections.map((sec, sIdx) => (
-              <section key={sIdx}>
-                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-2 flex items-center gap-1.5">
+              <section key={sIdx} className="resume-section-block">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-2 flex items-center gap-1.5 resume-section-header pdf-avoid-break">
                   <span className="w-2 h-2 rounded-sm bg-purple-600"></span>
                   {sec.heading}
                 </h2>
                 <div className="space-y-2">
                   {sec.items?.map((it, iIdx) => (
-                    <div key={iIdx} className="text-xs">
+                    <div key={iIdx} className="text-xs resume-entry pdf-avoid-break">
                       <div className="flex justify-between font-semibold text-slate-900">
                         <span>{it.title}</span>
-                        {it.date && <span className="text-slate-500 font-normal">{it.date}</span>}
+                        {it.date && <span className="text-slate-500 font-normal shrink-0">{it.date}</span>}
                       </div>
                       {it.subtitle && <p className="text-slate-600">{it.subtitle}</p>}
                       {it.description && <p className="text-slate-700 mt-0.5">{it.description}</p>}

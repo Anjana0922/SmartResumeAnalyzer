@@ -22,6 +22,7 @@ function normalizeResumeData(raw = {}, rawText = "") {
         github: String(rawPersonal.github || "").trim(),
         linkedin: String(rawPersonal.linkedin || "").trim(),
         portfolio_url: String(rawPersonal.portfolio_url || rawPersonal.website || "").trim(),
+        photo: String(rawPersonal.photo || safeObj.photo_path || safeObj.metadata?.photo_path || "").trim(),
     };
 
     // 2. Summary / About (ensuring dual-compatibility)
@@ -33,26 +34,36 @@ function normalizeResumeData(raw = {}, rawText = "") {
     const education = rawEducation.map((item) => {
         const edu = typeof item === "object" && item !== null ? item : {};
         return {
-            degree: String(edu.degree || edu.course || "").trim(),
-            institution: String(edu.institution || edu.institute || edu.university || edu.college || "").trim(),
+            degree: String(edu.degree || edu.course || edu.qualification || "").trim(),
+            institution: String(edu.institution || edu.institute || edu.university || edu.college || edu.school || "").trim(),
+            board: String(edu.board || edu.university_board || "").trim(),
             location: String(edu.location || "").trim(),
             year: String(edu.year || edu.duration || "").trim(),
-            score: String(edu.score?.value || edu.score || edu.gpa || edu.percentage || "").trim(),
-            coursework: Array.isArray(edu.coursework) ? edu.coursework.map(String) : [],
+            start_year: String(edu.start_year || "").trim(),
+            end_year: String(edu.end_year || "").trim(),
+            score: String(edu.score?.value || edu.score || edu.gpa || edu.percentage || edu.grade || "").trim(),
+            coursework: Array.isArray(edu.coursework)
+                ? edu.coursework.map(String)
+                : typeof edu.coursework === "string" && edu.coursework.trim()
+                ? edu.coursework.split(",").map((s) => s.trim()).filter(Boolean)
+                : [],
+            additional_details: String(edu.additional_details || edu.details || "").trim(),
         };
     }).filter((item) => item.degree || item.institution);
 
-    // 4. Experience & Internships
+    // 4. Experience & Internships (profession-independent)
     const rawExp = Array.isArray(safeObj.experience) ? safeObj.experience : [];
     const experience = rawExp.map((item) => {
         const exp = typeof item === "object" && item !== null ? item : {};
         const role = String(exp.role || exp.title || exp.position || "").trim();
-        const company = String(exp.company || exp.organization || "").trim();
+        const company = String(exp.company || exp.organization || exp.hospital || exp.school || "").trim();
         const description = String(exp.description || "").trim();
+        const employment_type = String(exp.employment_type || exp.type || "").trim();
 
         // Auto-detect internship status
         const isInternship = Boolean(
             exp.is_internship === true ||
+            /intern(ship)?/i.test(employment_type) ||
             /intern(ship)?/i.test(role) ||
             /intern(ship)?/i.test(description)
         );
@@ -62,69 +73,94 @@ function normalizeResumeData(raw = {}, rawText = "") {
             company,
             location: String(exp.location || "").trim(),
             duration: String(exp.duration || exp.year || "").trim(),
-            is_current: Boolean(exp.is_current || /present|current/i.test(exp.duration || "")),
+            start_date: String(exp.start_date || "").trim(),
+            end_date: String(exp.end_date || "").trim(),
+            employment_type,
+            is_current: Boolean(exp.is_current || /present|current/i.test(exp.duration || exp.end_date || "")),
             is_internship: isInternship,
             description,
-            highlights: Array.isArray(exp.highlights) ? exp.highlights.map(String) : [],
-            technologies: Array.isArray(exp.technologies) ? exp.technologies.map(String) : [],
+            responsibilities: String(exp.responsibilities || "").trim(),
+            highlights: Array.isArray(exp.highlights)
+                ? exp.highlights.map(String).filter(Boolean)
+                : typeof exp.highlights === "string" && exp.highlights.trim()
+                ? [exp.highlights.trim()]
+                : [],
+            achievements: String(exp.achievements || "").trim(),
+            technologies: Array.isArray(exp.technologies)
+                ? exp.technologies.map(String)
+                : typeof exp.technologies === "string" && exp.technologies.trim()
+                ? exp.technologies.split(",").map((s) => s.trim()).filter(Boolean)
+                : [],
         };
     }).filter((item) => item.role || item.company);
 
-    // 5. Skills (both flat array for existing frontend compatibility and categorized)
+    // 5. Skills (dynamic categories for any profession + flat arrays)
     let flatSkills = [];
     let categorizedSkills = {
+        professional: [],
         technical: [],
         frameworks: [],
         tools: [],
         soft: [],
+        industry: [],
+        languages: [],
+        other: [],
         all: [],
     };
 
     if (Array.isArray(safeObj.skills)) {
         flatSkills = safeObj.skills.map((s) => String(s).trim()).filter(Boolean);
-        categorizedSkills.technical = [...flatSkills];
+        categorizedSkills.professional = [...flatSkills];
         categorizedSkills.all = [...flatSkills];
     } else if (typeof safeObj.skills === "object" && safeObj.skills !== null) {
         const rawSkills = safeObj.skills;
         for (const [key, val] of Object.entries(rawSkills)) {
             if (Array.isArray(val)) {
                 const cleaned = val.map((s) => String(s).trim()).filter(Boolean);
-                if (key in categorizedSkills) {
-                    categorizedSkills[key] = cleaned;
-                } else {
-                    categorizedSkills.technical.push(...cleaned);
+                categorizedSkills[key] = cleaned;
+                if (key !== "all") {
+                    flatSkills.push(...cleaned);
                 }
-                flatSkills.push(...cleaned);
             }
         }
         flatSkills = Array.from(new Set(flatSkills));
         categorizedSkills.all = flatSkills;
     }
 
-    // 6. Projects
+    // 6. Projects / Professional Work
     const rawProjects = Array.isArray(safeObj.projects) ? safeObj.projects : [];
     const projects = rawProjects.map((item) => {
         const proj = typeof item === "object" && item !== null ? item : {};
         return {
             title: String(proj.title || proj.name || "").trim(),
             subtitle: String(proj.subtitle || "").trim(),
+            role: String(proj.role || "").trim(),
+            organization: String(proj.organization || proj.client || proj.company || "").trim(),
+            start_date: String(proj.start_date || "").trim(),
+            end_date: String(proj.end_date || "").trim(),
             description: String(proj.description || "").trim(),
-            technologies: Array.isArray(proj.technologies) ? proj.technologies.map(String) : [],
+            responsibilities: String(proj.responsibilities || "").trim(),
+            outcomes: String(proj.outcomes || proj.achievements || "").trim(),
+            technologies: Array.isArray(proj.technologies)
+                ? proj.technologies.map(String)
+                : typeof proj.technologies === "string" && proj.technologies.trim()
+                ? proj.technologies.split(",").map((s) => s.trim()).filter(Boolean)
+                : [],
             link: String(proj.link || proj.url || "").trim(),
             github: String(proj.github || "").trim(),
             duration: String(proj.duration || "").trim(),
         };
     }).filter((item) => item.title || item.description);
 
-    // 7. Certificates
+    // 7. Certificates & Training
     const rawCerts = Array.isArray(safeObj.certificates || safeObj.certifications) ? (safeObj.certificates || safeObj.certifications) : [];
     const certificates = rawCerts.map((item) => {
         const cert = typeof item === "object" && item !== null ? item : {};
         return {
             name: String(cert.name || cert.title || "").trim(),
-            issuer: String(cert.issuer || cert.organization || "").trim(),
+            issuer: String(cert.issuer || cert.organization || cert.authority || "").trim(),
             year: String(cert.year || cert.date || "").trim(),
-            link: String(cert.link || cert.url || "").trim(),
+            link: String(cert.link || cert.url || cert.credential_id || "").trim(),
         };
     }).filter((item) => item.name);
 
@@ -153,12 +189,12 @@ function normalizeResumeData(raw = {}, rawText = "") {
 
     // 10. Custom / Additional Sections
     const rawCustom = Array.isArray(safeObj.custom_sections) ? safeObj.custom_sections : [];
-    const custom_sections = rawCustom.map((item) => {
-        const sec = typeof item === "object" && item !== null ? item : {};
+    const custom_sections = rawCustom.map((sec) => {
+        const itemObj = typeof sec === "object" && sec !== null ? sec : {};
         return {
-            heading: String(sec.heading || sec.title || "Additional Section").trim(),
-            items: Array.isArray(sec.items)
-                ? sec.items.map((i) => ({
+            heading: String(itemObj.heading || itemObj.title || "Additional Section").trim(),
+            items: Array.isArray(itemObj.items)
+                ? itemObj.items.map((i) => ({
                     title: String(i.title || "").trim(),
                     subtitle: String(i.subtitle || "").trim(),
                     date: String(i.date || "").trim(),
@@ -173,6 +209,11 @@ function normalizeResumeData(raw = {}, rawText = "") {
             version: "1.0",
             source: safeObj.metadata?.source || "upload",
             user_category: safeObj.metadata?.user_category || "Student",
+            career_target: String(safeObj.metadata?.career_target || "").trim(),
+            title: personal.title,
+            location: personal.location,
+            portfolio_url: personal.portfolio_url,
+            photo_path: personal.photo,
             last_updated: safeObj.metadata?.last_updated || new Date().toISOString(),
         },
         personal,
@@ -181,10 +222,7 @@ function normalizeResumeData(raw = {}, rawText = "") {
         education,
         experience,
         skills: {
-            technical: categorizedSkills.technical || [],
-            frameworks: categorizedSkills.frameworks || [],
-            tools: categorizedSkills.tools || [],
-            soft: categorizedSkills.soft || [],
+            ...categorizedSkills,
             all: categorizedSkills.all || flatSkills || [],
         },
         categorized_skills: categorizedSkills,
@@ -209,12 +247,12 @@ Guidelines:
 2. Summary/About: Extract or synthesize a compelling 2-4 sentence professional summary (for Job Seekers) or career objective (for Students).
 3. Education: Extract degree, institution, location, graduation year/range, GPA/percentage, and notable coursework.
 4. Experience & Internships: Extract work history and internships. For each, capture role, company, location, duration, and bullet points/descriptions. Flag internships explicitly with "is_internship": true.
-5. Skills: Extract all skills. Separate them into technical, frameworks, tools, soft skills, and provide a comprehensive "all" array.
-6. Projects: Extract project title, subtitle, description, technologies used (as string array), live link, and GitHub repository URL.
+5. Skills: Extract all skills. Separate them into professional, technical, tools, soft skills, industry knowledge, and provide a comprehensive "all" array.
+6. Projects & Professional Work: Extract project or work title, subtitle, role, organization, description, technologies/tools used, live link, and repository/code URL.
 7. Certifications: Extract certification name, issuing organization, and year.
 8. Achievements: Extract honors, awards, publications, and notable milestones as bullet strings.
 9. Languages: Extract spoken/written languages and proficiency level (Native, Fluent, Intermediate, Basic) if mentioned.
-10. Dynamic/Additional Sections: If the resume contains custom sections (e.g., Volunteer Work, Publications, Extracurricular Activities, Hackathons, Leadership), capture them under "custom_sections" with heading and structured item objects.
+10. Dynamic/Additional Sections: If the resume contains custom sections (e.g., Clinical Rotations, Publications, Research, Teaching, Volunteer Work, Leadership), capture them under "custom_sections" with heading and structured item objects.
 11. Output: Return pure JSON without markdown code fences or conversational text.
 `;
 
@@ -229,7 +267,7 @@ async function parseWithAI(resumeText) {
         throw new Error("GEMINI_API_KEY is not configured in environment variables.");
     }
 
-    const modelName = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+    const modelName = process.env.GEMINI_MODEL || "gemini-2.0-flash";
     const ai = new GoogleGenAI({ apiKey });
 
     const prompt = `

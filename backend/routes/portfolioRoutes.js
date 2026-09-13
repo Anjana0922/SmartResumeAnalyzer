@@ -2,6 +2,11 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db");
 
+// Ensure experience column exists in portfolio table
+db.run("ALTER TABLE portfolio ADD COLUMN experience TEXT", (err) => {
+    // Column already exists or table altered successfully
+});
+
 // =====================================================
 // GET PORTFOLIO BY PORTFOLIO ID
 // GET /api/portfolio/:portfolioId
@@ -39,11 +44,19 @@ router.get("/:portfolioId", (req, res) => {
                 ? JSON.parse(portfolio.personal)
                 : {
                     name: "",
+                    title: "",
                     email: "",
                     phone: "",
+                    location: "",
                     github: "",
-                    linkedin: ""
+                    linkedin: "",
+                    portfolio_url: ""
                 };
+
+            // Experience
+            portfolio.experience = portfolio.experience
+                ? JSON.parse(portfolio.experience)
+                : [];
 
             // Education
             portfolio.education = portfolio.education
@@ -80,6 +93,7 @@ router.get("/:portfolioId", (req, res) => {
                 ? JSON.parse(portfolio.section_order)
                 : [
                     "about",
+                    "experience",
                     "education",
                     "skills",
                     "projects",
@@ -120,6 +134,7 @@ router.post("/", (req, res) => {
         theme,
         photo_path,
         about,
+        experience,
         education,
         skills,
         projects,
@@ -153,7 +168,9 @@ router.post("/", (req, res) => {
             email,
             phone,
             github,
-            linkedin
+            linkedin,
+            experience,
+            metadata
         FROM Resume_Details
         WHERE resume_id = ?
     `;
@@ -191,19 +208,45 @@ router.post("/", (req, res) => {
             // Personal details automatically taken from resume
             // -------------------------------------------------
 
+            let meta = {};
+            try {
+                meta = JSON.parse(resumeDetails.metadata || "{}");
+            } catch (e) {
+                meta = {};
+            }
+
             const personal = {
 
                 name: resumeDetails.name || "",
+
+                title: meta.title || "",
 
                 email: resumeDetails.email || "",
 
                 phone: resumeDetails.phone || "",
 
+                location: meta.location || "",
+
                 github: resumeDetails.github || "",
 
-                linkedin: resumeDetails.linkedin || ""
+                linkedin: resumeDetails.linkedin || "",
+
+                portfolio_url: meta.portfolio_url || ""
 
             };
+
+            let resumeExperience = [];
+            if (experience && Array.isArray(experience)) {
+                resumeExperience = experience;
+            } else {
+                try {
+                    resumeExperience = JSON.parse(resumeDetails.experience || "[]");
+                } catch (e) {
+                    resumeExperience = [];
+                }
+            }
+
+            const resolvedPhoto = photo_path || meta.photo_path || null;
 
 
             // -------------------------------------------------
@@ -219,6 +262,7 @@ router.post("/", (req, res) => {
                     photo_path,
                     personal,
                     about,
+                    experience,
                     education,
                     skills,
                     projects,
@@ -228,7 +272,7 @@ router.post("/", (req, res) => {
                     section_order,
                     generated_date
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
             `;
 
 
@@ -240,11 +284,13 @@ router.post("/", (req, res) => {
 
                 theme || "light",
 
-                photo_path || null,
+                resolvedPhoto,
 
                 JSON.stringify(personal),
 
                 about || "",
+
+                JSON.stringify(resumeExperience || []),
 
                 JSON.stringify(education || []),
 
@@ -261,6 +307,7 @@ router.post("/", (req, res) => {
                 JSON.stringify(
                     section_order || [
                         "about",
+                        "experience",
                         "education",
                         "skills",
                         "projects",
@@ -332,6 +379,7 @@ router.put("/:portfolioId", (req, res) => {
         theme,
         photo_path,
         about,
+        experience,
         education,
         skills,
         projects,
@@ -350,6 +398,7 @@ router.put("/:portfolioId", (req, res) => {
             theme = ?,
             photo_path = ?,
             about = ?,
+            experience = ?,
             education = ?,
             skills = ?,
             projects = ?,
@@ -366,10 +415,13 @@ router.put("/:portfolioId", (req, res) => {
         JSON.stringify(
             personal || {
                 name: "",
+                title: "",
                 email: "",
                 phone: "",
+                location: "",
                 github: "",
-                linkedin: ""
+                linkedin: "",
+                portfolio_url: ""
             }
         ),
 
@@ -380,6 +432,8 @@ router.put("/:portfolioId", (req, res) => {
         photo_path || null,
 
         about || "",
+
+        JSON.stringify(experience || []),
 
         JSON.stringify(education || []),
 

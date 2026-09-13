@@ -28,7 +28,7 @@ function TemplateSelection() {
     {
       name: "tech",
       title: "Tech",
-      description: "Developer focused",
+      description: "Modern and structured",
       className: "bg-[#dceee8]",
     },
     {
@@ -82,6 +82,12 @@ function TemplateSelection() {
       setCreating(true);
       setError("");
 
+      const photoUrl =
+        resume.metadata?.photo_path ||
+        resume.personal?.photo ||
+        resume.photo_path ||
+        null;
+
       const portfolioData = {
         resume_id: resumeId,
 
@@ -89,9 +95,11 @@ function TemplateSelection() {
 
         theme: selectedTemplate === "dark" ? "dark" : "light",
 
-        photo_path: null,
+        photo_path: photoUrl,
 
-        about: resume.about || "",
+        about: resume.about || resume.summary || "",
+
+        experience: resume.experience || [],
 
         education: resume.education || [],
 
@@ -99,7 +107,7 @@ function TemplateSelection() {
 
         projects: resume.projects || [],
 
-        certificates: resume.certificates || [],
+        certificates: resume.certificates || resume.certifications || [],
 
         achievements: resume.achievements || [],
 
@@ -107,6 +115,7 @@ function TemplateSelection() {
 
         section_order: [
           "about",
+          "experience",
           "education",
           "skills",
           "projects",

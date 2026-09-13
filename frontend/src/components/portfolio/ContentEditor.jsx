@@ -30,6 +30,7 @@ function ContentEditor({ resume, setResume }) {
   };
 
   const skills = toArray(resume.skills);
+  const experience = toArray(resume.experience);
   const education = toArray(resume.education);
   const projects = toArray(resume.projects);
   const certificates = toArray(resume.certificates);
@@ -58,6 +59,44 @@ function ContentEditor({ resume, setResume }) {
     setResume({
       ...resume,
       about: value,
+    });
+  };
+
+  // ==========================================
+  // EXPERIENCE
+  // ==========================================
+
+  const updateExperience = (index, field, value) => {
+    const updated = [...experience];
+    updated[index] = { ...(updated[index] || {}), [field]: value };
+    setResume({
+      ...resume,
+      experience: updated,
+    });
+  };
+
+  const deleteExperience = (index) => {
+    const updated = [...experience];
+    updated.splice(index, 1);
+    setResume({
+      ...resume,
+      experience: updated,
+    });
+  };
+
+  const addExperience = () => {
+    setResume({
+      ...resume,
+      experience: [
+        ...experience,
+        {
+          role: "",
+          company: "",
+          location: "",
+          duration: "",
+          description: "",
+        },
+      ],
     });
   };
 
@@ -335,6 +374,22 @@ function ContentEditor({ resume, setResume }) {
 
           <div>
             <label className="block text-sm text-gray-400 mb-2">
+              Professional Title
+            </label>
+
+            <input
+              type="text"
+              value={resume.personal?.title || ""}
+              placeholder="e.g. Science Teacher, Nurse Specialist, Senior Accountant"
+              onChange={(e) =>
+                updatePersonal("title", e.target.value)
+              }
+              className={inputClass}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">
               Email
             </label>
 
@@ -380,6 +435,22 @@ function ContentEditor({ resume, setResume }) {
 
           <div>
             <label className="block text-sm text-gray-400 mb-2">
+              Portfolio / Website URL
+            </label>
+
+            <input
+              type="text"
+              value={resume.personal?.portfolio_url || ""}
+              placeholder="https://yourwebsite.com"
+              onChange={(e) =>
+                updatePersonal("portfolio_url", e.target.value)
+              }
+              className={inputClass}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">
               LinkedIn
             </label>
 
@@ -395,7 +466,7 @@ function ContentEditor({ resume, setResume }) {
 
           <div>
             <label className="block text-sm text-gray-400 mb-2">
-              GitHub
+              GitHub (Optional)
             </label>
 
             <input
@@ -434,6 +505,102 @@ function ContentEditor({ resume, setResume }) {
           placeholder="Write something about yourself..."
         />
 
+      </div>
+
+
+      {/* =====================================
+          EXPERIENCE
+      ===================================== */}
+
+      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wider">
+              Experience
+            </p>
+            <h2 className="text-lg font-semibold mt-1">
+              Work History & Experience
+            </h2>
+          </div>
+
+          <button
+            type="button"
+            onClick={addExperience}
+            className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-xs font-medium transition"
+          >
+            + Add Experience
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {experience.map((exp, index) => (
+            <div
+              key={index}
+              className="p-4 rounded-xl border border-white/10 bg-black/20 space-y-3"
+            >
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-purple-400 font-semibold uppercase">
+                  Role #{index + 1}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => deleteExperience(index)}
+                  className="px-2.5 py-1 rounded text-xs bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                >
+                  Delete
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <input
+                  type="text"
+                  placeholder="Job Title / Role"
+                  value={exp.role || ""}
+                  onChange={(e) => updateExperience(index, "role", e.target.value)}
+                  className={inputClass}
+                />
+
+                <input
+                  type="text"
+                  placeholder="Organization / Company / School / Hospital"
+                  value={exp.company || ""}
+                  onChange={(e) => updateExperience(index, "company", e.target.value)}
+                  className={inputClass}
+                />
+
+                <input
+                  type="text"
+                  placeholder="Location"
+                  value={exp.location || ""}
+                  onChange={(e) => updateExperience(index, "location", e.target.value)}
+                  className={inputClass}
+                />
+
+                <input
+                  type="text"
+                  placeholder="Duration (e.g. 2021 - Present)"
+                  value={exp.duration || ""}
+                  onChange={(e) => updateExperience(index, "duration", e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+
+              <textarea
+                placeholder="Responsibilities, achievements, or work summary..."
+                value={exp.description || ""}
+                onChange={(e) => updateExperience(index, "description", e.target.value)}
+                rows={3}
+                className={`${inputClass} resize-none`}
+              />
+            </div>
+          ))}
+
+          {experience.length === 0 && (
+            <p className="text-xs text-gray-500 italic">No experience added yet. Click "+ Add Experience" above to add your work history.</p>
+          )}
+        </div>
       </div>
 
 

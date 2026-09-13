@@ -42,3 +42,58 @@ a {
 #root {
   min-height: 100vh;
 }
+
+/* ========================================================
+   PDF Export & Print Optimizations
+======================================================== */
+.resume-print-root {
+  width: 794px;
+  min-height: 1123px;
+  box-sizing: border-box;
+  background-color: #ffffff;
+  color: #0f172a;
+  margin: 0 auto;
+  position: relative;
+  overflow: visible;
+}
+
+/* Page break control for clean PDF chunks */
+.pdf-avoid-break,
+.resume-entry,
+.resume-section-header,
+.resume-section-block {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}
+
+.resume-section-header {
+  break-after: avoid !important;
+  page-break-after: avoid !important;
+}
+
+.pdf-page-break-before {
+  break-before: page !important;
+  page-break-before: always !important;
+}
+
+/* Print media rules */
+@media print {
+  body {
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .resume-print-root {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+  }
+}

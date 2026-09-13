@@ -21,8 +21,37 @@ import {
   Eye,
   Camera,
   Upload,
-  Loader2
+  Loader2,
+  Target,
 } from "lucide-react";
+
+export const CAREER_TARGET_OPTIONS = [
+  "Teacher / Educator",
+  "Doctor / Physician",
+  "Nurse / Healthcare Professional",
+  "Accountant / Auditor / Financial Analyst",
+  "Sales / Business Development",
+  "Marketing / Content / Social Media",
+  "Mechanical / Civil / Electrical Engineer",
+  "Researcher / Scientist",
+  "Graphic / UI/UX / Product Designer",
+  "Software Developer / Data / IT",
+  "Student / Fresher",
+  "Banking & Finance Professional",
+  "Human Resources / Recruiter",
+  "Operations / Logistics / Supply Chain",
+  "Legal / Compliance Professional",
+  "Hospitality / Customer Service",
+  "Other (Custom Role)"
+];
+
+export const DEFAULT_SKILL_CATEGORIES = [
+  { key: "professional", label: "Professional & Domain Skills", placeholder: "e.g. Curriculum Planning, Patient Care, Financial Auditing, B2B Sales", badgeColor: "bg-purple-500/20 text-purple-300 border-purple-500/30" },
+  { key: "technical", label: "Technical & Specialized Skills", placeholder: "e.g. Statistical Analysis, Clinical Diagnostics, Tax Compliance, Python", badgeColor: "bg-blue-500/20 text-blue-300 border-blue-500/30" },
+  { key: "tools", label: "Tools, Software & Platforms", placeholder: "e.g. Microsoft Excel, Salesforce, Canva, EMR Systems, QuickBooks, Git", badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" },
+  { key: "soft", label: "Soft & Interpersonal Skills", placeholder: "e.g. Communication, Empathy, Leadership, Classroom Management, Negotiation", badgeColor: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
+  { key: "industry", label: "Industry Knowledge & Regulations", placeholder: "e.g. HIPAA Compliance, GAAP, Educational Standards, Market Analysis", badgeColor: "bg-rose-500/20 text-rose-300 border-rose-500/30" },
+];
 
 function CreateResume() {
   const navigate = useNavigate();
@@ -44,6 +73,9 @@ function CreateResume() {
   // -------------------------------------------------------------
   // Form State
   // -------------------------------------------------------------
+  const [careerTarget, setCareerTarget] = useState("");
+  const [customCareerTarget, setCustomCareerTarget] = useState("");
+
   const [personal, setPersonal] = useState({
     name: storedUser?.full_name || "",
     title: "",
@@ -62,10 +94,12 @@ function CreateResume() {
     {
       degree: "",
       institution: "",
+      board: "",
       location: "",
       year: "",
       score: "",
       coursework: "",
+      additional_details: "",
     },
   ]);
 
@@ -75,34 +109,46 @@ function CreateResume() {
       company: "",
       location: "",
       duration: "",
+      employment_type: "Full-time",
       is_current: false,
       is_internship: false,
       description: "",
+      responsibilities: "",
+      achievements: "",
       highlights: [""],
       technologies: "",
     },
   ]);
 
   const [skills, setSkills] = useState({
+    professional: [],
     technical: [],
-    frameworks: [],
     tools: [],
     soft: [],
+    industry: [],
   });
 
   // Inputs for skill tags
   const [skillInputs, setSkillInputs] = useState({
+    professional: "",
     technical: "",
-    frameworks: "",
     tools: "",
     soft: "",
+    industry: "",
   });
+
+  const [customCategories, setCustomCategories] = useState([]);
+  const [newCategoryName, setNewCategoryName] = useState("");
 
   const [projects, setProjects] = useState([
     {
       title: "",
       subtitle: "",
+      role: "",
+      organization: "",
       description: "",
+      responsibilities: "",
+      outcomes: "",
       technologies: "",
       link: "",
       github: "",
@@ -155,6 +201,17 @@ function CreateResume() {
   const populateFromResume = (data) => {
     if (!data) return;
 
+    // Career Target
+    const target = data.metadata?.career_target || data.career_target || "";
+    if (target) {
+      if (CAREER_TARGET_OPTIONS.includes(target)) {
+        setCareerTarget(target);
+      } else {
+        setCareerTarget("Other (Custom Role)");
+        setCustomCareerTarget(target);
+      }
+    }
+
     if (data.personal) {
       setPersonal({
         name: data.personal.name || storedUser?.full_name || "",
@@ -178,14 +235,16 @@ function CreateResume() {
         data.education.map((e) => ({
           degree: e.degree || e.course || "",
           institution: e.institution || e.university || e.college || "",
+          board: e.board || "",
           location: e.location || "",
-          year: e.year || e.duration || "",
+          year: e.year || e.duration || (e.start_year && e.end_year ? `${e.start_year} - ${e.end_year}` : e.start_year || e.end_year || ""),
           score: typeof e.score === "object" ? e.score?.value || "" : e.score || e.gpa || "",
           coursework: Array.isArray(e.coursework)
             ? e.coursework.join(", ")
             : typeof e.coursework === "string"
             ? e.coursework
             : "",
+          additional_details: e.additional_details || "",
         }))
       );
     }
@@ -197,9 +256,12 @@ function CreateResume() {
           company: exp.company || exp.organization || "",
           location: exp.location || "",
           duration: exp.duration || exp.year || "",
+          employment_type: exp.employment_type || (exp.is_internship ? "Internship" : "Full-time"),
           is_current: Boolean(exp.is_current),
-          is_internship: Boolean(exp.is_internship),
+          is_internship: Boolean(exp.is_internship || exp.employment_type === "Internship"),
           description: exp.description || "",
+          responsibilities: exp.responsibilities || "",
+          achievements: exp.achievements || "",
           highlights:
             Array.isArray(exp.highlights) && exp.highlights.length > 0
               ? exp.highlights
@@ -216,18 +278,49 @@ function CreateResume() {
     if (data.skills) {
       const s = data.skills;
       if (typeof s === "object" && !Array.isArray(s)) {
-        setSkills({
+        const standardKeys = ["professional", "technical", "tools", "soft", "industry", "frameworks"];
+        const loadedSkills = {
+          professional: Array.isArray(s.professional) ? s.professional : [],
           technical: Array.isArray(s.technical) ? s.technical : [],
-          frameworks: Array.isArray(s.frameworks) ? s.frameworks : [],
           tools: Array.isArray(s.tools) ? s.tools : [],
           soft: Array.isArray(s.soft) ? s.soft : [],
-        });
+          industry: Array.isArray(s.industry) ? s.industry : [],
+        };
+        const loadedInputs = {
+          professional: "",
+          technical: "",
+          tools: "",
+          soft: "",
+          industry: "",
+        };
+        const extraCats = [];
+
+        // Legacy frameworks mapping
+        if (Array.isArray(s.frameworks) && s.frameworks.length > 0) {
+          loadedSkills.technical = Array.from(new Set([...loadedSkills.technical, ...s.frameworks]));
+        }
+
+        // Catch custom categories
+        for (const [key, val] of Object.entries(s)) {
+          if (key === "all" || standardKeys.includes(key)) continue;
+          if (Array.isArray(val) && val.length > 0) {
+            loadedSkills[key] = val;
+            loadedInputs[key] = "";
+            extraCats.push({ key, label: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, " ") });
+          }
+        }
+        setSkills(loadedSkills);
+        setSkillInputs(loadedInputs);
+        if (extraCats.length > 0) {
+          setCustomCategories(extraCats);
+        }
       } else if (Array.isArray(s)) {
         setSkills({
-          technical: s,
-          frameworks: [],
+          professional: s,
+          technical: [],
           tools: [],
           soft: [],
+          industry: [],
         });
       }
     }
@@ -237,7 +330,11 @@ function CreateResume() {
         data.projects.map((p) => ({
           title: p.title || p.name || "",
           subtitle: p.subtitle || "",
+          role: p.role || "",
+          organization: p.organization || "",
           description: p.description || "",
+          responsibilities: p.responsibilities || "",
+          outcomes: p.outcomes || "",
           technologies: Array.isArray(p.technologies)
             ? p.technologies.join(", ")
             : typeof p.technologies === "string"
@@ -360,26 +457,29 @@ function CreateResume() {
       setError("");
       setAboutSuccess("");
 
+      const effectiveCareerTarget =
+        careerTarget === "Other (Custom Role)"
+          ? customCareerTarget.trim()
+          : careerTarget.trim();
+
       const allSkills = Array.from(
-        new Set([
-          ...skills.technical,
-          ...skills.frameworks,
-          ...skills.tools,
-          ...skills.soft,
-        ])
+        new Set(
+          Object.values(skills).flatMap((arr) => (Array.isArray(arr) ? arr : []))
+        )
       );
 
       const resumeDataPayload = {
+        metadata: {
+          career_target: effectiveCareerTarget,
+        },
         personal,
         education: education.filter((e) => e.degree.trim() || e.institution.trim()),
         experience: experience.filter((exp) => exp.role.trim() || exp.company.trim()),
         projects: projects.filter((p) => p.title.trim()),
+        certificates: certificates.filter((c) => c.name.trim()),
         skills: {
+          ...skills,
           all: allSkills,
-          technical: skills.technical,
-          frameworks: skills.frameworks,
-          tools: skills.tools,
-          soft: skills.soft,
         },
       };
 
@@ -416,10 +516,12 @@ function CreateResume() {
       {
         degree: "",
         institution: "",
+        board: "",
         location: "",
         year: "",
         score: "",
         coursework: "",
+        additional_details: "",
       },
     ]);
   };
@@ -445,9 +547,12 @@ function CreateResume() {
         company: "",
         location: "",
         duration: "",
+        employment_type: "Full-time",
         is_current: false,
         is_internship: false,
         description: "",
+        responsibilities: "",
+        achievements: "",
         highlights: [""],
         technologies: "",
       },
@@ -460,7 +565,14 @@ function CreateResume() {
 
   const updateExperience = (index, field, value) => {
     setExperience((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
+      prev.map((item, i) => {
+        if (i !== index) return item;
+        const updated = { ...item, [field]: value };
+        if (field === "employment_type") {
+          updated.is_internship = value === "Internship";
+        }
+        return updated;
+      })
     );
   };
 
@@ -498,20 +610,21 @@ function CreateResume() {
   };
 
   // -------------------------------------------------------------
-  // Skills Handlers (Tag/Chip input)
+  // Skills Handlers (Tag/Chip input + Dynamic Categories)
   // -------------------------------------------------------------
   const handleAddSkill = (category) => {
-    const value = skillInputs[category].trim();
+    const value = (skillInputs[category] || "").trim();
     if (!value) return;
 
-    if (skills[category].includes(value)) {
+    const currentList = skills[category] || [];
+    if (currentList.includes(value)) {
       setSkillInputs((prev) => ({ ...prev, [category]: "" }));
       return;
     }
 
     setSkills((prev) => ({
       ...prev,
-      [category]: [...prev[category], value],
+      [category]: [...currentList, value],
     }));
 
     setSkillInputs((prev) => ({ ...prev, [category]: "" }));
@@ -520,8 +633,36 @@ function CreateResume() {
   const handleRemoveSkill = (category, skillToRemove) => {
     setSkills((prev) => ({
       ...prev,
-      [category]: prev[category].filter((s) => s !== skillToRemove),
+      [category]: (prev[category] || []).filter((s) => s !== skillToRemove),
     }));
+  };
+
+  const handleAddCustomCategory = () => {
+    const name = newCategoryName.trim();
+    if (!name) return;
+    const key = name.toLowerCase().replace(/[^a-z0-9]/g, "_");
+    if (skills[key]) {
+      setNewCategoryName("");
+      return;
+    }
+    setCustomCategories((prev) => [...prev, { key, label: name }]);
+    setSkills((prev) => ({ ...prev, [key]: [] }));
+    setSkillInputs((prev) => ({ ...prev, [key]: "" }));
+    setNewCategoryName("");
+  };
+
+  const handleRemoveCustomCategory = (key) => {
+    setCustomCategories((prev) => prev.filter((c) => c.key !== key));
+    setSkills((prev) => {
+      const copy = { ...prev };
+      delete copy[key];
+      return copy;
+    });
+    setSkillInputs((prev) => {
+      const copy = { ...prev };
+      delete copy[key];
+      return copy;
+    });
   };
 
   // -------------------------------------------------------------
@@ -533,7 +674,11 @@ function CreateResume() {
       {
         title: "",
         subtitle: "",
+        role: "",
+        organization: "",
         description: "",
+        responsibilities: "",
+        outcomes: "",
         technologies: "",
         link: "",
         github: "",
@@ -612,7 +757,25 @@ function CreateResume() {
   // -------------------------------------------------------------
   // Custom Sections Handlers
   // -------------------------------------------------------------
-  const addCustomSection = () => {
+  const addCustomSection = (preset = null) => {
+    if (preset && typeof preset === "object") {
+      setCustomSections((prev) => [
+        ...prev,
+        {
+          heading: preset.heading || "Additional Section",
+          items: [
+            {
+              title: preset.itemTitle || "",
+              subtitle: preset.itemSubtitle || "",
+              date: "",
+              description: "",
+            },
+          ],
+        },
+      ]);
+      return;
+    }
+
     setCustomSections((prev) => [
       ...prev,
       {
@@ -701,14 +864,16 @@ function CreateResume() {
     setSubmitAction(previewAfterSave ? "preview" : "save");
 
     try {
-      // Normalize skills
+      const effectiveCareerTarget =
+        careerTarget === "Other (Custom Role)"
+          ? customCareerTarget.trim()
+          : careerTarget.trim();
+
+      // Normalize skills: collect all unique skills across all categories
       const allSkills = Array.from(
-        new Set([
-          ...skills.technical,
-          ...skills.frameworks,
-          ...skills.tools,
-          ...skills.soft,
-        ])
+        new Set(
+          Object.values(skills).flatMap((arr) => (Array.isArray(arr) ? arr : []))
+        )
       );
 
       const payload = {
@@ -718,6 +883,7 @@ function CreateResume() {
           metadata: {
             source: "scratch",
             user_category: userCategory,
+            career_target: effectiveCareerTarget,
             photo_path: personal.photo || "",
           },
           personal: {
@@ -738,6 +904,7 @@ function CreateResume() {
             .map((item) => ({
               degree: item.degree.trim(),
               institution: item.institution.trim(),
+              board: item.board?.trim() || "",
               location: item.location.trim(),
               year: item.year.trim(),
               score: item.score.trim(),
@@ -747,6 +914,7 @@ function CreateResume() {
                     .map((s) => s.trim())
                     .filter(Boolean)
                 : [],
+              additional_details: item.additional_details?.trim() || "",
             })),
           experience: experience
             .filter((item) => item.role.trim() || item.company.trim())
@@ -755,9 +923,12 @@ function CreateResume() {
               company: item.company.trim(),
               location: item.location.trim(),
               duration: item.duration.trim(),
+              employment_type: item.employment_type || "Full-time",
               is_current: Boolean(item.is_current),
-              is_internship: Boolean(item.is_internship),
+              is_internship: Boolean(item.is_internship || item.employment_type === "Internship"),
               description: item.description.trim(),
+              responsibilities: item.responsibilities?.trim() || "",
+              achievements: item.achievements?.trim() || "",
               highlights: item.highlights.filter((h) => h && h.trim()),
               technologies: item.technologies
                 ? item.technologies
@@ -767,10 +938,7 @@ function CreateResume() {
                 : [],
             })),
           skills: {
-            technical: skills.technical,
-            frameworks: skills.frameworks,
-            tools: skills.tools,
-            soft: skills.soft,
+            ...skills,
             all: allSkills,
           },
           projects: projects
@@ -778,7 +946,11 @@ function CreateResume() {
             .map((item) => ({
               title: item.title.trim(),
               subtitle: item.subtitle.trim(),
+              role: item.role?.trim() || "",
+              organization: item.organization?.trim() || "",
               description: item.description.trim(),
+              responsibilities: item.responsibilities?.trim() || "",
+              outcomes: item.outcomes?.trim() || "",
               technologies: item.technologies
                 ? item.technologies
                     .split(",")
@@ -871,11 +1043,11 @@ function CreateResume() {
     { id: "personal", label: "Personal Details", icon: Globe },
     { id: "summary", label: "Summary / About", icon: Sparkles },
     { id: "education", label: "Education", icon: GraduationCap },
-    { id: "experience", label: "Experience & Internships", icon: Briefcase },
-    { id: "skills", label: "Skills", icon: Code2 },
-    { id: "projects", label: "Projects", icon: FolderGit2 },
-    { id: "certificates", label: "Certificates", icon: Award },
-    { id: "achievements", label: "Achievements", icon: Award },
+    { id: "experience", label: "Experience / Work History", icon: Briefcase },
+    { id: "skills", label: "Skills & Expertise", icon: Code2 },
+    { id: "projects", label: "Projects & Professional Work", icon: FolderGit2 },
+    { id: "certificates", label: "Certifications & Training", icon: Award },
+    { id: "achievements", label: "Honors & Achievements", icon: Award },
     { id: "languages", label: "Languages", icon: Languages },
     { id: "custom", label: "Additional Sections", icon: Layers },
   ];
@@ -909,7 +1081,7 @@ function CreateResume() {
             <p className="text-slate-400 text-sm mt-1">
               {isEditMode
                 ? "Update your resume details in place. Changes are saved to your existing record with zero duplicates."
-                : "Build your structured resume. This data will power your resume templates and portfolio generator."}
+                : "Build your structured resume. This data will power your resume templates and portfolio generator for any profession."}
             </p>
           </div>
 
@@ -1054,13 +1226,50 @@ function CreateResume() {
                       1. Personal Information
                     </h2>
                     <p className="text-xs text-slate-400">
-                      Primary contact details and online presence
+                      Primary contact details, profession, and online presence
                     </p>
                   </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Target Profession / Career Track Selector */}
+                <div className="md:col-span-2 pb-4 mb-2 border-b border-white/5">
+                  <div className="p-4 rounded-xl bg-purple-950/20 border border-purple-500/25">
+                    <div className="flex items-center gap-2 mb-2 text-purple-300 text-xs font-semibold">
+                      <Target size={15} />
+                      <span>Target Profession / Career Field:</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <select
+                        value={careerTarget}
+                        onChange={(e) => setCareerTarget(e.target.value)}
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#12111d] border border-white/15 text-white text-sm focus:border-purple-500 focus:outline-none cursor-pointer"
+                      >
+                        <option value="" className="text-slate-400">Select your profession / role...</option>
+                        {CAREER_TARGET_OPTIONS.map((opt) => (
+                          <option key={opt} value={opt} className="bg-[#12111d] text-white">
+                            {opt}
+                          </option>
+                        ))}
+                      </select>
+
+                      {careerTarget === "Other (Custom Role)" && (
+                        <input
+                          type="text"
+                          value={customCareerTarget}
+                          onChange={(e) => setCustomCareerTarget(e.target.value)}
+                          placeholder="Specify your field (e.g. Interior Designer, Pilot, Chef)..."
+                          className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
+                        />
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-2">
+                      Tailors AI summary phrasing, section terminology, and portfolio presentations to your chosen profession.
+                    </p>
+                  </div>
+                </div>
+
                 {/* Profile Photo Uploader */}
                 <div className="md:col-span-2 pb-4 mb-2 border-b border-white/5">
                   <label className="block text-xs font-medium text-slate-300 mb-2">
@@ -1141,7 +1350,7 @@ function CreateResume() {
                     onChange={(e) =>
                       setPersonal({ ...personal, name: e.target.value })
                     }
-                    placeholder="e.g. John Doe"
+                    placeholder="e.g. Dr. Sarah Connor / John Doe"
                     className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                   />
                 </div>
@@ -1158,8 +1367,8 @@ function CreateResume() {
                     }
                     placeholder={
                       userCategory === "Student"
-                        ? "e.g. Computer Science Student / Aspiring SWE"
-                        : "e.g. Senior Full Stack Engineer"
+                        ? "e.g. Biology Student / Aspiring Educator / B.Com Graduate"
+                        : "e.g. High School Teacher / Resident Physician / Sales Executive / Accountant"
                     }
                     className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                   />
@@ -1213,22 +1422,7 @@ function CreateResume() {
 
                 <div>
                   <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    GitHub URL
-                  </label>
-                  <input
-                    type="url"
-                    value={personal.github}
-                    onChange={(e) =>
-                      setPersonal({ ...personal, github: e.target.value })
-                    }
-                    placeholder="https://github.com/username"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    LinkedIn URL
+                    LinkedIn / Professional Network URL
                   </label>
                   <input
                     type="url"
@@ -1243,7 +1437,7 @@ function CreateResume() {
 
                 <div>
                   <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                    Portfolio / Website URL
+                    Portfolio / Website / Professional Profile URL
                   </label>
                   <input
                     type="url"
@@ -1251,7 +1445,22 @@ function CreateResume() {
                     onChange={(e) =>
                       setPersonal({ ...personal, portfolio_url: e.target.value })
                     }
-                    placeholder="https://yourportfolio.com"
+                    placeholder="https://yourprofile.com"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                    GitHub / Code Repository URL <span className="text-slate-400 font-normal">(Optional, for tech/coding roles)</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={personal.github}
+                    onChange={(e) =>
+                      setPersonal({ ...personal, github: e.target.value })
+                    }
+                    placeholder="https://github.com/username (Optional)"
                     className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                   />
                 </div>
@@ -1275,7 +1484,7 @@ function CreateResume() {
                       2. Professional Summary / About
                     </h2>
                     <p className="text-xs text-slate-400">
-                      A concise overview of your background, strengths, and goals
+                      A concise overview of your background, strengths, and career goals
                     </p>
                   </div>
                 </div>
@@ -1287,11 +1496,11 @@ function CreateResume() {
                 <div>
                   {userCategory === "Student" ? (
                     <span>
-                      <strong>Student Focus:</strong> Highlight your current degree, academic achievements, key coursework, technical projects, and career aspirations.
+                      <strong>Student / Fresher:</strong> Highlight your field of study, key academic coursework, practical projects, volunteer or internship experiences, and career objectives.
                     </span>
                   ) : (
                     <span>
-                      <strong>Job Seeker Focus:</strong> Highlight your professional track record, industry accomplishments, technical depth, and value proposition.
+                      <strong>Professional:</strong> Highlight your core experience, key achievements, industry domain knowledge, leadership or collaborative strengths, and the value you bring to your organization.
                     </span>
                   )}
                 </div>
@@ -1312,7 +1521,7 @@ function CreateResume() {
                     <option value="professional" className="bg-[#12111d] text-white">Professional</option>
                     <option value="simple" className="bg-[#12111d] text-white">Simple</option>
                     <option value="short" className="bg-[#12111d] text-white">Short</option>
-                    <option value="technical" className="bg-[#12111d] text-white">Technical</option>
+                    <option value="technical" className="bg-[#12111d] text-white">Technical / Domain-Focused</option>
                     <option value="career-focused" className="bg-[#12111d] text-white">Career-focused</option>
                   </select>
                 </div>
@@ -1367,8 +1576,8 @@ function CreateResume() {
                 onChange={(e) => setSummary(e.target.value)}
                 placeholder={
                   userCategory === "Student"
-                    ? "Passionate Computer Science student with hands-on experience in full-stack web development and machine learning. Seeking software engineering internship opportunities..."
-                    : "Results-driven Software Engineer with 4+ years of experience designing and deploying scalable web applications, microservices, and distributed cloud systems..."
+                    ? "Motivated student with a solid academic foundation in my discipline and hands-on project experience. Eager to contribute diligence, strong communication, and problem-solving abilities..."
+                    : "Accomplished professional with a proven track record of delivering measurable outcomes, managing initiatives, and collaborating across multidisciplinary teams. Seeking to leverage expertise in..."
                 }
                 className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none leading-relaxed"
               />
@@ -1388,10 +1597,10 @@ function CreateResume() {
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold text-white">
-                      3. Education
+                      3. Education & Academic Background
                     </h2>
                     <p className="text-xs text-slate-400">
-                      Degrees, academic institutions, grades, and coursework
+                      Degrees, academic institutions, board/affiliation, grades, and coursework
                     </p>
                   </div>
                 </div>
@@ -1430,7 +1639,7 @@ function CreateResume() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-medium text-slate-400 mb-1">
-                          Degree / Program
+                          Degree / Qualification
                         </label>
                         <input
                           type="text"
@@ -1438,14 +1647,14 @@ function CreateResume() {
                           onChange={(e) =>
                             updateEducation(idx, "degree", e.target.value)
                           }
-                          placeholder="e.g. B.S. in Computer Science"
+                          placeholder="e.g. B.Ed, MBBS, B.Com, B.S. in Biology, High School Diploma"
                           className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-medium text-slate-400 mb-1">
-                          Institution / University
+                          Institution / University / School
                         </label>
                         <input
                           type="text"
@@ -1453,14 +1662,29 @@ function CreateResume() {
                           onChange={(e) =>
                             updateEducation(idx, "institution", e.target.value)
                           }
-                          placeholder="e.g. Stanford University"
+                          placeholder="e.g. City University / Government Medical College / Central High School"
                           className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-medium text-slate-400 mb-1">
-                          Duration / Year
+                          Board / Council / Affiliation
+                        </label>
+                        <input
+                          type="text"
+                          value={edu.board}
+                          onChange={(e) =>
+                            updateEducation(idx, "board", e.target.value)
+                          }
+                          placeholder="e.g. State Board, CBSE, ICSE, University of Oxford"
+                          className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-400 mb-1">
+                          Duration / Year of Completion
                         </label>
                         <input
                           type="text"
@@ -1468,14 +1692,14 @@ function CreateResume() {
                           onChange={(e) =>
                             updateEducation(idx, "year", e.target.value)
                           }
-                          placeholder="e.g. 2020 - 2024"
+                          placeholder="e.g. 2020 - 2024 or 2023"
                           className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-medium text-slate-400 mb-1">
-                          GPA / Score
+                          GPA / Score / Grade / Percentage
                         </label>
                         <input
                           type="text"
@@ -1483,7 +1707,7 @@ function CreateResume() {
                           onChange={(e) =>
                             updateEducation(idx, "score", e.target.value)
                           }
-                          placeholder="e.g. 3.85 / 4.0 or 88%"
+                          placeholder="e.g. 3.85 / 4.0, 88%, or First Class with Distinction"
                           className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                         />
                       </div>
@@ -1498,14 +1722,14 @@ function CreateResume() {
                           onChange={(e) =>
                             updateEducation(idx, "location", e.target.value)
                           }
-                          placeholder="e.g. Stanford, CA"
+                          placeholder="e.g. Boston, MA / New Delhi, India"
                           className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-medium text-slate-400 mb-1">
-                          Coursework / Key Subjects (comma-separated)
+                          Relevant Coursework / Key Subjects (comma-separated)
                         </label>
                         <input
                           type="text"
@@ -1513,7 +1737,22 @@ function CreateResume() {
                           onChange={(e) =>
                             updateEducation(idx, "coursework", e.target.value)
                           }
-                          placeholder="e.g. Data Structures, Operating Systems, Cloud Computing"
+                          placeholder="e.g. Cell Biology, Educational Psychology, Financial Accounting, Microeconomics"
+                          className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-400 mb-1">
+                          Academic Honors / Additional Details
+                        </label>
+                        <input
+                          type="text"
+                          value={edu.additional_details}
+                          onChange={(e) =>
+                            updateEducation(idx, "additional_details", e.target.value)
+                          }
+                          placeholder="e.g. Dean's List (all semesters), Merit Scholarship recipient"
                           className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                         />
                       </div>
@@ -1524,7 +1763,7 @@ function CreateResume() {
             </section>
 
             {/* ========================================================
-                4. EXPERIENCE & INTERNSHIPS
+                4. EXPERIENCE / WORK HISTORY
             ======================================================== */}
             <section
               id="experience"
@@ -1537,10 +1776,10 @@ function CreateResume() {
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold text-white">
-                      4. Experience & Internships
+                      4. Experience / Work History
                     </h2>
                     <p className="text-xs text-slate-400">
-                      Full-time, part-time jobs, and internships (unified schema with internship flag)
+                      Professional employment, clinical rotations, teaching, internships, freelance, or contract work
                     </p>
                   </div>
                 </div>
@@ -1565,9 +1804,9 @@ function CreateResume() {
                         <span className="text-xs font-semibold text-purple-300 tracking-wide uppercase">
                           Experience #{idx + 1}
                         </span>
-                        {exp.is_internship && (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                            Internship
+                        {exp.employment_type && (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                            {exp.employment_type}
                           </span>
                         )}
                         {exp.is_current && (
@@ -1591,7 +1830,7 @@ function CreateResume() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       <div>
                         <label className="block text-xs font-medium text-slate-400 mb-1">
-                          Role / Title
+                          Role / Job Title
                         </label>
                         <input
                           type="text"
@@ -1599,14 +1838,14 @@ function CreateResume() {
                           onChange={(e) =>
                             updateExperience(idx, "role", e.target.value)
                           }
-                          placeholder="e.g. Software Engineer or Frontend Intern"
+                          placeholder="e.g. High School Teacher / Resident Physician / Sales Executive / Accountant"
                           className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-medium text-slate-400 mb-1">
-                          Company / Organization
+                          Organization / Company / School / Hospital
                         </label>
                         <input
                           type="text"
@@ -1614,9 +1853,31 @@ function CreateResume() {
                           onChange={(e) =>
                             updateExperience(idx, "company", e.target.value)
                           }
-                          placeholder="e.g. Google or Tech Startup"
+                          placeholder="e.g. St. Jude High School / Memorial Hospital / Apex Corp / Deloitte"
                           className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                         />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-400 mb-1">
+                          Employment Type
+                        </label>
+                        <select
+                          value={exp.employment_type || "Full-time"}
+                          onChange={(e) =>
+                            updateExperience(idx, "employment_type", e.target.value)
+                          }
+                          className="w-full px-3 py-2 rounded-lg bg-[#14121f] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none cursor-pointer"
+                        >
+                          <option value="Full-time">Full-time</option>
+                          <option value="Part-time">Part-time</option>
+                          <option value="Internship">Internship</option>
+                          <option value="Freelance">Freelance</option>
+                          <option value="Contract">Contract</option>
+                          <option value="Volunteer">Volunteer</option>
+                          <option value="Temporary">Temporary</option>
+                          <option value="Self-employed">Self-employed</option>
+                        </select>
                       </div>
 
                       <div>
@@ -1629,12 +1890,12 @@ function CreateResume() {
                           onChange={(e) =>
                             updateExperience(idx, "duration", e.target.value)
                           }
-                          placeholder="e.g. May 2023 - Aug 2023"
+                          placeholder="e.g. Aug 2021 - Present or Jan 2023 - Dec 2023"
                           className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                         />
                       </div>
 
-                      <div>
+                      <div className="md:col-span-2">
                         <label className="block text-xs font-medium text-slate-400 mb-1">
                           Location
                         </label>
@@ -1644,7 +1905,7 @@ function CreateResume() {
                           onChange={(e) =>
                             updateExperience(idx, "location", e.target.value)
                           }
-                          placeholder="e.g. New York, NY (or Remote)"
+                          placeholder="e.g. Chicago, IL (or Remote / Hybrid)"
                           className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                         />
                       </div>
@@ -1661,7 +1922,7 @@ function CreateResume() {
                           }
                           className="rounded border-white/20 bg-white/10 text-purple-600 focus:ring-purple-500 h-4 w-4 cursor-pointer"
                         />
-                        <span>This is an Internship</span>
+                        <span>This is an Internship / Rotation</span>
                       </label>
 
                       <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-300">
@@ -1679,7 +1940,7 @@ function CreateResume() {
 
                     <div className="mb-4">
                       <label className="block text-xs font-medium text-slate-400 mb-1">
-                        Overview / Description
+                        Overview / Role Summary
                       </label>
                       <textarea
                         rows={2}
@@ -1687,7 +1948,22 @@ function CreateResume() {
                         onChange={(e) =>
                           updateExperience(idx, "description", e.target.value)
                         }
-                        placeholder="Brief summary of your responsibilities..."
+                        placeholder="Brief overview of department, team, or operational scope..."
+                        className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="block text-xs font-medium text-slate-400 mb-1">
+                        Key Responsibilities & Scope
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={exp.responsibilities}
+                        onChange={(e) =>
+                          updateExperience(idx, "responsibilities", e.target.value)
+                        }
+                        placeholder="Core duties, patient care, curriculum delivery, budget management, or system design..."
                         className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                       />
                     </div>
@@ -1696,7 +1972,7 @@ function CreateResume() {
                     <div className="mb-4">
                       <div className="flex justify-between items-center mb-2">
                         <label className="block text-xs font-medium text-slate-400">
-                          Key Achievements / Bullet Points
+                          Key Achievements & Outcomes (Bullet Points)
                         </label>
                         <button
                           type="button"
@@ -1721,7 +1997,7 @@ function CreateResume() {
                                   e.target.value
                                 )
                               }
-                              placeholder="e.g. Reduced API response latency by 35% through Redis caching..."
+                              placeholder="e.g. Improved student test scores by 22% through interactive laboratory exercises..."
                               className="flex-1 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                             />
                             {exp.highlights.length > 1 && (
@@ -1742,7 +2018,7 @@ function CreateResume() {
 
                     <div>
                       <label className="block text-xs font-medium text-slate-400 mb-1">
-                        Technologies Used (comma-separated)
+                        Tools, Methods & Key Skills Used (comma-separated)
                       </label>
                       <input
                         type="text"
@@ -1750,7 +2026,7 @@ function CreateResume() {
                         onChange={(e) =>
                           updateExperience(idx, "technologies", e.target.value)
                         }
-                        placeholder="e.g. React, Node.js, PostgreSQL, Docker, AWS"
+                        placeholder="e.g. Google Classroom, Lesson Planning, EMR/EHR, QuickBooks, CRM, Excel, Agile, React"
                         className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                       />
                     </div>
@@ -1760,7 +2036,7 @@ function CreateResume() {
             </section>
 
             {/* ========================================================
-                5. SKILLS (Categorized & Unified)
+                5. SKILLS & EXPERTISE
             ======================================================== */}
             <section
               id="skills"
@@ -1773,10 +2049,10 @@ function CreateResume() {
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold text-white">
-                      5. Categorized Skills
+                      5. Skills & Expertise
                     </h2>
                     <p className="text-xs text-slate-400">
-                      Add skills by category with interactive tags (press Enter or click Add)
+                      Organized by domain, technical, tools, and soft skills (interactive tags for any profession)
                     </p>
                   </div>
                 </div>
@@ -1784,30 +2060,14 @@ function CreateResume() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[
-                  {
-                    key: "technical",
-                    label: "Technical & Programming Languages",
-                    placeholder: "e.g. Python, Java, JavaScript, C++, SQL",
+                  ...DEFAULT_SKILL_CATEGORIES,
+                  ...customCategories.map((c) => ({
+                    key: c.key,
+                    label: c.label,
+                    placeholder: `Add ${c.label}...`,
                     badgeColor: "bg-purple-500/20 text-purple-300 border-purple-500/30",
-                  },
-                  {
-                    key: "frameworks",
-                    label: "Frameworks & Libraries",
-                    placeholder: "e.g. React, Node.js, Express, Tailwind CSS, Django",
-                    badgeColor: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-                  },
-                  {
-                    key: "tools",
-                    label: "Tools, Platforms & Databases",
-                    placeholder: "e.g. Git, Docker, MongoDB, AWS, Figma, Linux",
-                    badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-                  },
-                  {
-                    key: "soft",
-                    label: "Soft Skills & Methodologies",
-                    placeholder: "e.g. Agile/Scrum, Problem Solving, Leadership, Teamwork",
-                    badgeColor: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-                  },
+                    isCustom: true,
+                  })),
                 ].map((cat) => (
                   <div
                     key={cat.key}
@@ -1815,11 +2075,23 @@ function CreateResume() {
                   >
                     <div>
                       <div className="flex justify-between items-center mb-2">
-                        <label className="text-xs font-semibold text-slate-300">
-                          {cat.label}
-                        </label>
+                        <div className="flex items-center gap-2">
+                          <label className="text-xs font-semibold text-slate-300">
+                            {cat.label}
+                          </label>
+                          {cat.isCustom && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveCustomCategory(cat.key)}
+                              className="text-slate-500 hover:text-red-400 text-xs transition cursor-pointer"
+                              title="Delete this custom category"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          )}
+                        </div>
                         <span className="text-[11px] font-mono text-slate-400">
-                          {skills[cat.key].length} added
+                          {(skills[cat.key] || []).length} added
                         </span>
                       </div>
 
@@ -1827,7 +2099,7 @@ function CreateResume() {
                       <div className="flex gap-2 mb-3">
                         <input
                           type="text"
-                          value={skillInputs[cat.key]}
+                          value={skillInputs[cat.key] || ""}
                           onChange={(e) =>
                             setSkillInputs({
                               ...skillInputs,
@@ -1854,7 +2126,7 @@ function CreateResume() {
 
                       {/* Chips Container */}
                       <div className="flex flex-wrap gap-1.5 min-h-[36px] p-2 rounded-lg bg-black/20 border border-white/5">
-                        {skills[cat.key].length === 0 ? (
+                        {!(skills[cat.key] && skills[cat.key].length > 0) ? (
                           <span className="text-xs text-slate-500 italic">
                             No skills added yet
                           </span>
@@ -1880,10 +2152,39 @@ function CreateResume() {
                   </div>
                 ))}
               </div>
+
+              {/* Add Custom Skill Category Bar */}
+              <div className="mt-6 p-4 rounded-xl bg-white/[0.02] border border-white/10 flex flex-col sm:flex-row items-center gap-3">
+                <div className="flex-1 w-full">
+                  <label className="block text-xs font-medium text-purple-300 mb-1">
+                    Need a custom category for your profession?
+                  </label>
+                  <input
+                    type="text"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddCustomCategory();
+                      }
+                    }}
+                    placeholder="e.g. Clinical Competencies, Laboratory Techniques, Pedagogical Methods..."
+                    className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-xs focus:border-purple-500 focus:outline-none"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAddCustomCategory}
+                  className="w-full sm:w-auto px-4 py-2 mt-auto rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium transition cursor-pointer self-end"
+                >
+                  + Add Category
+                </button>
+              </div>
             </section>
 
             {/* ========================================================
-                6. PROJECTS
+                6. PROJECTS & PROFESSIONAL WORK
             ======================================================== */}
             <section
               id="projects"
@@ -1896,10 +2197,10 @@ function CreateResume() {
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold text-white">
-                      6. Projects
+                      6. Projects & Professional Work
                     </h2>
                     <p className="text-xs text-slate-400">
-                      Technical projects, open source contributions, or portfolio builds
+                      Initiatives, case studies, research, curriculum design, campaigns, or technical builds
                     </p>
                   </div>
                 </div>
@@ -1909,7 +2210,7 @@ function CreateResume() {
                   onClick={addProject}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 text-xs font-medium transition cursor-pointer"
                 >
-                  <Plus size={14} /> Add Project
+                  <Plus size={14} /> Add Project / Work
                 </button>
               </div>
 
@@ -1921,7 +2222,7 @@ function CreateResume() {
                   >
                     <div className="flex justify-between items-center mb-4">
                       <span className="text-xs font-semibold text-purple-300 tracking-wide uppercase">
-                        Project #{idx + 1}
+                        Project / Initiative #{idx + 1}
                       </span>
                       {projects.length > 1 && (
                         <button
@@ -1938,7 +2239,7 @@ function CreateResume() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       <div>
                         <label className="block text-xs font-medium text-slate-400 mb-1">
-                          Project Title
+                          Project / Initiative Title
                         </label>
                         <input
                           type="text"
@@ -1946,14 +2247,29 @@ function CreateResume() {
                           onChange={(e) =>
                             updateProject(idx, "title", e.target.value)
                           }
-                          placeholder="e.g. Smart Resume Analyzer"
+                          placeholder="e.g. Biology Lab Inquiry Redesign / Q3 B2B Inbound Strategy / Smart Resume Analyzer"
                           className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-medium text-slate-400 mb-1">
-                          Subtitle / Tagline
+                          Role / Contribution
+                        </label>
+                        <input
+                          type="text"
+                          value={proj.role}
+                          onChange={(e) =>
+                            updateProject(idx, "role", e.target.value)
+                          }
+                          placeholder="e.g. Lead Educator / Campaign Strategist / Clinical Investigator / Lead Developer"
+                          className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-400 mb-1">
+                          Organization / Context / Subtitle
                         </label>
                         <input
                           type="text"
@@ -1961,69 +2277,7 @@ function CreateResume() {
                           onChange={(e) =>
                             updateProject(idx, "subtitle", e.target.value)
                           }
-                          placeholder="e.g. AI-Powered Portfolio & Resume Generator"
-                          className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-slate-400 mb-1">
-                          Live Demo Link
-                        </label>
-                        <input
-                          type="url"
-                          value={proj.link}
-                          onChange={(e) =>
-                            updateProject(idx, "link", e.target.value)
-                          }
-                          placeholder="https://myproject.com"
-                          className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-medium text-slate-400 mb-1">
-                          GitHub Repository URL
-                        </label>
-                        <input
-                          type="url"
-                          value={proj.github}
-                          onChange={(e) =>
-                            updateProject(idx, "github", e.target.value)
-                          }
-                          placeholder="https://github.com/user/project"
-                          className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="mb-4">
-                      <label className="block text-xs font-medium text-slate-400 mb-1">
-                        Description & Impact
-                      </label>
-                      <textarea
-                        rows={3}
-                        value={proj.description}
-                        onChange={(e) =>
-                          updateProject(idx, "description", e.target.value)
-                        }
-                        placeholder="Describe features, problem solved, architecture, and metrics..."
-                        className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-medium text-slate-400 mb-1">
-                          Technologies Used (comma-separated)
-                        </label>
-                        <input
-                          type="text"
-                          value={proj.technologies}
-                          onChange={(e) =>
-                            updateProject(idx, "technologies", e.target.value)
-                          }
-                          placeholder="e.g. React, Node.js, Tailwind, SQLite, Gemini AI"
+                          placeholder="e.g. School Curriculum Committee / Acme Corp Client Project / Academic Capstone"
                           className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                         />
                       </div>
@@ -2038,10 +2292,100 @@ function CreateResume() {
                           onChange={(e) =>
                             updateProject(idx, "duration", e.target.value)
                           }
-                          placeholder="e.g. Jan 2024 - Mar 2024"
+                          placeholder="e.g. Jan 2024 - Apr 2024"
                           className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                         />
                       </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-400 mb-1">
+                          Live Demo / Publication / Reference URL
+                        </label>
+                        <input
+                          type="url"
+                          value={proj.link}
+                          onChange={(e) =>
+                            updateProject(idx, "link", e.target.value)
+                          }
+                          placeholder="https://example.com/project-or-paper (Optional)"
+                          className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-400 mb-1">
+                          Repository / Resource URL <span className="text-slate-400 font-normal">(Optional, for tech roles)</span>
+                        </label>
+                        <input
+                          type="url"
+                          value={proj.github}
+                          onChange={(e) =>
+                            updateProject(idx, "github", e.target.value)
+                          }
+                          placeholder="https://github.com/user/project (Optional)"
+                          className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="block text-xs font-medium text-slate-400 mb-1">
+                        Overview & Objectives
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={proj.description}
+                        onChange={(e) =>
+                          updateProject(idx, "description", e.target.value)
+                        }
+                        placeholder="Describe the initiative's purpose, background context, and problem addressed..."
+                        className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="block text-xs font-medium text-slate-400 mb-1">
+                        Key Responsibilities / Deliverables
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={proj.responsibilities}
+                        onChange={(e) =>
+                          updateProject(idx, "responsibilities", e.target.value)
+                        }
+                        placeholder="Specific tasks, methodologies, analyses, clinical protocols, or code delivered..."
+                        className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="block text-xs font-medium text-slate-400 mb-1">
+                        Key Outcomes / Results & Impact
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={proj.outcomes}
+                        onChange={(e) =>
+                          updateProject(idx, "outcomes", e.target.value)
+                        }
+                        placeholder="e.g. Comprehension rate increased by 22%, generated $140k in pipeline, adopted hospital-wide..."
+                        className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-slate-400 mb-1">
+                        Tools, Skills & Methodologies Used (comma-separated)
+                      </label>
+                      <input
+                        type="text"
+                        value={proj.technologies}
+                        onChange={(e) =>
+                          updateProject(idx, "technologies", e.target.value)
+                        }
+                        placeholder="e.g. Statistical Analysis, SPSS, Inquiry-Based Learning, Google Workspace, Excel, React"
+                        className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
+                      />
                     </div>
                   </div>
                 ))}
@@ -2049,7 +2393,7 @@ function CreateResume() {
             </section>
 
             {/* ========================================================
-                7. CERTIFICATIONS
+                7. CERTIFICATIONS & LICENSES
             ======================================================== */}
             <section
               id="certificates"
@@ -2062,10 +2406,10 @@ function CreateResume() {
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold text-white">
-                      7. Certifications
+                      7. Certifications, Licenses & Training
                     </h2>
                     <p className="text-xs text-slate-400">
-                      Professional credentials and course certifications
+                      Professional credentials, state licenses, board certifications, and courses
                     </p>
                   </div>
                 </div>
@@ -2094,6 +2438,7 @@ function CreateResume() {
                           type="button"
                           onClick={() => removeCertificate(idx)}
                           className="text-slate-500 hover:text-red-400 transition p-1 cursor-pointer"
+                          title="Remove certification"
                         >
                           <Trash2 size={15} />
                         </button>
@@ -2103,7 +2448,7 @@ function CreateResume() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-medium text-slate-400 mb-1">
-                          Certificate Name
+                          Certification / License Name
                         </label>
                         <input
                           type="text"
@@ -2111,14 +2456,14 @@ function CreateResume() {
                           onChange={(e) =>
                             updateCertificate(idx, "name", e.target.value)
                           }
-                          placeholder="e.g. AWS Certified Solutions Architect"
+                          placeholder="e.g. State Teaching License / ACLS Certification / CPA / PMP"
                           className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-medium text-slate-400 mb-1">
-                          Issuing Organization
+                          Issuing Organization / Authority
                         </label>
                         <input
                           type="text"
@@ -2126,7 +2471,7 @@ function CreateResume() {
                           onChange={(e) =>
                             updateCertificate(idx, "issuer", e.target.value)
                           }
-                          placeholder="e.g. Amazon Web Services"
+                          placeholder="e.g. State Board of Education / American Heart Association / AICPA"
                           className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                         />
                       </div>
@@ -2141,14 +2486,14 @@ function CreateResume() {
                           onChange={(e) =>
                             updateCertificate(idx, "year", e.target.value)
                           }
-                          placeholder="e.g. 2023"
+                          placeholder="e.g. 2023 or Valid through 2026"
                           className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                         />
                       </div>
 
                       <div>
                         <label className="block text-xs font-medium text-slate-400 mb-1">
-                          Credential Link / URL
+                          Credential Link / Verification URL
                         </label>
                         <input
                           type="url"
@@ -2156,7 +2501,7 @@ function CreateResume() {
                           onChange={(e) =>
                             updateCertificate(idx, "link", e.target.value)
                           }
-                          placeholder="https://credly.com/your-badge"
+                          placeholder="https://credential.net/your-license (Optional)"
                           className="w-full px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                         />
                       </div>
@@ -2180,10 +2525,10 @@ function CreateResume() {
                   </div>
                   <div>
                     <h2 className="text-lg font-semibold text-white">
-                      8. Achievements & Honors
+                      8. Honors & Achievements
                     </h2>
                     <p className="text-xs text-slate-400">
-                      Hackathon victories, academic honors, scholarships, and rankings
+                      Academic honors, teaching recognition, quota accomplishments, or publications
                     </p>
                   </div>
                 </div>
@@ -2205,7 +2550,7 @@ function CreateResume() {
                       type="text"
                       value={ach}
                       onChange={(e) => updateAchievement(idx, e.target.value)}
-                      placeholder="e.g. 1st Place Winner out of 150+ teams at National College Hackathon 2023"
+                      placeholder="e.g. Teacher of the Year 2023 / Exceeded annual sales quota by 140% / Published clinical paper in peer-reviewed journal"
                       className="flex-1 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/10 text-white text-sm focus:border-purple-500 focus:outline-none"
                     />
                     {achievements.length > 1 && (
@@ -2315,18 +2660,45 @@ function CreateResume() {
                       10. Additional / Custom Sections
                     </h2>
                     <p className="text-xs text-slate-400">
-                      Add custom sections such as Publications, Volunteer Work, Leadership, or Extracurriculars
+                      Add custom sections such as Publications, Clinical Rotations, Volunteer Work, or Leadership
                     </p>
                   </div>
                 </div>
 
                 <button
                   type="button"
-                  onClick={addCustomSection}
+                  onClick={() => addCustomSection()}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 text-xs font-medium transition cursor-pointer"
                 >
-                  <Plus size={14} /> Add Custom Section
+                  <Plus size={14} /> Add Blank Section
                 </button>
+              </div>
+
+              {/* Quick Preset Buttons for Custom Sections */}
+              <div className="mb-6 p-4 rounded-xl bg-purple-950/20 border border-purple-500/20">
+                <p className="text-xs font-semibold text-purple-300 mb-2.5">
+                  1-Click Presets for your profession:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { heading: "Publications & Research", itemTitle: "Research Paper / Article", itemSubtitle: "Journal / Conference" },
+                    { heading: "Clinical Rotations & Experience", itemTitle: "Clinical Specialty / Ward", itemSubtitle: "Hospital / Healthcare Facility" },
+                    { heading: "Teaching & Mentorship Experience", itemTitle: "Course / Workshop", itemSubtitle: "School / Institution" },
+                    { heading: "Volunteer & Community Service", itemTitle: "Volunteer Role", itemSubtitle: "Nonprofit / Community Organization" },
+                    { heading: "Key Campaigns & Initiatives", itemTitle: "Campaign / Project Name", itemSubtitle: "Client / Organization" },
+                    { heading: "Conferences & Presentations", itemTitle: "Presentation / Speech", itemSubtitle: "Conference / Event" },
+                    { heading: "Professional Memberships & Affiliations", itemTitle: "Member / Board Member", itemSubtitle: "Professional Society / Association" },
+                  ].map((preset, pIdx) => (
+                    <button
+                      key={pIdx}
+                      type="button"
+                      onClick={() => addCustomSection(preset)}
+                      className="px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-purple-500/20 text-slate-300 hover:text-purple-200 border border-white/10 hover:border-purple-500/30 text-xs transition cursor-pointer"
+                    >
+                      + {preset.heading}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {customSections.length === 0 ? (

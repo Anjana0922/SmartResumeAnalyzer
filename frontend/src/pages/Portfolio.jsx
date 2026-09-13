@@ -98,6 +98,7 @@ function Portfolio() {
   const sections =
     portfolio.section_order || [
       "about",
+      "experience",
       "education",
       "skills",
       "projects",

@@ -4,6 +4,7 @@ import { GripVertical, Eye, EyeOff } from "lucide-react";
 function SectionOrganizer({ sections, setSections }) {
   const sectionNames = {
     about: "About",
+    experience: "Experience / Work History",
     education: "Education",
     skills: "Skills",
     projects: "Projects",

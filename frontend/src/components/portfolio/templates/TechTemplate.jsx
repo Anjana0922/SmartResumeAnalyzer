@@ -219,6 +219,75 @@ function TechTemplate({
   };
 
   // =========================================================
+  // EXPERIENCE
+  // =========================================================
+
+  const renderExperience = () => {
+    const experience = Array.isArray(resume?.experience) ? resume.experience : [];
+    if (!experience.length) return null;
+
+    return (
+      <section
+        id="experience"
+        className={`py-16 border-t ${border} scroll-mt-24`}
+      >
+        <Heading
+          number={sectionNumber("experience")}
+          title="Experience"
+          command="work_history"
+        />
+
+        <div className="space-y-6">
+          {experience.map((item, index) => (
+            <div
+              key={index}
+              className={`rounded-2xl border ${border} ${card} p-7 md:p-8 transition hover:border-[#6ee7b7]/50`}
+            >
+              <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 pb-4 border-b border-white/5">
+                <div>
+                  <h3 className="text-xl font-bold tracking-tight">
+                    {item.role || item.title || "Role"}
+                  </h3>
+                  <p className={`font-mono text-sm ${accent} mt-1`}>
+                    {item.company || item.organization || "Organization"}
+                  </p>
+                </div>
+                <div className="font-mono text-xs sm:text-right">
+                  <span className={muted}>
+                    {item.duration || item.year || ""}
+                  </span>
+                  {item.location && (
+                    <span className={`block ${faint}`}>{item.location}</span>
+                  )}
+                  {item.employment_type && (
+                    <span className={`inline-block mt-1 px-2 py-0.5 rounded border ${accentBorder} ${accentBg} ${accent} text-[10px]`}>
+                      {item.employment_type}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {item.description && (
+                <p className={`mt-4 text-base leading-7 ${muted}`}>
+                  {item.description}
+                </p>
+              )}
+
+              {Array.isArray(item.highlights) && item.highlights.filter(Boolean).length > 0 && (
+                <ul className={`mt-3 space-y-1 font-mono text-xs ${faint} list-disc list-inside`}>
+                  {item.highlights.filter(Boolean).map((hl, hIdx) => (
+                    <li key={hIdx}>{hl}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  };
+
+  // =========================================================
   // EDUCATION
   // =========================================================
 
@@ -603,6 +672,9 @@ function TechTemplate({
       case "about":
         return renderAbout();
 
+      case "experience":
+        return renderExperience();
+
       case "education":
         return renderEducation();
 
@@ -714,11 +786,16 @@ function TechTemplate({
                 "Your Name"}
             </h1>
 
+            {personal.title && (
+              <p className={`mt-4 font-mono text-xl md:text-2xl ${accent}`}>
+                {personal.title}
+              </p>
+            )}
+
             <p
-              className={`mt-8 text-xl md:text-2xl max-w-3xl leading-8 ${muted}`}
+              className={`mt-6 text-lg md:text-xl max-w-3xl leading-relaxed ${muted}`}
             >
-              Building ideas into practical
-              digital solutions.
+              {personal.title ? `Specialized in ${personal.title} with a focus on delivering high-impact results.` : "Dedicated to building practical and meaningful solutions."}
             </p>
 
             {/* CONTACT */}
