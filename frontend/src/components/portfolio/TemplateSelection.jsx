@@ -88,6 +88,11 @@ function TemplateSelection() {
         resume.photo_path ||
         null;
 
+      const rawSkills = resume.skills;
+      const flatSkills = Array.isArray(rawSkills)
+        ? rawSkills
+        : (resume.flat_skills || rawSkills?.all || Object.values(rawSkills || {}).flat().filter(Boolean));
+
       const portfolioData = {
         resume_id: resumeId,
 
@@ -97,13 +102,24 @@ function TemplateSelection() {
 
         photo_path: photoUrl,
 
+        personal: resume.personal || {
+          name: resume.name || "",
+          title: resume.metadata?.title || "",
+          email: resume.email || "",
+          phone: resume.phone || "",
+          location: resume.metadata?.location || "",
+          github: resume.github || "",
+          linkedin: resume.linkedin || "",
+          portfolio_url: resume.metadata?.portfolio_url || ""
+        },
+
         about: resume.about || resume.summary || "",
 
         experience: resume.experience || [],
 
         education: resume.education || [],
 
-        skills: resume.skills || [],
+        skills: flatSkills || [],
 
         projects: resume.projects || [],
 

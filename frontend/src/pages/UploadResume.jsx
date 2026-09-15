@@ -68,79 +68,15 @@ const UploadResume = () => {
         return;
       }
 
-      // ==============================
-      // 2. Create Portfolio
-      // ==============================
-
-      const portfolioResponse = await axios.post(
-        "http://localhost:5000/api/portfolio",
-        {
-          resume_id: resumeId,
-          template_name: "minimal",
-          theme: "light",
-          about: "",
-          education: [],
-          skills: [],
-          projects: [],
-          certificates: [],
-          achievements: [],
-          languages: [],
-          section_order: [
-            "about",
-            "education",
-            "skills",
-            "projects",
-            "certificates",
-            "achievements",
-            "languages",
-          ],
-        }
-      );
-
-      console.log(
-        "Portfolio creation response:",
-        portfolioResponse.data
-      );
-
-      const portfolioId =
-        portfolioResponse.data.portfolio_id;
-
-      if (!portfolioId) {
-        setError(
-          "Portfolio was created, but portfolio ID was not returned."
-        );
-        return;
-      }
-
-      // ==============================
-      // 3. Save Portfolio ID
-      // ==============================
-
-      localStorage.setItem(
-        "portfolio_id",
-        portfolioId
-      );
-
-      localStorage.setItem(
-        "resume_id",
-        resumeId
-      );
-
-      console.log("Saved portfolio ID:", portfolioId);
+      // Save Resume ID to localStorage
+      localStorage.setItem("resume_id", resumeId);
       console.log("Saved resume ID:", resumeId);
 
-      setMessage(
-        "Resume uploaded and portfolio created successfully!"
-      );
+      setMessage("Resume uploaded and parsed successfully! Redirecting to portfolio templates...");
 
-      // ==============================
-      // 4. Go to Editor
-      // ==============================
-
+      // Go to Template Selection for this resume
       setTimeout(() => {
-        navigate(
-          `/portfolio/create/${resumeId}`
-        );
+        navigate(`/portfolio/create/${resumeId}`);
       }, 1000);
 
     } catch (err) {

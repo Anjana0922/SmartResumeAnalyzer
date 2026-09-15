@@ -20,10 +20,18 @@ function ContentEditor({ resume, setResume }) {
     if (typeof value === "string") {
       try {
         const parsed = JSON.parse(value);
-        return Array.isArray(parsed) ? parsed : [];
+        if (Array.isArray(parsed)) return parsed;
+        if (parsed && typeof parsed === "object") {
+          return parsed.all || Object.values(parsed).flat().filter(Boolean);
+        }
+        return [];
       } catch {
         return [];
       }
+    }
+
+    if (value && typeof value === "object") {
+      return value.all || Object.values(value).flat().filter(Boolean);
     }
 
     return [];

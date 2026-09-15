@@ -124,6 +124,9 @@ function normalizeResumeData(raw = {}, rawText = "") {
             }
         }
         flatSkills = Array.from(new Set(flatSkills));
+        if (flatSkills.length === 0 && Array.isArray(rawSkills.all) && rawSkills.all.length > 0) {
+            flatSkills = rawSkills.all.map((s) => String(s).trim()).filter(Boolean);
+        }
         categorizedSkills.all = flatSkills;
     }
 

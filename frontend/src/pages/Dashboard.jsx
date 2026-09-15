@@ -33,16 +33,32 @@ function Dashboard() {
         </div>
 
         {/* Main Features */}
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+
+          {/* My Resumes */}
+          <button
+            onClick={() => navigate("/my-resumes")}
+            className="p-7 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-purple-500/50 hover:bg-white/[0.07] transition text-left cursor-pointer group"
+          >
+            <div className="text-4xl mb-5 group-hover:scale-110 transition duration-200">📂</div>
+
+            <h2 className="font-semibold text-xl group-hover:text-purple-300 transition">
+              My Resumes
+            </h2>
+
+            <p className="text-sm text-slate-400 mt-3 leading-6">
+              View, edit, choose templates, preview, and download all your saved and uploaded resumes.
+            </p>
+          </button>
 
           {/* Create Resume */}
           <button
             onClick={() => navigate("/resume/create")}
-            className="p-7 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-purple-500/50 hover:bg-white/[0.07] transition text-left"
+            className="p-7 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-purple-500/50 hover:bg-white/[0.07] transition text-left cursor-pointer group"
           >
-            <div className="text-4xl mb-5">📝</div>
+            <div className="text-4xl mb-5 group-hover:scale-110 transition duration-200">📝</div>
 
-            <h2 className="font-semibold text-xl">
+            <h2 className="font-semibold text-xl group-hover:text-purple-300 transition">
               Create Resume
             </h2>
 
@@ -55,11 +71,11 @@ function Dashboard() {
           {/* Generate Portfolio */}
           <button
             onClick={() => navigate("/upload")}
-            className="p-7 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-purple-500/50 hover:bg-white/[0.07] transition text-left"
+            className="p-7 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-purple-500/50 hover:bg-white/[0.07] transition text-left cursor-pointer group"
           >
-            <div className="text-4xl mb-5">🌐</div>
+            <div className="text-4xl mb-5 group-hover:scale-110 transition duration-200">🌐</div>
 
-            <h2 className="font-semibold text-xl">
+            <h2 className="font-semibold text-xl group-hover:text-purple-300 transition">
               Generate Portfolio
             </h2>
 
@@ -72,11 +88,11 @@ function Dashboard() {
           {/* ATS Analysis */}
           <button
             onClick={() => navigate("/ats")}
-            className="p-7 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-purple-500/50 hover:bg-white/[0.07] transition text-left"
+            className="p-7 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-purple-500/50 hover:bg-white/[0.07] transition text-left cursor-pointer group"
           >
-            <div className="text-4xl mb-5">📊</div>
+            <div className="text-4xl mb-5 group-hover:scale-110 transition duration-200">📊</div>
 
-            <h2 className="font-semibold text-xl">
+            <h2 className="font-semibold text-xl group-hover:text-purple-300 transition">
               ATS Analysis
             </h2>
 

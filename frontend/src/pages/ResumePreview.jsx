@@ -378,6 +378,23 @@ function ResumePreview() {
                   Choose Template
                 </button>
                 <button
+                  onClick={handleDownloadPdf}
+                  disabled={downloadingPdf}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-sm font-medium transition cursor-pointer border border-white/10 disabled:opacity-50"
+                >
+                  {downloadingPdf ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Generating PDF...
+                    </>
+                  ) : (
+                    <>
+                      <Download size={16} />
+                      Download PDF
+                    </>
+                  )}
+                </button>
+                <button
                   onClick={() => navigate("/dashboard")}
                   className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-sm font-medium transition cursor-pointer"
                 >
@@ -445,6 +462,13 @@ function ResumePreview() {
           </div>
         ) : (
           <div>
+            {/* Offscreen calibrated print node for Basic Preview */}
+            <div className="fixed -left-[9999px] top-0 opacity-0 pointer-events-none" aria-hidden="true">
+              <div id="resume-print-node" className="resume-print-root bg-white text-slate-900">
+                <ClassicTemplate resume={resume} />
+              </div>
+            </div>
+
             {/* ========================================================
                 Resume Document Container
             ======================================================== */}
@@ -1167,6 +1191,23 @@ function ResumePreview() {
             >
               <LayoutTemplate size={14} />
               Choose Template
+            </button>
+            <button
+              onClick={handleDownloadPdf}
+              disabled={downloadingPdf}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-xs font-medium transition cursor-pointer border border-white/10 disabled:opacity-50"
+            >
+              {downloadingPdf ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" />
+                  Generating PDF...
+                </>
+              ) : (
+                <>
+                  <Download size={14} />
+                  Download PDF
+                </>
+              )}
             </button>
             <button
               onClick={() => navigate("/dashboard")}

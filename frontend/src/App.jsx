@@ -12,6 +12,7 @@ import UploadResume from "./pages/UploadResume";
 import CreateResume from "./pages/CreateResume";
 import ResumePreview from "./pages/ResumePreview";
 import ResumeTemplates from "./pages/ResumeTemplates";
+import MyResumes from "./pages/MyResumes";
 import Portfolio from "./pages/Portfolio";
 import PortfolioEditor from "./pages/PortfolioEditor";
 import TemplateSelection from "./components/portfolio/TemplateSelection";
@@ -76,6 +77,11 @@ function App() {
       <Route
         path="/resume/templates/:resumeId"
         element={<ResumeTemplates />}
+      />
+
+      <Route
+        path="/my-resumes"
+        element={<MyResumes />}
       />
 
       {/* ==================================================

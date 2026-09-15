@@ -619,6 +619,105 @@ router.post("/create", async (req, res) => {
 });
 
 
+
+// =====================================
+// Get User Resumes
+// GET /my-resumes & GET /user/:userId
+// =====================================
+
+async function handleGetUserResumes(req, res) {
+    try {
+        const userId = req.params.userId || req.query.user_id || req.headers["x-user-id"];
+
+        if (!userId) {
+            return res.status(400).json({
+                message: "User ID is required to fetch resumes."
+            });
+        }
+
+        const sql = `
+            SELECT 
+                r.resume_id,
+                r.user_id,
+                r.file_name,
+                r.file_path,
+                r.upload_date,
+                r.status,
+                d.name,
+                d.email,
+                d.phone,
+                d.about,
+                d.metadata,
+                (SELECT p.portfolio_id FROM portfolio p WHERE p.resume_id = r.resume_id ORDER BY p.portfolio_id DESC LIMIT 1) AS portfolio_id,
+                (SELECT p.template_name FROM portfolio p WHERE p.resume_id = r.resume_id ORDER BY p.template_name DESC LIMIT 1) AS portfolio_template
+            FROM resume r
+            LEFT JOIN resume_details d ON r.resume_id = d.resume_id
+            WHERE r.user_id = ?
+            ORDER BY r.resume_id DESC
+        `;
+
+        db.all(sql, [userId], (err, rows) => {
+            if (err) {
+                console.error("Error fetching user resumes:", err);
+                return res.status(500).json({
+                    message: "Failed to retrieve user resumes.",
+                    error: err.message
+                });
+            }
+
+            const resumes = (rows || []).map((row) => {
+                let meta = {};
+                try {
+                    meta = JSON.parse(row.metadata || "{}");
+                } catch (e) {
+                    meta = {};
+                }
+
+                const source = meta.source || (row.status === "Created" ? "scratch" : "upload");
+                const careerTarget = meta.career_target || meta.user_category || meta.title || "Professional";
+
+                return {
+                    resume_id: row.resume_id,
+                    user_id: row.user_id,
+                    file_name: row.file_name,
+                    file_path: row.file_path,
+                    upload_date: row.upload_date,
+                    last_updated: meta.last_updated || row.upload_date,
+                    status: row.status,
+                    source: source,
+                    name: row.name || meta.name || "Untitled Resume",
+                    title: meta.title || "",
+                    email: row.email || "",
+                    phone: row.phone || "",
+                    location: meta.location || "",
+                    photo: meta.photo_path || "",
+                    career_target: careerTarget,
+                    user_category: meta.user_category || "General",
+                    template: meta.template || "classic",
+                    about: row.about || "",
+                    portfolio_id: row.portfolio_id || null,
+                    portfolio_template: row.portfolio_template || null
+                };
+            });
+
+            return res.status(200).json({
+                message: "Resumes retrieved successfully.",
+                resumes
+            });
+        });
+    } catch (error) {
+        console.error("Error in handleGetUserResumes:", error);
+        return res.status(500).json({
+            message: "Internal server error fetching resumes.",
+            error: error.message
+        });
+    }
+}
+
+router.get("/my-resumes", handleGetUserResumes);
+router.get("/user/:userId", handleGetUserResumes);
+
+
 // =====================================
 // Get Resume Details
 // GET /:resumeId
@@ -1003,6 +1102,84 @@ router.put("/:resumeId", (req, res) => {
         console.error("Error updating resume:", error);
         return res.status(500).json({
             message: "Internal server error while updating resume.",
+            error: error.message
+        });
+    }
+});
+
+
+// =====================================
+// Delete Resume (Cascading)
+// DELETE /:resumeId
+// =====================================
+
+router.delete("/:resumeId", (req, res) => {
+    try {
+        const resumeId = req.params.resumeId;
+        const userId = req.body?.user_id || req.query?.user_id || req.headers["x-user-id"];
+
+        if (!resumeId) {
+            return res.status(400).json({ message: "Resume ID is required." });
+        }
+
+        // 1. Verify existence and ownership
+        db.get("SELECT * FROM Resume WHERE resume_id = ?", [resumeId], (checkErr, resumeRow) => {
+            if (checkErr) {
+                console.error("Error finding resume for deletion:", checkErr);
+                return res.status(500).json({
+                    message: "Database error checking resume.",
+                    error: checkErr.message
+                });
+            }
+
+            if (!resumeRow) {
+                return res.status(404).json({ message: `Resume #${resumeId} not found.` });
+            }
+
+            // If userId was provided, verify ownership
+            if (userId && String(resumeRow.user_id) !== String(userId)) {
+                return res.status(403).json({
+                    message: "Unauthorized: You do not have permission to delete this resume."
+                });
+            }
+
+            // 2. Safely unlink uploaded file if it exists
+            if (resumeRow.file_path && typeof resumeRow.file_path === "string" && resumeRow.file_path.trim() !== "") {
+                try {
+                    if (fs.existsSync(resumeRow.file_path)) {
+                        fs.unlinkSync(resumeRow.file_path);
+                    }
+                } catch (fsErr) {
+                    console.warn("Could not delete physical resume file:", fsErr.message);
+                }
+            }
+
+            // 3. Cascade delete across all related tables
+            db.serialize(() => {
+                db.run("DELETE FROM Resume_Details WHERE resume_id = ?", [resumeId]);
+                db.run("DELETE FROM Resume_Analysis WHERE resume_id = ?", [resumeId]);
+                db.run("DELETE FROM portfolio WHERE resume_id = ?", [resumeId]);
+                db.run("DELETE FROM Resume WHERE resume_id = ?", [resumeId], function (delErr) {
+                    if (delErr) {
+                        console.error("Error deleting resume:", delErr);
+                        return res.status(500).json({
+                            message: "Failed to delete resume.",
+                            error: delErr.message
+                        });
+                    }
+
+                    console.log(`Resume #${resumeId} and all associated records deleted successfully.`);
+                    return res.status(200).json({
+                        message: "Resume deleted successfully.",
+                        resume_id: parseInt(resumeId, 10)
+                    });
+                });
+            });
+        });
+    } catch (error) {
+        console.error("Error in delete resume route:", error);
+        return res.status(500).json({
+            message: "Internal server error deleting resume.",
             error: error.message
         });
     }
