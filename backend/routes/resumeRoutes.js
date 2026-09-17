@@ -593,8 +593,10 @@ router.post("/create", async (req, res) => {
                         console.log("Resume_Details created with ID:", resumeDetailsID);
 
                         return res.status(201).json({
+                            success: true,
                             message: "Resume created successfully!",
                             resume_id: resumeID,
+                            resumeId: resumeID,
                             resume_details_id: resumeDetailsID,
                             resume: normalized
                         });
@@ -1089,8 +1091,10 @@ router.put("/:resumeId", (req, res) => {
                             normalized.metadata = mergedMetadata;
 
                             return res.status(200).json({
+                                success: true,
                                 message: "Resume updated successfully!",
                                 resume_id: Number(resumeId),
+                                resumeId: Number(resumeId),
                                 resume: normalized
                             });
                         }

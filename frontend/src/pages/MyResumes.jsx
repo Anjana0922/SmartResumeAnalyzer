@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import html2pdf from "html2pdf.js";
 import {
   FileText,
   Plus,
@@ -24,7 +23,6 @@ import {
   Globe,
   LayoutTemplate
 } from "lucide-react";
-import ClassicTemplate from "../components/resume/templates/ClassicTemplate";
 
 export default function MyResumes() {
   const navigate = useNavigate();
@@ -42,7 +40,6 @@ export default function MyResumes() {
 
   // Download state for direct card download
   const [downloadingId, setDownloadingId] = useState(null);
-  const [resumeForPdf, setResumeForPdf] = useState(null);
 
   // Current logged in user
   const storedUser = localStorage.getItem("user");
@@ -114,78 +111,9 @@ export default function MyResumes() {
     }
   };
 
-  // Direct Card PDF Download
-  const handleCardDownloadPdf = async (resumeItem) => {
-    try {
-      setDownloadingId(resumeItem.resume_id);
-
-      // Fetch full resume details to ensure all sections, skills, education are present
-      const res = await axios.get(
-        `http://localhost:5000/api/resume/${resumeItem.resume_id}`
-      );
-      const fullResume = res.data?.resume;
-
-      if (!fullResume) {
-        throw new Error("Could not retrieve resume data for PDF export.");
-      }
-
-      setResumeForPdf(fullResume);
-
-      // Wait a tick for React to render the offscreen node
-      setTimeout(async () => {
-        const element = document.getElementById("direct-card-print-node");
-        if (!element) {
-          console.error("Print node not found");
-          setDownloadingId(null);
-          return;
-        }
-
-        if (document.fonts && document.fonts.ready) {
-          try {
-            await document.fonts.ready;
-          } catch (e) {}
-        }
-
-        const rawName = fullResume.personal?.name || "Candidate";
-        const cleanName = rawName.trim().replace(/[^a-zA-Z0-9_-]/g, "_");
-        const filename = `${cleanName}_Resume.pdf`;
-
-        const opt = {
-          margin: [0, 0, 0, 0],
-          filename: filename,
-          image: { type: "jpeg", quality: 0.98 },
-          enableLinks: true,
-          html2canvas: {
-            scale: 2,
-            useCORS: true,
-            logging: false,
-            letterRendering: true,
-            windowWidth: 794,
-            scrollY: 0,
-            scrollX: 0
-          },
-          jsPDF: {
-            unit: "mm",
-            format: "a4",
-            orientation: "portrait",
-            compress: true
-          },
-          pagebreak: {
-            mode: ["avoid-all", "css", "legacy"],
-            avoid: [".pdf-avoid-break", ".resume-entry", ".resume-section-block"]
-          }
-        };
-
-        await html2pdf().set(opt).from(element).save();
-        setDownloadingId(null);
-        setResumeForPdf(null);
-      }, 300);
-    } catch (err) {
-      console.error("PDF download error:", err);
-      alert("Failed to generate PDF. Please try opening Preview.");
-      setDownloadingId(null);
-      setResumeForPdf(null);
-    }
+  // Direct Card PDF Download - Navigates to Preview where printable element is reliably rendered
+  const handleCardDownloadPdf = (resumeItem) => {
+    navigate(`/resume/preview/${resumeItem.resume_id}?download=true`);
   };
 
   // Filtered resumes
@@ -210,14 +138,7 @@ export default function MyResumes() {
 
   return (
     <div className="min-h-screen bg-[#08070d] text-slate-100 px-4 py-8 md:px-8">
-      {/* Hidden container for direct card PDF exports */}
-      {resumeForPdf && (
-        <div className="fixed -left-[9999px] top-0 opacity-0 pointer-events-none" aria-hidden="true">
-          <div id="direct-card-print-node" className="resume-print-root bg-white text-slate-900">
-            <ClassicTemplate resume={resumeForPdf} />
-          </div>
-        </div>
-      )}
+      
 
       <div className="max-w-6xl mx-auto space-y-8">
         {/* ========================================================

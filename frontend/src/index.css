@@ -50,11 +50,13 @@ a {
   width: 794px;
   min-height: 1123px;
   box-sizing: border-box;
-  background-color: #ffffff;
-  color: #0f172a;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
   margin: 0 auto;
   position: relative;
   overflow: visible;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 /* Page break control for clean PDF chunks */

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation, useParams } from "react-router-dom";
+import { useNavigate, useLocation, useParams, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import {
   ArrowLeft,
@@ -56,6 +56,8 @@ export const DEFAULT_SKILL_CATEGORIES = [
 function CreateResume() {
   const navigate = useNavigate();
   const { resumeId: urlResumeId } = useParams();
+  const [searchParams] = useSearchParams();
+  const currentTemplate = searchParams.get("template") || "";
 
   // -------------------------------------------------------------
   // Read Logged-In User
@@ -1014,15 +1016,17 @@ function CreateResume() {
 
       console.log("Resume save response:", response.data);
 
-      const resumeId = response.data.resume_id || targetId;
+      const resumeId = response.data.resume_id || response.data.resumeId || targetId;
       if (resumeId) {
         localStorage.setItem("resume_id", String(resumeId));
         setSavedResumeId(resumeId);
 
-        if (previewAfterSave) {
-          navigate(`/resume/preview/${resumeId}`);
-          return;
-        }
+        const targetPreviewUrl = currentTemplate
+          ? `/resume/preview/${resumeId}?template=${currentTemplate}`
+          : `/resume/preview/${resumeId}`;
+
+        navigate(targetPreviewUrl);
+        return;
       } else {
         throw new Error("Resume was saved, but no resume ID was returned.");
       }
