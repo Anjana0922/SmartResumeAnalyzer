@@ -5,7 +5,9 @@ import {
   MapPin,
   ArrowUpRight,
   Sparkles,
+  Globe,
 } from "lucide-react";
+import { Linkedin, Github } from "../SocialIcons";
 
 function AestheticTemplate({
   resume,
@@ -85,6 +87,7 @@ function AestheticTemplate({
   const certificates = safeArray(resume?.certificates);
   const achievements = safeArray(resume?.achievements);
   const languages = safeArray(resume?.languages);
+  const custom_sections = safeArray(resume?.custom_sections);
 
   // Skills can be either an array or an object of categories
   const skills =
@@ -342,6 +345,13 @@ function AestheticTemplate({
                               className={`text-xs px-3 py-1 rounded-full ${decorative} ${muted}`}
                             >
                               {item.duration}
+                            </span>
+                          )}
+                          {item?.is_internship && (
+                            <span
+                              className="text-[10px] font-semibold uppercase px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+                            >
+                              Internship
                             </span>
                           )}
                           {item?.employment_type && (
@@ -790,6 +800,46 @@ function AestheticTemplate({
           </section>
         );
 
+      case "custom_sections":
+        if (!custom_sections.length) return null;
+
+        return (
+          <div key="custom_sections" className="space-y-16">
+            {custom_sections.map((sec, sIdx) => {
+              const items = safeArray(sec.items);
+              return (
+                <section key={sIdx} id={`custom-${sIdx}`} className="py-24 scroll-mt-24">
+                  <SectionHeading
+                    number={String(8 + sIdx).padStart(2, "0")}
+                    title={sec.title || sec.heading || "Additional Information"}
+                    subtitle="Selected details and contributions"
+                  />
+                  {items.length > 0 ? (
+                    <div className="space-y-6">
+                      {items.map((it, iIdx) => (
+                        <div key={iIdx} className={`p-8 rounded-[1.75rem] border ${border} ${surface}`}>
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <h3 className="font-serif text-2xl">{it.title || it.name || "Item"}</h3>
+                            {it.date && (
+                              <span className={`text-xs px-3 py-1 rounded-full ${decorative} ${muted}`}>
+                                {it.date}
+                              </span>
+                            )}
+                          </div>
+                          {it.subtitle && <p className={`text-sm mt-1 font-medium ${accent}`}>{it.subtitle}</p>}
+                          {it.description && <p className={`mt-3 text-sm leading-7 ${muted}`}>{it.description}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  ) : sec.content ? (
+                    <p className={`text-lg leading-8 ${muted}`}>{sec.content}</p>
+                  ) : null}
+                </section>
+              );
+            })}
+          </div>
+        );
+
       default:
         return null;
     }
@@ -950,6 +1000,7 @@ function AestheticTemplate({
 
       <main className="max-w-7xl mx-auto px-6 md:px-10 pb-24">
         {sections.map(renderSection)}
+        {!sections?.includes("custom_sections") && renderSection("custom_sections")}
       </main>
 
       {/* =====================================================

@@ -7,7 +7,9 @@ import {
   Terminal,
   Code2,
   ExternalLink,
+  Globe,
 } from "lucide-react";
+import { Linkedin, Github } from "../SocialIcons";
 
 function TechTemplate({
   resume,
@@ -65,6 +67,19 @@ function TechTemplate({
   // =========================================================
   // HELPERS
   // =========================================================
+
+  const toArray = (val) => {
+    if (Array.isArray(val)) return val;
+    if (typeof val === "string") {
+      try {
+        const parsed = JSON.parse(val);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  };
 
   const formatSectionName = (section) => {
     return section
@@ -258,6 +273,11 @@ function TechTemplate({
                   </span>
                   {item.location && (
                     <span className={`block ${faint}`}>{item.location}</span>
+                  )}
+                  {item.is_internship && (
+                    <span className="inline-block mt-1 mr-1 px-2 py-0.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-400 text-[10px]">
+                      Internship
+                    </span>
                   )}
                   {item.employment_type && (
                     <span className={`inline-block mt-1 px-2 py-0.5 rounded border ${accentBorder} ${accentBg} ${accent} text-[10px]`}>
@@ -664,6 +684,48 @@ function TechTemplate({
   };
 
   // =========================================================
+  // CUSTOM SECTIONS
+  // =========================================================
+
+  const renderCustomSections = () => {
+    const customSecs = toArray(resume?.custom_sections);
+    if (!customSecs.length) return null;
+
+    return (
+      <div className="space-y-16">
+        {customSecs.map((sec, sIdx) => {
+          const items = toArray(sec.items);
+          return (
+            <section key={sIdx} id={`custom-${sIdx}`} className={`py-16 border-t ${border} scroll-mt-24`}>
+              <Heading
+                number={String(8 + sIdx).padStart(2, "0")}
+                title={sec.title || sec.heading || "Additional Information"}
+                command={`custom_${sIdx + 1}`}
+              />
+              {items.length > 0 ? (
+                <div className="space-y-4">
+                  {items.map((it, iIdx) => (
+                    <div key={iIdx} className={`p-6 rounded-2xl border ${border} ${card}`}>
+                      <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
+                        <h3 className="font-mono text-base font-semibold">{it.title || it.name || "Item"}</h3>
+                        {it.date && <span className={`font-mono text-xs ${faint}`}>{it.date}</span>}
+                      </div>
+                      {it.subtitle && <p className={`font-mono text-sm ${accent} mt-1`}>{it.subtitle}</p>}
+                      {it.description && <p className={`mt-3 text-sm leading-6 ${muted}`}>{it.description}</p>}
+                    </div>
+                  ))}
+                </div>
+              ) : sec.content ? (
+                <p className={`text-base leading-7 ${muted}`}>{sec.content}</p>
+              ) : null}
+            </section>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // =========================================================
   // SECTION RENDERER
   // =========================================================
 
@@ -692,6 +754,9 @@ function TechTemplate({
 
       case "languages":
         return renderLanguages();
+
+      case "custom_sections":
+        return renderCustomSections();
 
       default:
         return null;
@@ -888,7 +953,12 @@ function TechTemplate({
       ===================================================== */}
 
       <main className="max-w-[1200px] mx-auto px-6 md:px-10 pb-24">
-        {sections.map(renderSection)}
+        {sections.map((sec) => (
+          <React.Fragment key={sec}>
+            {renderSection(sec)}
+          </React.Fragment>
+        ))}
+        {!sections?.includes("custom_sections") && renderCustomSections()}
       </main>
 
       {/* =====================================================

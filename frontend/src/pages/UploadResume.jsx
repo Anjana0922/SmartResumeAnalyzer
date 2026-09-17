@@ -72,11 +72,11 @@ const UploadResume = () => {
       localStorage.setItem("resume_id", resumeId);
       console.log("Saved resume ID:", resumeId);
 
-      setMessage("Resume uploaded and parsed successfully! Redirecting to portfolio templates...");
+      setMessage("Resume uploaded and parsed successfully! Redirecting to review details...");
 
-      // Go to Template Selection for this resume
+      // Go to Portfolio Data Review for this resume
       setTimeout(() => {
-        navigate(`/portfolio/create/${resumeId}`);
+        navigate(`/portfolio/review/${resumeId}`);
       }, 1000);
 
     } catch (err) {

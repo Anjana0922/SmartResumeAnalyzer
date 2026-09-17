@@ -471,12 +471,18 @@ export default function MyResumes() {
                     <div className="flex items-center gap-2">
                       {/* Portfolio Generator Link */}
                       <button
-                        onClick={() => navigate(`/portfolio/create/${item.resume_id}`)}
+                        onClick={() => {
+                          if (item.portfolio_id) {
+                            navigate(`/portfolio/${item.portfolio_id}`);
+                          } else {
+                            navigate(`/portfolio/review/${item.resume_id}`);
+                          }
+                        }}
                         className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-purple-300 text-xs font-medium transition cursor-pointer"
-                        title="Generate Portfolio Website"
+                        title={item.portfolio_id ? "View Generated Portfolio" : "Review and Generate Portfolio"}
                       >
                         <Globe size={13} />
-                        Portfolio
+                        {item.portfolio_id ? "View Portfolio" : "Portfolio"}
                       </button>
 
                       {/* Delete Button */}

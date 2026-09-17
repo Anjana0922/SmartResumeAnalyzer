@@ -15,6 +15,7 @@ import ResumeTemplates from "./pages/ResumeTemplates";
 import MyResumes from "./pages/MyResumes";
 import Portfolio from "./pages/Portfolio";
 import PortfolioEditor from "./pages/PortfolioEditor";
+import PortfolioDataReview from "./pages/PortfolioDataReview";
 import TemplateSelection from "./components/portfolio/TemplateSelection";
 
 function App() {
@@ -85,6 +86,15 @@ function App() {
       />
 
       {/* ==================================================
+          PORTFOLIO DATA REVIEW
+      ================================================== */}
+
+      <Route
+        path="/portfolio/review/:resumeId"
+        element={<PortfolioDataReview />}
+      />
+
+      {/* ==================================================
           TEMPLATE SELECTION / PORTFOLIO CREATION
       ================================================== */}
 
@@ -108,6 +118,11 @@ function App() {
 
       <Route
         path="/portfolio/:portfolioId"
+        element={<Portfolio />}
+      />
+
+      <Route
+        path="/portfolio/view/:portfolioId"
         element={<Portfolio />}
       />
 

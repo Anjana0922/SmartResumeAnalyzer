@@ -254,6 +254,15 @@ router.post("/upload", upload.single("resume"), async (req, res) => {
                 // Insert into Resume_Details
                 // =================================
 
+                const metadataToStore = {
+                    title: parsedResume.personal?.title || "",
+                    location: parsedResume.personal?.location || parsedResume.personal?.address || "",
+                    portfolio_url: parsedResume.personal?.portfolio_url || "",
+                    photo_path: parsedResume.personal?.photo || "",
+                    source: "upload",
+                    user_category: req.body.user_category || "Student"
+                };
+
                 const detailsSQL = `
                     INSERT INTO Resume_Details
                     (
@@ -271,9 +280,10 @@ router.post("/upload", upload.single("resume"), async (req, res) => {
                         github,
                         linkedin,
                         about,
-                        custom_sections
+                        custom_sections,
+                        metadata
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 `;
 
 
@@ -327,6 +337,10 @@ router.post("/upload", upload.single("resume"), async (req, res) => {
 
                         JSON.stringify(
                             parsedResume.custom_sections || []
+                        ),
+
+                        JSON.stringify(
+                            metadataToStore
                         )
 
                     ],
@@ -1418,5 +1432,8 @@ async function handleGenerateAbout(req, res) {
 
 router.post("/generate-about", handleGenerateAbout);
 router.post("/:resumeId/generate-about", handleGenerateAbout);
+
+router.generateAboutSummary = generateAboutSummary;
+router.handleGenerateAbout = handleGenerateAbout;
 
 module.exports = router;

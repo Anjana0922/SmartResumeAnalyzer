@@ -4,7 +4,9 @@ import {
   Phone,
   MapPin,
   ArrowUpRight,
+  Globe,
 } from "lucide-react";
+import { Linkedin, Github } from "../SocialIcons";
 
 function DarkTemplate({
   resume,
@@ -76,6 +78,7 @@ function DarkTemplate({
   const certificates = toArray(resume?.certificates);
   const achievements = toArray(resume?.achievements);
   const languages = toArray(resume?.languages);
+  const custom_sections = toArray(resume?.custom_sections);
 
   // =========================================================
   // SECTION HEADING
@@ -374,6 +377,11 @@ function DarkTemplate({
                 </span>
                 {item.location && (
                   <p className={`text-xs mt-1 ${faint}`}>{item.location}</p>
+                )}
+                {item.is_internship && (
+                  <span className={`inline-block mt-2 mr-1 px-2 py-0.5 text-[9px] uppercase tracking-wider font-mono bg-amber-500/15 text-amber-400 border border-amber-500/30`}>
+                    Internship
+                  </span>
                 )}
                 {item.employment_type && (
                   <span className={`inline-block mt-2 px-2 py-0.5 text-[9px] uppercase tracking-wider font-mono ${accentSoft} ${accent}`}>
@@ -828,6 +836,45 @@ function DarkTemplate({
   };
 
   // =========================================================
+  // CUSTOM SECTIONS
+  // =========================================================
+
+  const renderCustomSections = () => {
+    if (!custom_sections.length) return null;
+
+    return (
+      <div className="space-y-0">
+        {custom_sections.map((sec, sIdx) => {
+          const items = toArray(sec.items);
+          return (
+            <section key={sIdx} id={`custom-${sIdx}`} className={`py-20 border-t ${border} scroll-mt-24`}>
+              <SectionHeading number={String(8 + sIdx).padStart(2, "0")} title={sec.title || sec.heading || "Additional Information"} />
+              {items.length > 0 ? (
+                <div className="space-y-0">
+                  {items.map((it, iIdx) => (
+                    <div key={iIdx} className={`grid md:grid-cols-[160px_1fr] gap-8 py-8 border-b ${border}`}>
+                      <div>
+                        {it.date && <span className={`text-xs font-mono ${faint}`}>{it.date}</span>}
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-semibold">{it.title || it.name || "Item"}</h3>
+                        {it.subtitle && <p className={`mt-1 text-sm font-medium ${secondary}`}>{it.subtitle}</p>}
+                        {it.description && <p className={`mt-3 text-sm leading-relaxed ${secondary}`}>{it.description}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : sec.content ? (
+                <p className={`text-sm md:text-base leading-relaxed ${secondary}`}>{sec.content}</p>
+              ) : null}
+            </section>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // =========================================================
   // NAVIGATION LABELS
   // =========================================================
 
@@ -1120,10 +1167,14 @@ function DarkTemplate({
             case "languages":
               return renderLanguages();
 
+            case "custom_sections":
+              return renderCustomSections();
+
             default:
               return null;
           }
         })}
+        {!sections?.includes("custom_sections") && renderCustomSections()}
       </main>
 
       {/* =====================================================
