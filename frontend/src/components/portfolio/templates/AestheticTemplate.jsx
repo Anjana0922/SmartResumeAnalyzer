@@ -478,8 +478,9 @@ function AestheticTemplate({
                           <span
                             className={`inline-block mt-5 px-4 py-2 rounded-full ${accentBg} ${accent} text-xs`}
                           >
-                            {item.score.label}:{" "}
-                            {item.score.value}
+                            {typeof item.score === "object" && item.score !== null
+                              ? `${item.score.label || "Score"}: ${item.score.value || ""}`
+                              : String(item.score)}
                           </span>
                         )}
                       </div>

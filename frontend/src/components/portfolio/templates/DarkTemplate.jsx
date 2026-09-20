@@ -324,8 +324,9 @@ function DarkTemplate({
                       ${accent}
                     `}
                   >
-                    {item.score.label}:{" "}
-                    {item.score.value}
+                    {typeof item.score === "object" && item.score !== null
+                      ? `${item.score.label || "Score"}: ${item.score.value || ""}`
+                      : String(item.score)}
                   </span>
                 )}
               </div>

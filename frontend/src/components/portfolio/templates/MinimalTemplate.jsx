@@ -231,8 +231,9 @@ function MinimalTemplate({
                   <p
                     className={`mt-2 text-xs ${accent}`}
                   >
-                    {item.score.label}:{" "}
-                    {item.score.value}
+                    {typeof item.score === "object" && item.score !== null
+                      ? `${item.score.label || "Score"}: ${item.score.value || ""}`
+                      : String(item.score)}
                   </p>
                 )}
               </div>

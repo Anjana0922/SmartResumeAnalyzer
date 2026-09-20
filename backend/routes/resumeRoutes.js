@@ -39,7 +39,14 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({
-    storage: storage
+    storage: storage,
+    fileFilter: function (req, file, cb) {
+        const ext = path.extname(file.originalname).toLowerCase();
+        if (ext === ".pdf" || ext === ".docx") {
+            return cb(null, true);
+        }
+        cb(new Error("Only PDF (.pdf) and Word (.docx) documents are supported."));
+    }
 });
 
 // =====================================
@@ -414,13 +421,8 @@ router.post("/upload", upload.single("resume"), async (req, res) => {
         );
 
         return res.status(500).json({
-
-            message:
-                "Resume processing failed.",
-
-            error:
-                error.message
-
+            message: error.message || "Resume processing failed.",
+            error: error.message
         });
 
     }

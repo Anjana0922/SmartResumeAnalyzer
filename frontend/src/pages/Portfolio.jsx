@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import { ArrowLeft, Edit3, Share2, Check, LayoutTemplate, Home, Loader2, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Edit3, Share2, Check, LayoutTemplate, Home, Loader2, CheckCircle2, Download } from "lucide-react";
 
 import PortfolioPreview from "../components/portfolio/PortfolioPreview";
+import { exportPortfolioToHtml } from "../utils/exportPortfolioHtml";
 
 function Portfolio() {
   const { portfolioId } = useParams();
@@ -166,6 +167,15 @@ function Portfolio() {
                 <span>Change Template</span>
               </button>
             )}
+
+            <button
+              onClick={() => exportPortfolioToHtml(portfolio, { photo, template, theme })}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 text-xs font-semibold transition border border-white/10 cursor-pointer"
+              title="Download standalone HTML portfolio"
+            >
+              <Download size={14} />
+              <span>Download HTML</span>
+            </button>
 
             <button
               onClick={() => navigate(`/portfolio/${portfolioId}/edit`)}

@@ -49,6 +49,8 @@ function ProfessionalTemplate({
     ? "bg-[#172131]"
     : "bg-white";
 
+  const card = whiteCard;
+
   const sidebar = isDark
     ? "bg-[#0b1320]"
     : "bg-[#172a46]";
@@ -290,8 +292,9 @@ function ProfessionalTemplate({
                   <span
                     className={`inline-block mt-3 px-3 py-1 rounded-md text-xs ${accentBg} ${accent}`}
                   >
-                    {item.score.label}:{" "}
-                    {item.score.value}
+                    {typeof item.score === "object" && item.score !== null
+                      ? `${item.score.label || "Score"}: ${item.score.value || ""}`
+                      : String(item.score)}
                   </span>
                 )}
               </div>

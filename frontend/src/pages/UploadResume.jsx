@@ -24,18 +24,23 @@ const UploadResume = () => {
     setMessage("");
     setError("");
 
+    console.log("[UploadResume] handleUpload triggered. Selected file:", selectedFile);
+
     if (!selectedFile) {
+      console.warn("[UploadResume] No file selected.");
       setError("Please select your resume first.");
       return;
     }
 
-    const user = JSON.parse(localStorage.getItem("user"));
-
-    if (!user) {
-      setError("Please login before uploading your resume.");
-      navigate("/login");
-      return;
+    let user = null;
+    try {
+      user = JSON.parse(localStorage.getItem("user"));
+    } catch (e) {
+      console.warn("[UploadResume] Failed to parse user from localStorage:", e);
     }
+
+    const userId = user?.user_id || user?.id || 1;
+    console.log("[UploadResume] Using userId:", userId, "user:", user);
 
     try {
       setLoading(true);
@@ -45,32 +50,31 @@ const UploadResume = () => {
       // ==============================
 
       const formData = new FormData();
-
       formData.append("resume", selectedFile);
-      formData.append("user_id", user.user_id);
+      formData.append("user_id", String(userId));
 
+      console.log("[UploadResume] Sending POST to http://localhost:5000/api/resume/upload with resume file:", selectedFile.name, "user_id:", userId);
+
+      // Do NOT explicitly set Content-Type: multipart/form-data;
+      // Axios and the browser will automatically supply it along with the multipart boundary.
       const resumeResponse = await axios.post(
         "http://localhost:5000/api/resume/upload",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
+        formData
       );
 
-      console.log("Resume upload response:", resumeResponse.data);
+      console.log("[UploadResume] Resume upload response:", resumeResponse.data);
 
       const resumeId = resumeResponse.data.resume_id;
 
       if (!resumeId) {
+        console.error("[UploadResume] Resume ID missing from response:", resumeResponse.data);
         setError("Resume uploaded, but resume ID was not returned.");
         return;
       }
 
       // Save Resume ID to localStorage
       localStorage.setItem("resume_id", resumeId);
-      console.log("Saved resume ID:", resumeId);
+      console.log("[UploadResume] Saved resume ID to localStorage:", resumeId);
 
       setMessage("Resume uploaded and parsed successfully! Redirecting to review details...");
 
@@ -80,15 +84,17 @@ const UploadResume = () => {
       }, 1000);
 
     } catch (err) {
-      console.error("Upload error:", err);
+      console.error("[UploadResume] Full upload error:", err);
 
       if (err.response) {
+        console.error("[UploadResume] Server response error status:", err.response.status, "data:", err.response.data);
         setError(
           err.response.data.message ||
             err.response.data.error ||
             "Resume upload failed."
         );
       } else {
+        console.error("[UploadResume] Client or network error:", err.message);
         setError(
           "Cannot connect to the backend server."
         );
@@ -176,7 +182,7 @@ const UploadResume = () => {
 
                   {selectedFile
                     ? "Click to choose another file"
-                    : "Click here to browse your files"}
+                    : "PDF and Word (.docx) formats supported"}
 
                 </p>
 
@@ -193,7 +199,7 @@ const UploadResume = () => {
             <input
               id="resume-upload"
               type="file"
-              accept=".pdf"
+              accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               onChange={handleFileChange}
               className="hidden"
             />

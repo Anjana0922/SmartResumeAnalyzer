@@ -18,6 +18,7 @@ import TwoColumnTemplate from "../components/resume/templates/TwoColumnTemplate"
 import CreativeTemplate from "../components/resume/templates/CreativeTemplate";
 import AtsTemplate from "../components/resume/templates/AtsTemplate";
 import { generateResumePDF, getResumePdfFilename } from "../utils/pdfGenerator";
+import { generateAtsTextPDF } from "../utils/atsResumeGenerator";
 
 function ResumePreview() {
   const { resumeId } = useParams();
@@ -94,19 +95,9 @@ function ResumePreview() {
   const handleDownloadPdf = async () => {
     if (downloadingPdf) return; // Prevent duplicate clicks
 
-    const printableNode =
-      document.getElementById("resume-print-node") || resumePrintRef.current;
-
     console.log("PDF download started");
     console.log("Resume ID:", resumeId);
     console.log("Template:", templateKey);
-    console.log("Printable node:", printableNode);
-
-    if (!printableNode) {
-      console.error("Print container #resume-print-node not found!");
-      alert("Error: Printable resume element not found. Please refresh the page.");
-      return;
-    }
 
     try {
       setDownloadingPdf(true);
@@ -114,7 +105,19 @@ function ResumePreview() {
       const filename = getResumePdfFilename(resume?.personal?.name, templateKey);
       console.log("Generated filename:", filename);
 
-      await generateResumePDF(printableNode, filename);
+      if (templateKey === "ats") {
+        console.log("[ResumePreview] Generating vector text PDF for ATS template:", filename);
+        await generateAtsTextPDF(resume, filename);
+      } else {
+        const printableNode =
+          document.getElementById("resume-print-node") || resumePrintRef.current;
+        if (!printableNode) {
+          console.error("Print container #resume-print-node not found!");
+          alert("Error: Printable resume element not found. Please refresh the page.");
+          return;
+        }
+        await generateResumePDF(printableNode, filename);
+      }
       console.log("PDF download successfully completed:", filename);
     } catch (err) {
       console.error("PDF generation error:", err);

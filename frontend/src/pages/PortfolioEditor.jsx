@@ -14,7 +14,8 @@ import {
   LayoutTemplate,
   Loader2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Download
 } from "lucide-react";
 
 import ContentEditor from "../components/portfolio/ContentEditor";
@@ -22,6 +23,7 @@ import PhotoUploader from "../components/portfolio/PhotoUploader";
 import SectionOrganizer from "../components/portfolio/SectionOrganizer";
 import ThemeSelector from "../components/portfolio/ThemeSelector";
 import PortfolioPreview from "../components/portfolio/PortfolioPreview";
+import { exportPortfolioToHtml } from "../utils/exportPortfolioHtml";
 
 function PortfolioEditor() {
   const { portfolioId } = useParams();
@@ -340,6 +342,15 @@ function PortfolioEditor() {
             >
               <Eye size={14} />
               <span>View</span>
+            </button>
+
+            <button
+              onClick={() => exportPortfolioToHtml(portfolio, { photo, template: currentTemplate, theme })}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold transition border border-white/10 cursor-pointer"
+              title="Download standalone HTML portfolio"
+            >
+              <Download size={14} />
+              <span className="hidden sm:inline">Download HTML</span>
             </button>
 
             <button

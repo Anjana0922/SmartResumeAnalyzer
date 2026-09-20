@@ -17,6 +17,7 @@ import Portfolio from "./pages/Portfolio";
 import PortfolioEditor from "./pages/PortfolioEditor";
 import PortfolioDataReview from "./pages/PortfolioDataReview";
 import TemplateSelection from "./components/portfolio/TemplateSelection";
+import ATSAnalyzer from "./pages/ATSAnalyzer";
 
 function App() {
   return (
@@ -29,6 +30,15 @@ function App() {
       <Route
         path="/"
         element={<Home />}
+      />
+
+      {/* ==================================================
+          ATS RESUME ANALYZER
+      ================================================== */}
+
+      <Route
+        path="/ats"
+        element={<ATSAnalyzer />}
       />
 
       {/* ==================================================

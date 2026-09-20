@@ -256,6 +256,7 @@ function sanitizeCloneStyles(cloneNode) {
  * @param {string} filename - Target PDF file name (e.g. "John_Doe_Resume_Basic.pdf")
  */
 export async function generateResumePDF(element, filename) {
+  console.log("USING OLD generateResumePDF");
   // 1. Validate element
   if (!element) {
     throw new Error("PDF generation failed: printable resume element not found.");

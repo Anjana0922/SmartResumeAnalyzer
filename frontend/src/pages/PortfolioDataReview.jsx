@@ -29,6 +29,25 @@ import {
   X
 } from "lucide-react";
 
+const formatCustomItemForDisplay = (item) => {
+  if (!item) return "";
+  if (typeof item === "string") return item.trim();
+  if (typeof item === "object") {
+    const title = (item.title || item.name || "").trim();
+    const subtitle = (item.subtitle || item.role || "").trim();
+    const date = (item.date || item.year || "").trim();
+    const desc = (item.description || item.text || item.content || item.details || "").trim();
+
+    let header = title;
+    if (subtitle) header = header ? `${header} - ${subtitle}` : subtitle;
+    if (date) header = header ? `${header} (${date})` : date;
+
+    if (header && desc) return `${header}: ${desc}`;
+    return header || desc || "";
+  }
+  return String(item).trim();
+};
+
 function PortfolioDataReview() {
   const { resumeId } = useParams();
   const navigate = useNavigate();
@@ -116,6 +135,7 @@ function PortfolioDataReview() {
         const edu = Array.isArray(data.education) ? data.education : [];
         setEducation(
           edu.map((e) => ({
+            ...e,
             degree: e.degree || e.course || "",
             institution: e.institution || e.university || e.college || "",
             location: e.location || "",
@@ -129,6 +149,7 @@ function PortfolioDataReview() {
         const exp = Array.isArray(data.experience) ? data.experience : [];
         setExperience(
           exp.map((item) => ({
+            ...item,
             role: item.role || item.title || "",
             company: item.company || item.organization || "",
             location: item.location || "",
@@ -157,6 +178,7 @@ function PortfolioDataReview() {
         const prj = Array.isArray(data.projects) ? data.projects : [];
         setProjects(
           prj.map((p) => ({
+            ...p,
             title: p.title || p.name || "",
             subtitle: p.subtitle || p.role || "",
             description: p.description || "",
@@ -170,6 +192,7 @@ function PortfolioDataReview() {
         const cert = Array.isArray(data.certificates || data.certifications) ? (data.certificates || data.certifications) : [];
         setCertificates(
           cert.map((c) => ({
+            ...c,
             name: c.name || c.title || "",
             issuer: c.issuer || c.organization || "",
             year: c.year || c.issue_date || c.date || "",
@@ -180,22 +203,39 @@ function PortfolioDataReview() {
         // Achievements
         const ach = Array.isArray(data.achievements) ? data.achievements : [];
         setAchievements(
-          ach.map((a) => (typeof a === "string" ? { title: a, description: "" } : { title: a.title || "", description: a.description || "" }))
+          ach.map((a) => (typeof a === "string" ? { title: a, description: "" } : { ...a, title: a.title || "", description: a.description || "" }))
         );
 
         // Languages
         const lang = Array.isArray(data.languages) ? data.languages : [];
         setLanguages(
-          lang.map((l) => (typeof l === "string" ? { language: l, proficiency: "Proficient" } : { language: l.language || l.name || "", proficiency: l.proficiency || "Proficient" }))
+          lang.map((l) =>
+            typeof l === "string"
+              ? { language: l, proficiency: "Proficient", name: l, level: "Proficient" }
+              : {
+                  ...l,
+                  language: l.language || l.name || "",
+                  proficiency: l.proficiency || l.level || "Proficient",
+                  name: l.language || l.name || "",
+                  level: l.proficiency || l.level || "Proficient"
+                }
+          )
         );
 
         // Custom Sections
         const cust = Array.isArray(data.custom_sections) ? data.custom_sections : [];
         setCustomSections(
-          cust.map((c) => ({
-            heading: c.heading || c.title || "Custom Section",
-            items: Array.isArray(c.items) ? c.items.join("\n") : (c.items || c.content || "")
-          }))
+          cust.map((c) => {
+            const rawItems = Array.isArray(c.items)
+              ? c.items
+              : (typeof c.items === "string" && c.items.trim() ? [c.items] : (c.content ? [c.content] : []));
+            return {
+              ...c,
+              heading: c.heading || c.title || "Custom Section",
+              rawItems,
+              items: rawItems.map(formatCustomItemForDisplay).filter(Boolean).join("\n")
+            };
+          })
         );
 
         // Fetch initial AI Suggestions
@@ -341,18 +381,84 @@ function PortfolioDataReview() {
           photo_path: personal.photo,
           last_updated: new Date().toISOString()
         },
-        education: education,
-        experience: experience,
+        education: education.map((e) => ({
+          ...e,
+          degree: e.degree || "",
+          institution: e.institution || "",
+          location: e.location || "",
+          year: e.year || "",
+          score: e.score || "",
+          coursework: e.coursework || ""
+        })),
+        experience: experience.map((item) => ({
+          ...item,
+          role: item.role || "",
+          company: item.company || "",
+          location: item.location || "",
+          duration: item.duration || "",
+          description: item.description || "",
+          is_internship: Boolean(item.is_internship)
+        })),
         skills: skills,
         flat_skills: skills,
-        projects: projects,
-        certificates: certificates,
-        achievements: achievements,
-        languages: languages,
-        custom_sections: customSections.map((c) => ({
-          heading: c.heading,
-          items: typeof c.items === "string" ? c.items.split("\n").map((s) => s.trim()).filter(Boolean) : c.items
-        }))
+        projects: projects.map((p) => ({
+          ...p,
+          title: p.title || "",
+          subtitle: p.subtitle || "",
+          description: p.description || "",
+          technologies: p.technologies || "",
+          link: p.link || "",
+          github: p.github || ""
+        })),
+        certificates: certificates.map((c) => ({
+          ...c,
+          name: c.name || "",
+          issuer: c.issuer || "",
+          year: c.year || "",
+          link: c.link || ""
+        })),
+        achievements: achievements.map((a) => ({
+          ...a,
+          title: a.title || "",
+          description: a.description || ""
+        })),
+        languages: languages.map((l) => ({
+          ...l,
+          name: l.language || l.name || "",
+          level: l.proficiency || l.level || "Proficient",
+          language: l.language || l.name || "",
+          proficiency: l.proficiency || l.level || "Proficient"
+        })),
+        custom_sections: customSections.map((c) => {
+          const lines = typeof c.items === "string"
+            ? c.items.split("\n").map((s) => s.trim()).filter(Boolean)
+            : (Array.isArray(c.items) ? c.items : []);
+
+          const processedItems = lines.map((line, idx) => {
+            const original = Array.isArray(c.rawItems) ? c.rawItems[idx] : null;
+            if (original && typeof original === "object") {
+              if (line === formatCustomItemForDisplay(original)) {
+                return original;
+              }
+              return {
+                ...original,
+                title: original.title || "",
+                subtitle: original.subtitle || "",
+                date: original.date || "",
+                description: line
+              };
+            }
+            return typeof original === "object" && original !== null
+              ? { ...original, description: line }
+              : line;
+          });
+
+          return {
+            ...c,
+            heading: c.heading,
+            items: processedItems
+          };
+        })
       };
 
       await axios.put(`http://localhost:5000/api/resume/${resumeId}`, payload);
@@ -1494,7 +1600,7 @@ function PortfolioDataReview() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setLanguages([...languages, { language: "", proficiency: "Fluent" }])}
+                  onClick={() => setLanguages([...languages, { language: "", proficiency: "Fluent", name: "", level: "Fluent" }])}
                   className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition"
                 >
                   <Plus size={14} />
@@ -1519,7 +1625,11 @@ function PortfolioDataReview() {
                           value={item.language}
                           onChange={(e) => {
                             const updated = [...languages];
-                            updated[idx].language = e.target.value;
+                            updated[idx] = {
+                              ...updated[idx],
+                              language: e.target.value,
+                              name: e.target.value
+                            };
                             setLanguages(updated);
                           }}
                           placeholder="e.g. English, Spanish, French"
@@ -1529,7 +1639,11 @@ function PortfolioDataReview() {
                           value={item.proficiency}
                           onChange={(e) => {
                             const updated = [...languages];
-                            updated[idx].proficiency = e.target.value;
+                            updated[idx] = {
+                              ...updated[idx],
+                              proficiency: e.target.value,
+                              level: e.target.value
+                            };
                             setLanguages(updated);
                           }}
                           className={`${inputClass} bg-[#0e0c18]`}
