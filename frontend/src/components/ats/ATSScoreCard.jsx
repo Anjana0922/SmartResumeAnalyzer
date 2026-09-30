@@ -6,13 +6,13 @@ export default function ATSScoreCard({ score = 0, breakdown = {}, scoreLabel = "
   const isAverage = score >= 50 && score < 75;
   const isPoor = score < 50;
 
-  const scoreColor = isGood ? "text-emerald-400" : isAverage ? "text-amber-400" : "text-rose-400";
-  const strokeColor = isGood ? "#10b981" : isAverage ? "#f59e0b" : "#f43f5e";
+  const scoreColor = isGood ? "text-emerald-600" : isAverage ? "text-amber-600" : "text-rose-600";
+  const strokeColor = isGood ? "#059669" : isAverage ? "#d97706" : "#e11d48";
   const badgeBg = isGood
-    ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/30"
+    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
     : isAverage
-    ? "bg-amber-500/10 text-amber-300 border-amber-500/30"
-    : "bg-rose-500/10 text-rose-300 border-rose-500/30";
+    ? "bg-amber-50 text-amber-700 border-amber-200"
+    : "bg-rose-50 text-rose-700 border-rose-200";
 
   const radius = 60;
   const circumference = 2 * Math.PI * radius;
@@ -29,7 +29,7 @@ export default function ATSScoreCard({ score = 0, breakdown = {}, scoreLabel = "
   ];
 
   return (
-    <div className="bg-[#0f0e17] border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl">
+    <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         
         {/* Left: Circular Gauge */}
@@ -40,7 +40,7 @@ export default function ATSScoreCard({ score = 0, breakdown = {}, scoreLabel = "
                 cx="80"
                 cy="80"
                 r={radius}
-                stroke="#27272a"
+                stroke="#f1f5f9"
                 strokeWidth="12"
                 fill="transparent"
               />
@@ -75,7 +75,7 @@ export default function ATSScoreCard({ score = 0, breakdown = {}, scoreLabel = "
             </span>
           </div>
 
-          <p className="text-xs text-slate-400 mt-2 max-w-xs">
+          <p className="text-xs text-slate-500 mt-2 max-w-xs">
             {isGood
               ? "Your resume satisfies major ATS machine-reading criteria and will parse cleanly across most applicant tracking systems."
               : "Your resume has layout, symbol, or structural elements that may cause automated ATS screeners to drop critical information."}
@@ -84,11 +84,11 @@ export default function ATSScoreCard({ score = 0, breakdown = {}, scoreLabel = "
 
         {/* Right: 7-Category Breakdown */}
         <div className="lg:col-span-8 space-y-3">
-          <div className="flex items-center justify-between pb-2 border-b border-white/5">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">
               ATS Compatibility Criteria
             </h3>
-            <span className="text-xs text-slate-500 font-mono">
+            <span className="text-xs text-slate-400 font-mono">
               7 Evaluation Dimensions
             </span>
           </div>
@@ -106,13 +106,13 @@ export default function ATSScoreCard({ score = 0, breakdown = {}, scoreLabel = "
               return (
                 <div key={cat.key} className="space-y-0.5">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-300 font-medium">{cat.label}</span>
-                    <span className="font-mono text-slate-400">
-                      <strong className="text-white">{catScore}</strong> / {catMax} pts
+                    <span className="text-slate-700 font-medium">{cat.label}</span>
+                    <span className="font-mono text-slate-500">
+                      <strong className="text-slate-900">{catScore}</strong> / {catMax} pts
                     </span>
                   </div>
 
-                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                     <div
                       className={`h-full ${barColor} rounded-full transition-all duration-700`}
                       style={{ width: `${pct}%` }}
@@ -129,8 +129,8 @@ export default function ATSScoreCard({ score = 0, breakdown = {}, scoreLabel = "
             })}
           </div>
 
-          <div className="pt-2 text-[11px] text-slate-500 flex items-center gap-1">
-            <Info size={13} className="shrink-0" />
+          <div className="pt-2 text-[11px] text-slate-400 flex items-center gap-1">
+            <Info size={13} className="shrink-0 text-slate-400" />
             <span>
               Evaluates machine readability and layout safety. Missing optional sections do not penalize your score.
             </span>

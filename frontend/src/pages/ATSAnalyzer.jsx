@@ -160,31 +160,31 @@ export default function ATSAnalyzer() {
   };
 
   return (
-    <div className="min-h-screen bg-[#08070d] text-slate-100 px-4 py-8 md:px-8">
+    <div className="min-h-screen bg-slate-50 text-slate-900 px-4 py-8 md:px-8">
       <div className="max-w-6xl mx-auto">
         
         {/* ========================================================
             Top Navigation Bar
         ======================================================== */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200 mb-8">
           <div>
             <button
               onClick={() => navigate("/dashboard")}
-              className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition text-sm mb-3 group cursor-pointer"
+              className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 transition text-sm mb-3 group cursor-pointer"
             >
               <ArrowLeft size={16} className="group-hover:-translate-x-1 transition" />
               Back to Dashboard
             </button>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-extrabold tracking-tight text-white">
+              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
                 ATS Resume Analyzer
               </h1>
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-300 border border-purple-500/20 flex items-center gap-1.5">
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1.5">
                 <ShieldCheck size={14} />
                 Heuristic Scanner
               </span>
             </div>
-            <p className="text-slate-400 text-sm mt-1">
+            <p className="text-slate-600 text-sm mt-1">
               Scan your resume against 7 core ATS categories. Identify parsing drop-offs and convert to an ATS-friendly layout.
             </p>
           </div>
@@ -193,14 +193,14 @@ export default function ATSAnalyzer() {
             <div className="flex items-center gap-3">
               <button
                 onClick={handleReset}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-sm font-medium transition cursor-pointer border border-white/10"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium transition cursor-pointer border border-slate-300 shadow-sm"
               >
                 <RefreshCw size={15} />
                 Analyze Another
               </button>
               <button
                 onClick={() => setShowPreviewModal(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold transition cursor-pointer shadow-lg shadow-purple-600/25"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition cursor-pointer shadow-md shadow-indigo-200"
               >
                 <FileText size={15} />
                 View ATS Resume
@@ -217,7 +217,7 @@ export default function ATSAnalyzer() {
             
             {/* Error Message */}
             {error && (
-              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm flex items-center gap-3">
+              <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm flex items-center gap-3">
                 <AlertCircle size={18} className="shrink-0" />
                 <span>{error}</span>
               </div>
@@ -229,12 +229,12 @@ export default function ATSAnalyzer() {
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
               onDrop={handleDrop}
-              className={`p-10 rounded-2xl border-2 border-dashed transition-all text-center flex flex-col items-center justify-center cursor-pointer ${
+              className={`p-10 rounded-2xl border-2 border-dashed transition-all text-center flex flex-col items-center justify-center cursor-pointer shadow-sm ${
                 dragActive
-                  ? "border-purple-500 bg-purple-500/10"
+                  ? "border-indigo-500 bg-indigo-50/50"
                   : file
-                  ? "border-emerald-500/50 bg-emerald-500/5"
-                  : "border-white/10 bg-white/[0.02] hover:border-purple-500/40 hover:bg-white/[0.04]"
+                  ? "border-emerald-500 bg-emerald-50/40"
+                  : "border-slate-300 bg-white hover:border-indigo-400 hover:bg-slate-50/50"
               }`}
               onClick={() => document.getElementById("ats-file-input")?.click()}
             >
@@ -248,35 +248,35 @@ export default function ATSAnalyzer() {
 
               {file ? (
                 <div className="space-y-3">
-                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/20">
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200">
                     <FileText size={28} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-white text-base truncate max-w-sm mx-auto">
+                    <h3 className="font-bold text-slate-900 text-base truncate max-w-sm mx-auto">
                       {file.name}
                     </h3>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-xs text-slate-500 mt-0.5">
                       {(file.size / 1024).toFixed(1)} KB &bull; Ready to analyze
                     </p>
                   </div>
-                  <span className="inline-block px-3 py-1 rounded-full text-xs text-emerald-300 bg-emerald-500/10 border border-emerald-500/20 font-medium">
+                  <span className="inline-block px-3 py-1 rounded-full text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 font-medium">
                     Click to change file
                   </span>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <div className="w-14 h-14 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center mx-auto border border-purple-500/20">
+                  <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto border border-indigo-100">
                     <Upload size={28} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-white text-base">
+                    <h3 className="font-bold text-slate-900 text-base">
                       Upload your resume
                     </h3>
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className="text-xs text-slate-500 mt-1">
                       Drag and drop your file here, or click to browse
                     </p>
                   </div>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-slate-400">
                     Supports PDF (.pdf) and Word (.docx) up to 10MB
                   </p>
                 </div>
@@ -285,9 +285,9 @@ export default function ATSAnalyzer() {
 
             {/* Alternative: Select from My Resumes */}
             {userResumes.length > 0 && (
-              <div className="bg-[#0f0e17] border border-white/10 rounded-2xl p-5 space-y-3">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400">
-                  <FolderOpen size={14} className="text-purple-400" />
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-3 shadow-sm">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-600">
+                  <FolderOpen size={14} className="text-indigo-600" />
                   <span>Or select from your saved resumes</span>
                 </div>
 
@@ -297,7 +297,7 @@ export default function ATSAnalyzer() {
                     setSelectedResumeId(e.target.value);
                     if (e.target.value) setFile(null); // Clear file upload
                   }}
-                  className="w-full bg-[#08070d] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-purple-500 transition cursor-pointer"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-indigo-600 focus:bg-white transition cursor-pointer"
                 >
                   <option value="">-- Choose a resume from your account --</option>
                   {userResumes.map((r) => (
@@ -313,7 +313,7 @@ export default function ATSAnalyzer() {
             <button
               onClick={handleAnalyze}
               disabled={analyzing || (!file && !selectedResumeId)}
-              className="w-full py-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-sm transition shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition shadow-md shadow-indigo-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {analyzing ? (
                 <>
@@ -329,17 +329,17 @@ export default function ATSAnalyzer() {
             </button>
 
             {/* Information Pills */}
-            <div className="grid grid-cols-3 gap-3 pt-2 text-center text-[11px] text-slate-400">
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
-                <div className="font-semibold text-white mb-0.5">100% Heuristic</div>
+            <div className="grid grid-cols-3 gap-3 pt-2 text-center text-[11px] text-slate-600">
+              <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-sm">
+                <div className="font-semibold text-slate-900 mb-0.5">100% Heuristic</div>
                 <div>No API fees or token delays</div>
               </div>
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
-                <div className="font-semibold text-white mb-0.5">7 Categories</div>
+              <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-sm">
+                <div className="font-semibold text-slate-900 mb-0.5">7 Categories</div>
                 <div>Transparent 0-100 scoring</div>
               </div>
-              <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
-                <div className="font-semibold text-white mb-0.5">Instant Fix</div>
+              <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-sm">
+                <div className="font-semibold text-slate-900 mb-0.5">Instant Fix</div>
                 <div>Single-column ATS conversion</div>
               </div>
             </div>
@@ -354,16 +354,16 @@ export default function ATSAnalyzer() {
           <div className="space-y-8">
             
             {/* Header Summary Banner */}
-            <div className="p-4 rounded-xl bg-white/[0.02] border border-white/10 flex flex-wrap items-center justify-between gap-4">
+            <div className="p-4 rounded-xl bg-white border border-slate-200 flex flex-wrap items-center justify-between gap-4 shadow-sm">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
                   <FileText size={20} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-white text-sm">
+                  <h3 className="font-bold text-slate-900 text-sm">
                     {analysisResult.fileName || "Uploaded Resume"}
                   </h3>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-500">
                     Analyzed on {new Date().toLocaleDateString()} &bull; ATS Compatibility Report
                   </p>
                 </div>
@@ -371,7 +371,7 @@ export default function ATSAnalyzer() {
 
               <button
                 onClick={() => setShowPreviewModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition cursor-pointer shadow-md shadow-purple-600/20"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition cursor-pointer shadow-md shadow-indigo-200"
               >
                 <span>Convert to ATS-Friendly Resume</span>
               </button>
