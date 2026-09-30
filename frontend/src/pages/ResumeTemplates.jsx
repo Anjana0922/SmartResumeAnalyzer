@@ -150,10 +150,10 @@ export default function ResumeTemplates() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#08070d] text-white flex items-center justify-center px-4">
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center px-4">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mx-auto" />
-          <p className="mt-4 text-slate-400 text-sm">Loading template gallery...</p>
+          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto" />
+          <p className="mt-4 text-slate-600 text-sm">Loading template gallery...</p>
         </div>
       </div>
     );
@@ -161,14 +161,14 @@ export default function ResumeTemplates() {
 
   if (error || !resume) {
     return (
-      <div className="min-h-screen bg-[#08070d] text-white flex items-center justify-center px-4">
-        <div className="max-w-md w-full p-8 rounded-2xl bg-white/[0.03] border border-red-500/30 text-center">
-          <AlertCircle size={24} className="text-red-400 mx-auto mb-3" />
-          <h2 className="text-xl font-bold mb-2">Error Loading Resume</h2>
-          <p className="text-slate-400 text-sm mb-6">{error || "Resume not found."}</p>
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center px-4">
+        <div className="max-w-md w-full p-8 rounded-2xl bg-white border border-red-200 text-center shadow-xl">
+          <AlertCircle size={24} className="text-red-600 mx-auto mb-3" />
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Error Loading Resume</h2>
+          <p className="text-slate-600 text-sm mb-6">{error || "Resume not found."}</p>
           <button
             onClick={() => navigate("/dashboard")}
-            className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium transition cursor-pointer"
+            className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition cursor-pointer shadow-md shadow-indigo-200"
           >
             Back to Dashboard
           </button>
@@ -180,27 +180,27 @@ export default function ResumeTemplates() {
   const candidateName = resume.personal?.name || "Candidate";
 
   return (
-    <div className="min-h-screen bg-[#08070d] text-slate-100 px-4 py-8 md:px-8">
+    <div className="min-h-screen bg-slate-50 text-slate-900 px-4 py-8 md:px-8">
       <div className="max-w-6xl mx-auto">
         {/* Top Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-white/10 mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200 mb-8">
           <div>
             <button
               onClick={() => navigate(`/resume/preview/${resumeId}`)}
-              className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition text-sm mb-3 group cursor-pointer"
+              className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 transition text-sm mb-3 group cursor-pointer"
             >
               <ArrowLeft size={16} className="group-hover:-translate-x-1 transition" />
               Back to Basic Preview
             </button>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-extrabold tracking-tight text-white">
+              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
                 Choose a Resume Template
               </h1>
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-purple-500/10 text-purple-300 border border-purple-500/20">
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
                 Resume #{resumeId}
               </span>
             </div>
-            <p className="text-slate-400 text-sm mt-1">
+            <p className="text-slate-600 text-sm mt-1">
               Select one of our 5 professionally formatted layouts for {candidateName}. You can change templates anytime and export as PDF.
             </p>
           </div>
@@ -208,7 +208,7 @@ export default function ResumeTemplates() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(`/resume/edit/${resumeId}`)}
-              className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-sm font-medium transition cursor-pointer border border-white/10"
+              className="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium transition cursor-pointer border border-slate-300 shadow-sm"
             >
               Edit Resume Data
             </button>
@@ -222,12 +222,12 @@ export default function ResumeTemplates() {
             return (
               <div
                 key={tmpl.key}
-                className="group relative bg-[#0e0d16] border border-white/10 hover:border-purple-500/50 rounded-2xl p-6 flex flex-col justify-between transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/10"
+                className="group relative bg-white border border-slate-200 hover:border-indigo-400 rounded-2xl p-6 flex flex-col justify-between transition-all duration-300 hover:shadow-lg shadow-sm"
               >
                 <div>
                   {/* Top Bar with Badge & Icon */}
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-2.5 rounded-xl bg-white/[0.04] text-purple-400 border border-white/5 group-hover:border-purple-500/30 transition">
+                    <div className="p-2.5 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 group-hover:border-indigo-200 transition">
                       <Icon size={20} />
                     </div>
                     <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${tmpl.badgeColor}`}>
@@ -236,8 +236,8 @@ export default function ResumeTemplates() {
                   </div>
 
                   {/* Thumbnail / Layout Representation */}
-                  <div className="mb-5 p-3 rounded-xl bg-black/40 border border-white/5 overflow-hidden">
-                    <div className={`h-32 rounded-lg p-2.5 text-[8px] flex flex-col justify-between border ${tmpl.previewBg} transition transform group-hover:scale-[1.02] duration-300`}>
+                  <div className="mb-5 p-3 rounded-xl bg-slate-50 border border-slate-200 overflow-hidden">
+                    <div className={`h-32 rounded-lg p-2.5 text-[8px] flex flex-col justify-between border ${tmpl.previewBg} transition transform group-hover:scale-[1.02] duration-300 shadow-sm`}>
                       <div className="flex items-start justify-between">
                         <div>
                           <div className="font-bold uppercase tracking-wider text-[9px] truncate max-w-[120px]">
@@ -284,21 +284,21 @@ export default function ResumeTemplates() {
                   </div>
 
                   {/* Title & Description */}
-                  <h3 className="text-lg font-bold text-white mb-1 group-hover:text-purple-300 transition">
+                  <h3 className="text-lg font-bold text-slate-900 mb-1 group-hover:text-indigo-600 transition">
                     {tmpl.name}
                   </h3>
-                  <p className="text-xs text-purple-300/80 font-medium mb-2">
+                  <p className="text-xs text-indigo-600 font-semibold mb-2">
                     {tmpl.tagline}
                   </p>
-                  <p className="text-xs text-slate-400 leading-relaxed mb-4">
+                  <p className="text-xs text-slate-600 leading-relaxed mb-4">
                     {tmpl.description}
                   </p>
 
                   {/* Feature Bullets */}
-                  <ul className="space-y-1.5 mb-6 text-xs text-slate-300">
+                  <ul className="space-y-1.5 mb-6 text-xs text-slate-700">
                     {tmpl.features.map((feat, fIdx) => (
                       <li key={fIdx} className="flex items-center gap-2">
-                        <Check size={13} className="text-emerald-400 shrink-0" />
+                        <Check size={13} className="text-emerald-600 shrink-0" />
                         <span>{feat}</span>
                       </li>
                     ))}
@@ -308,7 +308,7 @@ export default function ResumeTemplates() {
                 {/* Select Button */}
                 <button
                   onClick={() => handleSelectTemplate(tmpl.key)}
-                  className="w-full py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold transition flex items-center justify-center gap-2 shadow-lg shadow-purple-600/20 cursor-pointer"
+                  className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition flex items-center justify-center gap-2 shadow-md shadow-indigo-200 cursor-pointer"
                 >
                   <span>Use This Template</span>
                   <ChevronRight size={16} />

@@ -181,10 +181,10 @@ function TemplateSelection() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#080611] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 size={36} className="text-purple-500 animate-spin mx-auto mb-3" />
-          <p className="text-sm text-slate-400">Loading resume details...</p>
+          <Loader2 size={36} className="text-indigo-600 animate-spin mx-auto mb-3" />
+          <p className="text-sm text-slate-600">Loading resume details...</p>
         </div>
       </div>
     );
@@ -192,13 +192,13 @@ function TemplateSelection() {
 
   if (!resume) {
     return (
-      <div className="min-h-screen bg-[#080611] text-white flex items-center justify-center px-6">
-        <div className="text-center max-w-md">
-          <h2 className="text-2xl font-bold">Resume not found</h2>
-          <p className="text-slate-400 mt-2 text-sm">{error || "Could not retrieve resume details."}</p>
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center px-6">
+        <div className="text-center max-w-md bg-white p-8 rounded-2xl border border-slate-200 shadow-xl">
+          <h2 className="text-2xl font-bold text-slate-900">Resume not found</h2>
+          <p className="text-slate-600 mt-2 text-sm">{error || "Could not retrieve resume details."}</p>
           <button
             onClick={() => navigate("/dashboard")}
-            className="mt-6 px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 transition text-sm font-semibold"
+            className="mt-6 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition text-sm font-semibold shadow-md shadow-indigo-200 cursor-pointer"
           >
             Back to Dashboard
           </button>
@@ -208,27 +208,27 @@ function TemplateSelection() {
   }
 
   return (
-    <div className="min-h-screen bg-[#080611] text-white selection:bg-purple-500 selection:text-white pb-20">
+    <div className="min-h-screen bg-slate-50 text-slate-900 pb-20">
       {/* Control Navigation */}
-      <header className="sticky top-0 z-40 bg-[#080611]/90 backdrop-blur-xl border-b border-white/10 px-6 py-4">
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-200 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(`/portfolio/review/${resumeId}`)}
-              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition"
+              className="p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
               title="Back to Review Details"
             >
               <ArrowLeft size={18} />
             </button>
             <div>
-              <h1 className="text-base font-bold text-white">Choose Portfolio Template</h1>
-              <p className="text-xs text-slate-400">Step 2 of 3: Select your visual presentation style</p>
+              <h1 className="text-base font-bold text-slate-900">Choose Portfolio Template</h1>
+              <p className="text-xs text-slate-500">Step 2 of 3: Select your visual presentation style</p>
             </div>
           </div>
 
           <button
             onClick={() => navigate(`/portfolio/review/${resumeId}`)}
-            className="text-xs font-medium text-slate-300 hover:text-white transition px-3 py-1.5 rounded-lg border border-white/10"
+            className="text-xs font-semibold text-slate-700 hover:text-indigo-600 transition px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 shadow-sm cursor-pointer"
           >
             Back to Review
           </button>
@@ -238,16 +238,16 @@ function TemplateSelection() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-12">
         <div className="text-center max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-xs font-semibold mb-4">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold mb-4">
             <Sparkles size={13} />
             <span>Profession-Independent Templates</span>
           </div>
 
-          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">
+          <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900">
             Select Your Visual Layout
           </h2>
 
-          <p className="text-sm text-slate-400 mt-3 leading-relaxed">
+          <p className="text-sm text-slate-600 mt-3 leading-relaxed">
             All 5 templates display your exact resume details. You can freely switch templates and customize content at any time in the editor.
           </p>
         </div>
@@ -263,13 +263,13 @@ function TemplateSelection() {
                 onClick={() => setSelectedTemplate(template.name)}
                 className={`text-left rounded-2xl p-4 transition duration-200 cursor-pointer flex flex-col justify-between border ${
                   isSelected
-                    ? "bg-purple-600/10 border-purple-500 shadow-xl shadow-purple-600/20 ring-2 ring-purple-500/50"
-                    : "bg-white/[0.02] border-white/10 hover:border-white/20 hover:bg-white/[0.04]"
+                    ? "bg-indigo-50/50 border-indigo-600 shadow-md ring-2 ring-indigo-500/30"
+                    : "bg-white border-slate-200 hover:border-indigo-300 hover:shadow-md shadow-sm"
                 }`}
               >
                 <div>
                   {/* Template Wireframe Preview */}
-                  <div className={`h-48 rounded-xl ${template.className} p-4 overflow-hidden relative shadow-inner mb-4 flex flex-col justify-between`}>
+                  <div className={`h-48 rounded-xl ${template.className} p-4 overflow-hidden relative shadow-inner mb-4 flex flex-col justify-between border border-slate-200`}>
                     <div>
                       <div className="w-12 h-1.5 bg-black/20 rounded-full" />
                       <div className="w-24 h-3.5 bg-black/20 rounded-full mt-3" />
@@ -287,7 +287,7 @@ function TemplateSelection() {
                     </div>
 
                     {isSelected && (
-                      <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-purple-600 text-white flex items-center justify-center shadow-md">
+                      <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-md">
                         <Check size={14} />
                       </div>
                     )}
@@ -295,16 +295,16 @@ function TemplateSelection() {
 
                   {/* Badge & Title */}
                   <div className="flex items-center justify-between gap-1 mb-1.5">
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-slate-300">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-700">
                       {template.badge}
                     </span>
                     {isSelected && (
-                      <span className="text-[11px] font-bold text-purple-400">Selected</span>
+                      <span className="text-[11px] font-bold text-indigo-600">Selected</span>
                     )}
                   </div>
 
-                  <h3 className="font-bold text-sm text-white">{template.title}</h3>
-                  <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                  <h3 className="font-bold text-sm text-slate-900">{template.title}</h3>
+                  <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
                     {template.description}
                   </p>
                 </div>
@@ -315,7 +315,7 @@ function TemplateSelection() {
 
         {/* Error Notification */}
         {error && (
-          <div className="max-w-md mx-auto mt-8 p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs text-center">
+          <div className="max-w-md mx-auto mt-8 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs text-center">
             {error}
           </div>
         )}
@@ -325,7 +325,7 @@ function TemplateSelection() {
           <button
             type="button"
             onClick={() => navigate(`/portfolio/review/${resumeId}`)}
-            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-semibold transition border border-white/10"
+            className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition border border-slate-300 shadow-sm cursor-pointer"
           >
             ← Back to Review
           </button>
@@ -334,7 +334,7 @@ function TemplateSelection() {
             type="button"
             onClick={handleContinue}
             disabled={creating}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white text-xs font-bold transition shadow-lg shadow-purple-600/30 cursor-pointer disabled:opacity-50"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow-md shadow-indigo-200 cursor-pointer disabled:opacity-50"
           >
             {creating ? (
               <span className="inline-flex items-center gap-2">

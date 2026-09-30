@@ -8,25 +8,25 @@ function Dashboard() {
   const category = user?.user_category || "Student";
 
   return (
-    <div className="min-h-screen bg-[#08070d] text-white px-6 py-10">
+    <div className="min-h-screen bg-slate-50 text-slate-900 px-6 py-10">
       <div className="max-w-6xl mx-auto">
 
         {/* Header */}
         <div className="mb-12">
-          <p className="text-purple-400 text-sm font-medium mb-2">
-            Smart Resume Analyzer
+          <p className="text-indigo-600 text-sm font-semibold tracking-wide uppercase mb-2">
+            Profile Builder
           </p>
 
-          <h1 className="text-4xl font-bold">
+          <h1 className="text-4xl font-bold text-slate-900 tracking-tight">
             Welcome, {user?.full_name || "User"} 👋
           </h1>
 
-          <p className="text-slate-400 mt-3">
+          <p className="text-slate-600 mt-2">
             Create, analyze, and build your professional portfolio.
           </p>
 
           <div className="mt-4">
-            <span className="inline-block px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-sm">
+            <span className="inline-block px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold uppercase tracking-wider">
               {category}
             </span>
           </div>
@@ -38,15 +38,15 @@ function Dashboard() {
           {/* My Resumes */}
           <button
             onClick={() => navigate("/my-resumes")}
-            className="p-7 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-purple-500/50 hover:bg-white/[0.07] transition text-left cursor-pointer group"
+            className="p-7 rounded-2xl bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-lg transition-all duration-200 text-left cursor-pointer group shadow-sm"
           >
             <div className="text-4xl mb-5 group-hover:scale-110 transition duration-200">📂</div>
 
-            <h2 className="font-semibold text-xl group-hover:text-purple-300 transition">
+            <h2 className="font-semibold text-xl text-slate-900 group-hover:text-indigo-600 transition">
               My Resumes
             </h2>
 
-            <p className="text-sm text-slate-400 mt-3 leading-6">
+            <p className="text-sm text-slate-600 mt-3 leading-6">
               View, edit, choose templates, preview, and download all your saved and uploaded resumes.
             </p>
           </button>
@@ -54,15 +54,15 @@ function Dashboard() {
           {/* Create Resume */}
           <button
             onClick={() => navigate("/resume/create")}
-            className="p-7 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-purple-500/50 hover:bg-white/[0.07] transition text-left cursor-pointer group"
+            className="p-7 rounded-2xl bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-lg transition-all duration-200 text-left cursor-pointer group shadow-sm"
           >
             <div className="text-4xl mb-5 group-hover:scale-110 transition duration-200">📝</div>
 
-            <h2 className="font-semibold text-xl group-hover:text-purple-300 transition">
+            <h2 className="font-semibold text-xl text-slate-900 group-hover:text-indigo-600 transition">
               Create Resume
             </h2>
 
-            <p className="text-sm text-slate-400 mt-3 leading-6">
+            <p className="text-sm text-slate-600 mt-3 leading-6">
               Build a professional resume from scratch using our resume
               templates.
             </p>
@@ -71,15 +71,15 @@ function Dashboard() {
           {/* Generate Portfolio */}
           <button
             onClick={() => navigate("/upload")}
-            className="p-7 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-purple-500/50 hover:bg-white/[0.07] transition text-left cursor-pointer group"
+            className="p-7 rounded-2xl bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-lg transition-all duration-200 text-left cursor-pointer group shadow-sm"
           >
             <div className="text-4xl mb-5 group-hover:scale-110 transition duration-200">🌐</div>
 
-            <h2 className="font-semibold text-xl group-hover:text-purple-300 transition">
+            <h2 className="font-semibold text-xl text-slate-900 group-hover:text-indigo-600 transition">
               Generate Portfolio
             </h2>
 
-            <p className="text-sm text-slate-400 mt-3 leading-6">
+            <p className="text-sm text-slate-600 mt-3 leading-6">
               Upload your existing resume and turn it into a professional
               portfolio website.
             </p>
@@ -88,15 +88,15 @@ function Dashboard() {
           {/* ATS Analysis */}
           <button
             onClick={() => navigate("/ats")}
-            className="p-7 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-purple-500/50 hover:bg-white/[0.07] transition text-left cursor-pointer group"
+            className="p-7 rounded-2xl bg-white border border-slate-200 hover:border-indigo-400 hover:shadow-lg transition-all duration-200 text-left cursor-pointer group shadow-sm"
           >
             <div className="text-4xl mb-5 group-hover:scale-110 transition duration-200">📊</div>
 
-            <h2 className="font-semibold text-xl group-hover:text-purple-300 transition">
+            <h2 className="font-semibold text-xl text-slate-900 group-hover:text-indigo-600 transition">
               ATS Analysis
             </h2>
 
-            <p className="text-sm text-slate-400 mt-3 leading-6">
+            <p className="text-sm text-slate-600 mt-3 leading-6">
               Analyze your resume and get suggestions to improve its ATS
               compatibility.
             </p>

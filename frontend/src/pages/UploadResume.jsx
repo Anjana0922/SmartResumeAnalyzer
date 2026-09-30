@@ -105,91 +105,65 @@ const UploadResume = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#080611] text-white flex items-center justify-center px-6 py-20 relative overflow-hidden">
-
-      {/* Background glow */}
-
-      <div className="absolute top-[-200px] left-[-150px] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[120px]" />
-
-      <div className="absolute bottom-[-200px] right-[-150px] w-[500px] h-[500px] bg-violet-600/20 rounded-full blur-[120px]" />
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center px-6 py-20 relative overflow-hidden">
 
       {/* Main container */}
-
       <div className="relative z-10 w-full max-w-5xl">
 
         {/* Header */}
-
         <div className="text-center mb-10">
 
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-sm mb-5">
-
-            <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
-
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold uppercase tracking-wider mb-5">
+            <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />
             Resume Analyzer
-
           </div>
 
-          <h1 className="text-4xl md:text-5xl font-bold">
-
+          <h1 className="text-4xl md:text-5xl font-bold text-slate-900">
             Upload your
-
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-violet-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">
               {" "}resume
             </span>
-
           </h1>
 
-          <p className="text-slate-400 mt-4 max-w-xl mx-auto">
-
+          <p className="text-slate-600 mt-4 max-w-xl mx-auto">
             Upload your resume and we'll extract your
             education, skills, projects, certifications
             and achievements to build your portfolio.
-
           </p>
 
         </div>
 
         {/* Main card */}
-
         <div className="max-w-2xl mx-auto">
 
-          <div className="bg-white/[0.04] backdrop-blur-xl border border-white/10 rounded-3xl p-8 md:p-10 shadow-2xl">
+          <div className="bg-white border border-slate-200 rounded-3xl p-8 md:p-10 shadow-xl shadow-slate-200/50">
 
             {/* Upload area */}
-
             <label
               htmlFor="resume-upload"
               className="block cursor-pointer"
             >
 
-              <div className="border-2 border-dashed border-purple-500/30 hover:border-purple-400/60 rounded-2xl p-10 text-center bg-purple-500/[0.03] hover:bg-purple-500/[0.06] transition">
+              <div className="border-2 border-dashed border-indigo-200 hover:border-indigo-400 rounded-2xl p-10 text-center bg-indigo-50/30 hover:bg-indigo-50/60 transition">
 
-                <div className="mx-auto w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500/20 to-violet-600/20 border border-purple-500/20 flex items-center justify-center text-4xl mb-6">
-
+                <div className="mx-auto w-20 h-20 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-4xl mb-6 shadow-sm">
                   📄
-
                 </div>
 
-                <h2 className="text-xl font-semibold">
-
+                <h2 className="text-xl font-semibold text-slate-900">
                   {selectedFile
                     ? "Resume selected"
                     : "Upload your resume"}
-
                 </h2>
 
                 <p className="text-slate-500 text-sm mt-2">
-
                   {selectedFile
                     ? "Click to choose another file"
                     : "PDF and Word (.docx) formats supported"}
-
                 </p>
 
-                <div className="mt-5 inline-flex px-5 py-2.5 rounded-lg bg-purple-600/10 border border-purple-500/20 text-purple-300 text-sm">
-
+                <div className="mt-5 inline-flex px-5 py-2.5 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 text-sm font-semibold">
                   Browse Resume
-
                 </div>
 
               </div>
@@ -205,115 +179,81 @@ const UploadResume = () => {
             />
 
             {/* Selected file */}
-
             {selectedFile && (
+              <div className="mt-5 p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-4">
 
-              <div className="mt-5 p-4 rounded-xl bg-slate-900/70 border border-white/10 flex items-center gap-4">
-
-                <div className="w-11 h-11 rounded-lg bg-red-500/10 flex items-center justify-center">
+                <div className="w-11 h-11 rounded-lg bg-indigo-50 flex items-center justify-center text-lg">
                   📄
                 </div>
 
                 <div className="flex-1 min-w-0">
 
-                  <p className="text-sm font-medium text-white truncate">
+                  <p className="text-sm font-medium text-slate-900 truncate">
                     {selectedFile.name}
                   </p>
 
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-slate-500 mt-0.5">
                     {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                   </p>
 
                 </div>
 
-                <span className="text-emerald-400 text-sm">
+                <span className="text-emerald-600 font-semibold text-sm">
                   ✓ Ready
                 </span>
 
               </div>
-
             )}
 
             {/* Error */}
-
             {error && (
-
-              <div className="mt-5 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              <div className="mt-5 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
                 {error}
               </div>
-
             )}
 
             {/* Success */}
-
             {message && (
-
-              <div className="mt-5 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
+              <div className="mt-5 p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm">
                 {message}
               </div>
-
             )}
 
             {/* Upload button */}
-
             <button
               onClick={handleUpload}
               disabled={loading}
-              className="w-full mt-6 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 disabled:opacity-50 font-semibold shadow-lg shadow-purple-600/20 transition"
+              className="w-full mt-6 py-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold shadow-md shadow-indigo-200 transition cursor-pointer"
             >
-
               {loading
                 ? "Analyzing Resume..."
                 : "Upload & Generate Portfolio →"}
-
             </button>
 
           </div>
 
           {/* Process */}
-
           <div className="mt-8 grid grid-cols-3 gap-3">
 
-            <div className="text-center p-4 rounded-xl bg-white/[0.03] border border-white/5">
-
-              <div className="text-lg mb-2">
-                📤
-              </div>
-
-              <p className="text-xs text-slate-400">
-                Upload
-              </p>
-
+            <div className="text-center p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+              <div className="text-lg mb-2">📤</div>
+              <p className="text-xs font-medium text-slate-600">Upload</p>
             </div>
 
-            <div className="text-center p-4 rounded-xl bg-white/[0.03] border border-white/5">
-
-              <div className="text-lg mb-2">
-                ⚙️
-              </div>
-
-              <p className="text-xs text-slate-400">
-                Analyze
-              </p>
-
+            <div className="text-center p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+              <div className="text-lg mb-2">⚙️</div>
+              <p className="text-xs font-medium text-slate-600">Analyze</p>
             </div>
 
-            <div className="text-center p-4 rounded-xl bg-white/[0.03] border border-white/5">
-
-              <div className="text-lg mb-2">
-                ✨
-              </div>
-
-              <p className="text-xs text-slate-400">
-                Portfolio
-              </p>
-
+            <div className="text-center p-4 rounded-xl bg-white border border-slate-200 shadow-sm">
+              <div className="text-lg mb-2">✨</div>
+              <p className="text-xs font-medium text-slate-600">Portfolio</p>
             </div>
 
           </div>
 
-          <p className="text-center text-xs text-slate-600 mt-6">
-            Smart Resume Analyzer • Resume to Portfolio Generator
+          <p className="text-center text-xs text-slate-500 mt-6">
+            Profile Builder • Professional Profile Platform
           </p>
 
         </div>

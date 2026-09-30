@@ -94,7 +94,7 @@ function PortfolioDataReview() {
   const [activeTab, setActiveTab] = useState("personal");
 
   const inputClass =
-    "w-full px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-purple-500/60 transition";
+    "w-full px-3.5 py-2 rounded-xl bg-white border border-slate-300 text-slate-800 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition shadow-xs";
 
   // ==================================================
   // 1. FETCH RESUME DETAILS
@@ -493,10 +493,10 @@ function PortfolioDataReview() {
   // ==================================================
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#080611] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 size={36} className="text-purple-500 animate-spin mx-auto mb-4" />
-          <p className="text-slate-400 font-medium">Extracting and loading resume details for review...</p>
+          <Loader2 size={36} className="text-indigo-600 animate-spin mx-auto mb-4" />
+          <p className="text-slate-600 font-medium">Extracting and loading resume details for review...</p>
         </div>
       </div>
     );
@@ -518,26 +518,26 @@ function PortfolioDataReview() {
   const visibleSuggestions = suggestions.filter((s) => !dismissedSuggestions.includes(s.id));
 
   return (
-    <div className="min-h-screen bg-[#080611] text-white selection:bg-purple-500 selection:text-white pb-24">
+    <div className="min-h-screen bg-slate-50 text-slate-800 selection:bg-indigo-600 selection:text-white pb-24">
       {/* Top Sticky Header */}
-      <header className="sticky top-0 z-40 bg-[#080611]/90 backdrop-blur-xl border-b border-white/10 px-6 py-4">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-slate-200 px-6 py-4 shadow-xs">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate("/dashboard")}
-              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition"
+              className="p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
               title="Back to Dashboard"
             >
               <ArrowLeft size={18} />
             </button>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-lg font-bold text-white tracking-tight">Review Resume Details</h1>
-                <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
+                <h1 className="text-lg font-bold text-slate-900 tracking-tight">Review Resume Details</h1>
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold">
                   Parsed from Resume
                 </span>
               </div>
-              <p className="text-xs text-slate-400">Step 1 of 3: Verify and refine your details before selecting a portfolio template</p>
+              <p className="text-xs text-slate-500">Step 1 of 3: Verify and refine your details before selecting a portfolio template</p>
             </div>
           </div>
 
@@ -545,16 +545,16 @@ function PortfolioDataReview() {
             <button
               onClick={() => handleSave(false)}
               disabled={saving}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-xs font-semibold transition border border-white/10 disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition border border-slate-300 shadow-xs disabled:opacity-50 cursor-pointer"
             >
-              {saving ? <Loader2 size={14} className="animate-spin text-purple-400" /> : <Save size={14} />}
+              {saving ? <Loader2 size={14} className="animate-spin text-indigo-600" /> : <Save size={14} />}
               Save Progress
             </button>
 
             <button
               onClick={handleProceed}
               disabled={saving}
-              className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white text-xs font-bold transition shadow-lg shadow-purple-600/30 cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow-sm shadow-indigo-600/20 cursor-pointer disabled:opacity-50"
             >
               <span>Choose Template</span>
               <ArrowRight size={14} />
@@ -566,15 +566,15 @@ function PortfolioDataReview() {
       {/* Notifications */}
       <div className="max-w-7xl mx-auto px-6 pt-6">
         {successMessage && (
-          <div className="mb-6 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-sm flex items-center gap-3 animate-fadeIn">
-            <CheckCircle2 size={18} className="shrink-0" />
+          <div className="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center gap-3 animate-fadeIn">
+            <CheckCircle2 size={18} className="shrink-0 text-emerald-600" />
             <span>{successMessage}</span>
           </div>
         )}
 
         {error && (
-          <div className="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm flex items-center gap-3 animate-fadeIn">
-            <AlertCircle size={18} className="shrink-0" />
+          <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-sm flex items-center gap-3 animate-fadeIn">
+            <AlertCircle size={18} className="shrink-0 text-red-600" />
             <span>{error}</span>
           </div>
         )}
@@ -583,8 +583,8 @@ function PortfolioDataReview() {
       <main className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 mt-2">
         {/* Left Navigation Tabs */}
         <div className="lg:col-span-3 space-y-6">
-          <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-3 space-y-1">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 px-3 py-2">
+          <div className="rounded-2xl bg-white border border-slate-200 p-3 space-y-1 shadow-xs">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 px-3 py-2">
               Sections to Review
             </p>
             {tabs.map((tab) => {
@@ -596,11 +596,11 @@ function PortfolioDataReview() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition text-left cursor-pointer ${
                     isActive
-                      ? "bg-purple-600 text-white shadow-md shadow-purple-600/25"
-                      : "text-slate-300 hover:bg-white/5 hover:text-white"
+                      ? "bg-indigo-600 text-white shadow-sm"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
-                  <Icon size={16} className={isActive ? "text-white" : "text-slate-400"} />
+                  <Icon size={16} className={isActive ? "text-white" : "text-slate-500"} />
                   <span className="truncate">{tab.label}</span>
                 </button>
               );
@@ -609,15 +609,15 @@ function PortfolioDataReview() {
 
           {/* AI Suggestions Box in Sidebar */}
           {visibleSuggestions.length > 0 && (
-            <div className="rounded-2xl bg-purple-500/[0.04] border border-purple-500/20 p-4 space-y-3">
+            <div className="rounded-2xl bg-indigo-50/70 border border-indigo-200/80 p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-bold text-purple-300">
-                  <Sparkles size={14} className="text-purple-400" />
+                <div className="flex items-center gap-2 text-xs font-bold text-indigo-950">
+                  <Sparkles size={14} className="text-indigo-600" />
                   <span>AI Suggestions ({visibleSuggestions.length})</span>
                 </div>
-                {loadingSuggestions && <Loader2 size={12} className="animate-spin text-purple-400" />}
+                {loadingSuggestions && <Loader2 size={12} className="animate-spin text-indigo-600" />}
               </div>
-              <p className="text-[11px] text-slate-400 leading-relaxed">
+              <p className="text-[11px] text-slate-600 leading-relaxed">
                 Advisory tips to strengthen your portfolio based on your actual resume data:
               </p>
 
@@ -625,17 +625,17 @@ function PortfolioDataReview() {
                 {visibleSuggestions.map((sug) => (
                   <div
                     key={sug.id}
-                    className="p-3 rounded-xl bg-white/[0.03] border border-white/10 text-xs space-y-1.5 relative group"
+                    className="p-3 rounded-xl bg-white border border-slate-200 text-xs space-y-1.5 relative group shadow-2xs"
                   >
                     <button
                       onClick={() => setDismissedSuggestions((prev) => [...prev, sug.id])}
-                      className="absolute top-2 right-2 text-slate-500 hover:text-slate-300 p-0.5"
+                      className="absolute top-2 right-2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
                       title="Dismiss suggestion"
                     >
                       <X size={12} />
                     </button>
-                    <p className="font-semibold text-slate-200 pr-4">{sug.title}</p>
-                    <p className="text-[11px] text-slate-400 leading-normal">{sug.description}</p>
+                    <p className="font-semibold text-slate-800 pr-4">{sug.title}</p>
+                    <p className="text-[11px] text-slate-600 leading-normal">{sug.description}</p>
                   </div>
                 ))}
               </div>
@@ -649,36 +649,36 @@ function PortfolioDataReview() {
               1. PERSONAL DETAILS
           ==================================================== */}
           {activeTab === "personal" && (
-            <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-6 space-y-6 animate-fadeIn">
+            <div className="rounded-2xl bg-white border border-slate-200 p-6 space-y-6 shadow-sm animate-fadeIn">
               <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <User size={20} className="text-purple-400" />
+                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <User size={20} className="text-indigo-600" />
                   Personal Information & Headline
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   Ensure your professional title, contact methods, and links are accurate.
                 </p>
               </div>
 
               {/* Photo uploader */}
-              <div className="flex items-center gap-5 p-4 rounded-xl bg-white/[0.03] border border-white/10">
+              <div className="flex items-center gap-5 p-4 rounded-xl bg-slate-50 border border-slate-200">
                 {personal.photo ? (
                   <img
                     src={personal.photo}
                     alt={personal.name || "Profile"}
-                    className="w-20 h-20 rounded-full object-cover border-2 border-purple-500/40 shrink-0"
+                    className="w-20 h-20 rounded-full object-cover border-2 border-indigo-500/40 shrink-0"
                   />
                 ) : (
-                  <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-500 shrink-0">
+                  <div className="w-20 h-20 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-slate-500 shrink-0">
                     <User size={30} />
                   </div>
                 )}
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold text-white">Profile Photo</p>
-                  <p className="text-[11px] text-slate-400">
+                  <p className="text-xs font-semibold text-slate-900">Profile Photo</p>
+                  <p className="text-[11px] text-slate-500">
                     Recommended for portfolios. Professional headshots enhance credibility across any career.
                   </p>
-                  <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition cursor-pointer mt-1">
+                  <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition cursor-pointer mt-1">
                     <Upload size={12} />
                     <span>Upload Photo</span>
                     <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
@@ -688,7 +688,7 @@ function PortfolioDataReview() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">Full Name *</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Full Name *</label>
                   <input
                     type="text"
                     value={personal.name}
@@ -699,7 +699,7 @@ function PortfolioDataReview() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">
                     Professional Title / Headline *
                   </label>
                   <input
@@ -715,7 +715,7 @@ function PortfolioDataReview() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">Email *</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Email *</label>
                   <input
                     type="email"
                     value={personal.email}
@@ -726,7 +726,7 @@ function PortfolioDataReview() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">Phone</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Phone</label>
                   <input
                     type="text"
                     value={personal.phone}
@@ -737,7 +737,7 @@ function PortfolioDataReview() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">Location (City, Country)</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Location (City, Country)</label>
                   <input
                     type="text"
                     value={personal.location}
@@ -748,7 +748,7 @@ function PortfolioDataReview() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">Existing Website / Portfolio Link</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">Existing Website / Portfolio Link</label>
                   <input
                     type="text"
                     value={personal.portfolio_url}
@@ -759,7 +759,7 @@ function PortfolioDataReview() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">LinkedIn Profile URL</label>
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">LinkedIn Profile URL</label>
                   <input
                     type="text"
                     value={personal.linkedin}
@@ -770,7 +770,7 @@ function PortfolioDataReview() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                  <label className="block text-xs font-medium text-slate-700 mb-1.5">
                     GitHub / Code Repository (Optional)
                   </label>
                   <input
@@ -789,32 +789,32 @@ function PortfolioDataReview() {
               2. ABOUT / SUMMARY (WITH AI GENERATOR)
           ==================================================== */}
           {activeTab === "about" && (
-            <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-6 space-y-6 animate-fadeIn">
+            <div className="rounded-2xl bg-white border border-slate-200 p-6 space-y-6 shadow-sm animate-fadeIn">
               <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <FileText size={20} className="text-purple-400" />
+                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <FileText size={20} className="text-indigo-600" />
                   About Me / Professional Summary
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   A compelling introduction summary introduces your background and philosophy to visitors.
                 </p>
               </div>
 
               {/* AI About Generator Toolbar */}
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-900/20 to-violet-900/20 border border-purple-500/25 space-y-3">
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-50/80 to-purple-50/80 border border-indigo-200/70 space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <Sparkles size={16} className="text-purple-400" />
-                    <span className="text-xs font-bold text-purple-200">AI Summary Generator (5 Writing Styles)</span>
+                    <Sparkles size={16} className="text-indigo-600" />
+                    <span className="text-xs font-bold text-indigo-950">AI Summary Generator (5 Writing Styles)</span>
                   </div>
                   {aboutSource && (
-                    <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-300 border border-purple-500/20 font-semibold">
+                    <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200 font-semibold">
                       Source: {aboutSource}
                     </span>
                   )}
                 </div>
 
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <p className="text-xs text-slate-600 leading-relaxed">
                   Generate an authentic professional summary strictly using your actual resume facts. Select a tone below:
                 </p>
 
@@ -833,8 +833,8 @@ function PortfolioDataReview() {
                       onClick={() => handleGenerateAbout(style.id)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer border ${
                         aboutStyle === style.id
-                          ? "bg-purple-600 border-purple-500 text-white shadow-md shadow-purple-600/30"
-                          : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10 hover:text-white"
+                          ? "bg-indigo-600 border-indigo-600 text-white shadow-xs"
+                          : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50 hover:text-slate-900"
                       }`}
                     >
                       {generatingAbout && aboutStyle === style.id ? (
@@ -851,7 +851,7 @@ function PortfolioDataReview() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                <label className="block text-xs font-medium text-slate-700 mb-1.5">
                   Summary Text (Editable)
                 </label>
                 <textarea
@@ -867,7 +867,7 @@ function PortfolioDataReview() {
                     <button
                       type="button"
                       onClick={() => setAbout("")}
-                      className="text-slate-400 hover:text-red-400 transition"
+                      className="text-slate-500 hover:text-red-600 transition cursor-pointer"
                     >
                       Clear text
                     </button>
@@ -881,14 +881,14 @@ function PortfolioDataReview() {
               3. EXPERIENCE & INTERNSHIPS
           ==================================================== */}
           {activeTab === "experience" && (
-            <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-6 space-y-6 animate-fadeIn">
+            <div className="rounded-2xl bg-white border border-slate-200 p-6 space-y-6 shadow-sm animate-fadeIn">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <Briefcase size={20} className="text-purple-400" />
+                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <Briefcase size={20} className="text-indigo-600" />
                     Work Experience & Internships
                   </h2>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-slate-500 mt-1">
                     Manage roles, hospital residencies, teaching positions, or corporate experience.
                   </p>
                 </div>
@@ -900,7 +900,7 @@ function PortfolioDataReview() {
                       { role: "", company: "", location: "", duration: "", description: "", is_internship: false }
                     ])
                   }
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition shadow-sm shadow-purple-600/30"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition shadow-xs cursor-pointer"
                 >
                   <Plus size={14} />
                   Add Position
@@ -908,7 +908,7 @@ function PortfolioDataReview() {
               </div>
 
               {experience.length === 0 ? (
-                <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/10 text-center text-slate-400 text-xs">
+                <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200 text-center text-slate-500 text-xs">
                   No experience records extracted yet. Click "+ Add Position" above to add your employment or internships.
                 </div>
               ) : (
@@ -916,12 +916,12 @@ function PortfolioDataReview() {
                   {experience.map((item, idx) => (
                     <div
                       key={idx}
-                      className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3 relative group"
+                      className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200 space-y-3 relative group"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-purple-300">Position #{idx + 1}</span>
+                        <span className="text-xs font-bold text-indigo-600">Position #{idx + 1}</span>
                         <div className="flex items-center gap-3">
-                          <label className="inline-flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
+                          <label className="inline-flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
                             <input
                               type="checkbox"
                               checked={Boolean(item.is_internship)}
@@ -930,7 +930,7 @@ function PortfolioDataReview() {
                                 updated[idx].is_internship = e.target.checked;
                                 setExperience(updated);
                               }}
-                              className="rounded bg-white/10 border-white/20 text-purple-600 focus:ring-purple-500/40"
+                              className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/40"
                             />
                             <span>Internship</span>
                           </label>
@@ -941,7 +941,7 @@ function PortfolioDataReview() {
                               const updated = experience.filter((_, i) => i !== idx);
                               setExperience(updated);
                             }}
-                            className="text-slate-500 hover:text-red-400 transition"
+                            className="text-slate-400 hover:text-red-600 transition cursor-pointer"
                             title="Delete this position"
                           >
                             <Trash2 size={15} />
@@ -951,7 +951,7 @@ function PortfolioDataReview() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1">Job Title / Role</label>
+                          <label className="block text-[11px] text-slate-600 mb-1">Job Title / Role</label>
                           <input
                             type="text"
                             value={item.role}
@@ -966,7 +966,7 @@ function PortfolioDataReview() {
                         </div>
 
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1">Organization / Employer</label>
+                          <label className="block text-[11px] text-slate-600 mb-1">Organization / Employer</label>
                           <input
                             type="text"
                             value={item.company}
@@ -981,7 +981,7 @@ function PortfolioDataReview() {
                         </div>
 
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1">Location</label>
+                          <label className="block text-[11px] text-slate-600 mb-1">Location</label>
                           <input
                             type="text"
                             value={item.location}
@@ -996,7 +996,7 @@ function PortfolioDataReview() {
                         </div>
 
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1">Duration / Dates</label>
+                          <label className="block text-[11px] text-slate-600 mb-1">Duration / Dates</label>
                           <input
                             type="text"
                             value={item.duration}
@@ -1012,7 +1012,7 @@ function PortfolioDataReview() {
                       </div>
 
                       <div>
-                        <label className="block text-[11px] text-slate-400 mb-1">Key Responsibilities & Achievements</label>
+                        <label className="block text-[11px] text-slate-600 mb-1">Key Responsibilities & Achievements</label>
                         <textarea
                           value={item.description}
                           onChange={(e) => {
@@ -1036,14 +1036,14 @@ function PortfolioDataReview() {
               4. EDUCATION
           ==================================================== */}
           {activeTab === "education" && (
-            <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-6 space-y-6 animate-fadeIn">
+            <div className="rounded-2xl bg-white border border-slate-200 p-6 space-y-6 shadow-sm animate-fadeIn">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <GraduationCap size={20} className="text-purple-400" />
+                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <GraduationCap size={20} className="text-indigo-600" />
                     Education & Degrees
                   </h2>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-slate-500 mt-1">
                     Degrees, diplomas, certifications, or academic programs.
                   </p>
                 </div>
@@ -1055,7 +1055,7 @@ function PortfolioDataReview() {
                       { degree: "", institution: "", location: "", year: "", score: "", coursework: "" }
                     ])
                   }
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition shadow-xs cursor-pointer"
                 >
                   <Plus size={14} />
                   Add Degree
@@ -1063,7 +1063,7 @@ function PortfolioDataReview() {
               </div>
 
               {education.length === 0 ? (
-                <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/10 text-center text-slate-400 text-xs">
+                <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200 text-center text-slate-500 text-xs">
                   No education records listed. Click "+ Add Degree" to include your credentials.
                 </div>
               ) : (
@@ -1071,17 +1071,17 @@ function PortfolioDataReview() {
                   {education.map((item, idx) => (
                     <div
                       key={idx}
-                      className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3 relative group"
+                      className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200 space-y-3 relative group"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-purple-300">Degree #{idx + 1}</span>
+                        <span className="text-xs font-bold text-indigo-600">Degree #{idx + 1}</span>
                         <button
                           type="button"
                           onClick={() => {
                             const updated = education.filter((_, i) => i !== idx);
                             setEducation(updated);
                           }}
-                          className="text-slate-500 hover:text-red-400 transition"
+                          className="text-slate-400 hover:text-red-600 transition cursor-pointer"
                           title="Delete degree"
                         >
                           <Trash2 size={15} />
@@ -1090,7 +1090,7 @@ function PortfolioDataReview() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1">Degree / Qualification</label>
+                          <label className="block text-[11px] text-slate-600 mb-1">Degree / Qualification</label>
                           <input
                             type="text"
                             value={item.degree}
@@ -1105,7 +1105,7 @@ function PortfolioDataReview() {
                         </div>
 
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1">Institution / University</label>
+                          <label className="block text-[11px] text-slate-600 mb-1">Institution / University</label>
                           <input
                             type="text"
                             value={item.institution}
@@ -1120,7 +1120,7 @@ function PortfolioDataReview() {
                         </div>
 
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1">Year / Dates</label>
+                          <label className="block text-[11px] text-slate-600 mb-1">Year / Dates</label>
                           <input
                             type="text"
                             value={item.year}
@@ -1135,7 +1135,7 @@ function PortfolioDataReview() {
                         </div>
 
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1">Score / GPA / Grade (Optional)</label>
+                          <label className="block text-[11px] text-slate-600 mb-1">Score / GPA / Grade (Optional)</label>
                           <input
                             type="text"
                             value={item.score}
@@ -1160,13 +1160,13 @@ function PortfolioDataReview() {
               5. SKILLS
           ==================================================== */}
           {activeTab === "skills" && (
-            <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-6 space-y-6 animate-fadeIn">
+            <div className="rounded-2xl bg-white border border-slate-200 p-6 space-y-6 shadow-sm animate-fadeIn">
               <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Wrench size={20} className="text-purple-400" />
+                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <Wrench size={20} className="text-indigo-600" />
                   Skills & Competencies
                 </h2>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   Add or remove skills relevant to your domain and profession.
                 </p>
               </div>
@@ -1197,14 +1197,14 @@ function PortfolioDataReview() {
                       setNewSkill("");
                     }
                   }}
-                  className="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition shrink-0 cursor-pointer"
+                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition shrink-0 cursor-pointer shadow-xs"
                 >
                   Add Skill
                 </button>
               </div>
 
               {/* Skills Tag Cloud */}
-              <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10">
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200">
                 {skills.length === 0 ? (
                   <p className="text-xs text-slate-500 italic">No skills listed yet.</p>
                 ) : (
@@ -1212,13 +1212,13 @@ function PortfolioDataReview() {
                     {skills.map((skill, index) => (
                       <span
                         key={index}
-                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-200 text-xs font-medium group"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-medium group"
                       >
                         <span>{skill}</span>
                         <button
                           type="button"
                           onClick={() => setSkills(skills.filter((_, i) => i !== index))}
-                          className="text-purple-400 hover:text-red-400 transition"
+                          className="text-indigo-400 hover:text-red-500 transition cursor-pointer"
                           title="Remove skill"
                         >
                           <X size={12} />
@@ -1235,14 +1235,14 @@ function PortfolioDataReview() {
               6. PROJECTS / NOTABLE WORK
           ==================================================== */}
           {activeTab === "projects" && (
-            <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-6 space-y-6 animate-fadeIn">
+            <div className="rounded-2xl bg-white border border-slate-200 p-6 space-y-6 shadow-sm animate-fadeIn">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <FolderGit2 size={20} className="text-purple-400" />
+                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <FolderGit2 size={20} className="text-indigo-600" />
                     Projects & Notable Work
                   </h2>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-slate-500 mt-1">
                     Showcase key work samples, case studies, clinical research, publications, or client projects.
                   </p>
                 </div>
@@ -1254,7 +1254,7 @@ function PortfolioDataReview() {
                       { title: "", subtitle: "", description: "", technologies: "", link: "", github: "" }
                     ])
                   }
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition shadow-xs cursor-pointer"
                 >
                   <Plus size={14} />
                   Add Work / Project
@@ -1262,7 +1262,7 @@ function PortfolioDataReview() {
               </div>
 
               {projects.length === 0 ? (
-                <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/10 text-center text-slate-400 text-xs">
+                <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200 text-center text-slate-500 text-xs">
                   No projects or work samples extracted yet. Click "+ Add Work / Project" to showcase key deliverables.
                 </div>
               ) : (
@@ -1270,17 +1270,17 @@ function PortfolioDataReview() {
                   {projects.map((item, idx) => (
                     <div
                       key={idx}
-                      className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3 relative group"
+                      className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200 space-y-3 relative group"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-purple-300">Work Sample #{idx + 1}</span>
+                        <span className="text-xs font-bold text-indigo-600">Work Sample #{idx + 1}</span>
                         <button
                           type="button"
                           onClick={() => {
                             const updated = projects.filter((_, i) => i !== idx);
                             setProjects(updated);
                           }}
-                          className="text-slate-500 hover:text-red-400 transition"
+                          className="text-slate-400 hover:text-red-600 transition cursor-pointer"
                           title="Delete project"
                         >
                           <Trash2 size={15} />
@@ -1289,7 +1289,7 @@ function PortfolioDataReview() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1">Title / Case Name</label>
+                          <label className="block text-[11px] text-slate-600 mb-1">Title / Case Name</label>
                           <input
                             type="text"
                             value={item.title}
@@ -1304,7 +1304,7 @@ function PortfolioDataReview() {
                         </div>
 
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1">Tools / Methodologies Used</label>
+                          <label className="block text-[11px] text-slate-600 mb-1">Tools / Methodologies Used</label>
                           <input
                             type="text"
                             value={item.technologies}
@@ -1319,7 +1319,7 @@ function PortfolioDataReview() {
                         </div>
 
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1">Live URL / Publication Link</label>
+                          <label className="block text-[11px] text-slate-600 mb-1">Live URL / Publication Link</label>
                           <input
                             type="text"
                             value={item.link}
@@ -1334,7 +1334,7 @@ function PortfolioDataReview() {
                         </div>
 
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1">Repository / Source Code (Optional)</label>
+                          <label className="block text-[11px] text-slate-600 mb-1">Repository / Source Code (Optional)</label>
                           <input
                             type="text"
                             value={item.github}
@@ -1350,7 +1350,7 @@ function PortfolioDataReview() {
                       </div>
 
                       <div>
-                        <label className="block text-[11px] text-slate-400 mb-1">Description & Outcome</label>
+                        <label className="block text-[11px] text-slate-600 mb-1">Description & Outcome</label>
                         <textarea
                           value={item.description}
                           onChange={(e) => {
@@ -1374,14 +1374,14 @@ function PortfolioDataReview() {
               7. CERTIFICATES & CREDENTIALS
           ==================================================== */}
           {activeTab === "certificates" && (
-            <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-6 space-y-6 animate-fadeIn">
+            <div className="rounded-2xl bg-white border border-slate-200 p-6 space-y-6 shadow-sm animate-fadeIn">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <Award size={20} className="text-purple-400" />
+                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <Award size={20} className="text-indigo-600" />
                     Certificates & Professional Licenses
                   </h2>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-slate-500 mt-1">
                     State licenses, professional certifications, or specialized credentials.
                   </p>
                 </div>
@@ -1393,7 +1393,7 @@ function PortfolioDataReview() {
                       { name: "", issuer: "", year: "", link: "" }
                     ])
                   }
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition shadow-xs cursor-pointer"
                 >
                   <Plus size={14} />
                   Add Certificate
@@ -1401,7 +1401,7 @@ function PortfolioDataReview() {
               </div>
 
               {certificates.length === 0 ? (
-                <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/10 text-center text-slate-400 text-xs">
+                <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200 text-center text-slate-500 text-xs">
                   No certificates listed. Click "+ Add Certificate" to list licenses and training.
                 </div>
               ) : (
@@ -1409,17 +1409,17 @@ function PortfolioDataReview() {
                   {certificates.map((item, idx) => (
                     <div
                       key={idx}
-                      className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3 relative group"
+                      className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200 space-y-3 relative group"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-purple-300">Credential #{idx + 1}</span>
+                        <span className="text-xs font-bold text-indigo-600">Credential #{idx + 1}</span>
                         <button
                           type="button"
                           onClick={() => {
                             const updated = certificates.filter((_, i) => i !== idx);
                             setCertificates(updated);
                           }}
-                          className="text-slate-500 hover:text-red-400 transition"
+                          className="text-slate-400 hover:text-red-600 transition cursor-pointer"
                           title="Delete certificate"
                         >
                           <Trash2 size={15} />
@@ -1428,7 +1428,7 @@ function PortfolioDataReview() {
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div className="md:col-span-2">
-                          <label className="block text-[11px] text-slate-400 mb-1">Certificate / License Name</label>
+                          <label className="block text-[11px] text-slate-600 mb-1">Certificate / License Name</label>
                           <input
                             type="text"
                             value={item.name}
@@ -1443,7 +1443,7 @@ function PortfolioDataReview() {
                         </div>
 
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1">Issuer / Board</label>
+                          <label className="block text-[11px] text-slate-600 mb-1">Issuer / Board</label>
                           <input
                             type="text"
                             value={item.issuer}
@@ -1458,7 +1458,7 @@ function PortfolioDataReview() {
                         </div>
 
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1">Year / Expiry</label>
+                          <label className="block text-[11px] text-slate-600 mb-1">Year / Expiry</label>
                           <input
                             type="text"
                             value={item.year}
@@ -1473,7 +1473,7 @@ function PortfolioDataReview() {
                         </div>
 
                         <div className="md:col-span-2">
-                          <label className="block text-[11px] text-slate-400 mb-1">Credential URL (Optional)</label>
+                          <label className="block text-[11px] text-slate-600 mb-1">Credential URL (Optional)</label>
                           <input
                             type="text"
                             value={item.link}
@@ -1498,21 +1498,21 @@ function PortfolioDataReview() {
               8. ACHIEVEMENTS
           ==================================================== */}
           {activeTab === "achievements" && (
-            <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-6 space-y-6 animate-fadeIn">
+            <div className="rounded-2xl bg-white border border-slate-200 p-6 space-y-6 shadow-sm animate-fadeIn">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <Trophy size={20} className="text-purple-400" />
+                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <Trophy size={20} className="text-indigo-600" />
                     Achievements & Honors
                   </h2>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-slate-500 mt-1">
                     Awards, commendations, scholarships, or notable recognitions.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setAchievements([...achievements, { title: "", description: "" }])}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition shadow-xs cursor-pointer"
                 >
                   <Plus size={14} />
                   Add Achievement
@@ -1520,7 +1520,7 @@ function PortfolioDataReview() {
               </div>
 
               {achievements.length === 0 ? (
-                <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/10 text-center text-slate-400 text-xs">
+                <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200 text-center text-slate-500 text-xs">
                   No achievements listed. Click "+ Add Achievement" to showcase your honors.
                 </div>
               ) : (
@@ -1528,17 +1528,17 @@ function PortfolioDataReview() {
                   {achievements.map((item, idx) => (
                     <div
                       key={idx}
-                      className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3 relative group"
+                      className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200 space-y-3 relative group"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-purple-300">Honor #{idx + 1}</span>
+                        <span className="text-xs font-bold text-indigo-600">Honor #{idx + 1}</span>
                         <button
                           type="button"
                           onClick={() => {
                             const updated = achievements.filter((_, i) => i !== idx);
                             setAchievements(updated);
                           }}
-                          className="text-slate-500 hover:text-red-400 transition"
+                          className="text-slate-400 hover:text-red-600 transition cursor-pointer"
                           title="Delete achievement"
                         >
                           <Trash2 size={15} />
@@ -1547,7 +1547,7 @@ function PortfolioDataReview() {
 
                       <div className="space-y-3">
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1">Title</label>
+                          <label className="block text-[11px] text-slate-600 mb-1">Title</label>
                           <input
                             type="text"
                             value={item.title}
@@ -1562,7 +1562,7 @@ function PortfolioDataReview() {
                         </div>
 
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1">Details (Optional)</label>
+                          <label className="block text-[11px] text-slate-600 mb-1">Details (Optional)</label>
                           <textarea
                             value={item.description}
                             onChange={(e) => {
@@ -1587,21 +1587,21 @@ function PortfolioDataReview() {
               9. LANGUAGES
           ==================================================== */}
           {activeTab === "languages" && (
-            <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-6 space-y-6 animate-fadeIn">
+            <div className="rounded-2xl bg-white border border-slate-200 p-6 space-y-6 shadow-sm animate-fadeIn">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <LanguagesIcon size={20} className="text-purple-400" />
+                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <LanguagesIcon size={20} className="text-indigo-600" />
                     Languages
                   </h2>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-slate-500 mt-1">
                     Languages spoken and proficiency levels.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setLanguages([...languages, { language: "", proficiency: "Fluent", name: "", level: "Fluent" }])}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition shadow-xs cursor-pointer"
                 >
                   <Plus size={14} />
                   Add Language
@@ -1609,7 +1609,7 @@ function PortfolioDataReview() {
               </div>
 
               {languages.length === 0 ? (
-                <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/10 text-center text-slate-400 text-xs">
+                <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200 text-center text-slate-500 text-xs">
                   No languages listed. Click "+ Add Language" to include multilingual capabilities.
                 </div>
               ) : (
@@ -1617,7 +1617,7 @@ function PortfolioDataReview() {
                   {languages.map((item, idx) => (
                     <div
                       key={idx}
-                      className="p-4 rounded-xl bg-white/[0.03] border border-white/10 flex items-center gap-3 relative group"
+                      className="p-4 rounded-xl bg-slate-50/70 border border-slate-200 flex items-center gap-3 relative group"
                     >
                       <div className="flex-1 space-y-2">
                         <input
@@ -1646,7 +1646,7 @@ function PortfolioDataReview() {
                             };
                             setLanguages(updated);
                           }}
-                          className={`${inputClass} bg-[#0e0c18]`}
+                          className={`${inputClass} bg-white text-slate-800`}
                         >
                           <option value="Native">Native / Bilingual</option>
                           <option value="Fluent">Fluent</option>
@@ -1661,7 +1661,7 @@ function PortfolioDataReview() {
                           const updated = languages.filter((_, i) => i !== idx);
                           setLanguages(updated);
                         }}
-                        className="text-slate-500 hover:text-red-400 transition p-1"
+                        className="text-slate-400 hover:text-red-600 transition p-1 cursor-pointer"
                         title="Delete language"
                       >
                         <Trash2 size={15} />
@@ -1677,14 +1677,14 @@ function PortfolioDataReview() {
               10. CUSTOM SECTIONS
           ==================================================== */}
           {activeTab === "custom" && (
-            <div className="rounded-2xl bg-white/[0.02] border border-white/10 p-6 space-y-6 animate-fadeIn">
+            <div className="rounded-2xl bg-white border border-slate-200 p-6 space-y-6 shadow-sm animate-fadeIn">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <Layers size={20} className="text-purple-400" />
+                  <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                    <Layers size={20} className="text-indigo-600" />
                     Custom Sections
                   </h2>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-slate-500 mt-1">
                     Add custom sections (e.g. Publications, Volunteer Work, Memberships, Clinical Rotations).
                   </p>
                 </div>
@@ -1696,7 +1696,7 @@ function PortfolioDataReview() {
                       { heading: "Publications & Research", items: "" }
                     ])
                   }
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold transition"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold transition shadow-xs cursor-pointer"
                 >
                   <Plus size={14} />
                   Add Custom Section
@@ -1704,7 +1704,7 @@ function PortfolioDataReview() {
               </div>
 
               {customSections.length === 0 ? (
-                <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/10 text-center text-slate-400 text-xs">
+                <div className="p-8 rounded-2xl bg-slate-50 border border-slate-200 text-center text-slate-500 text-xs">
                   No custom sections yet. You can add any domain-specific section here!
                 </div>
               ) : (
@@ -1712,17 +1712,17 @@ function PortfolioDataReview() {
                   {customSections.map((item, idx) => (
                     <div
                       key={idx}
-                      className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-3 relative group"
+                      className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200 space-y-3 relative group"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-purple-300">Custom Section #{idx + 1}</span>
+                        <span className="text-xs font-bold text-indigo-600">Custom Section #{idx + 1}</span>
                         <button
                           type="button"
                           onClick={() => {
                             const updated = customSections.filter((_, i) => i !== idx);
                             setCustomSections(updated);
                           }}
-                          className="text-slate-500 hover:text-red-400 transition"
+                          className="text-slate-400 hover:text-red-600 transition cursor-pointer"
                           title="Delete section"
                         >
                           <Trash2 size={15} />
@@ -1731,7 +1731,7 @@ function PortfolioDataReview() {
 
                       <div className="space-y-3">
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1">Section Heading</label>
+                          <label className="block text-[11px] text-slate-600 mb-1">Section Heading</label>
                           <input
                             type="text"
                             value={item.heading}
@@ -1746,7 +1746,7 @@ function PortfolioDataReview() {
                         </div>
 
                         <div>
-                          <label className="block text-[11px] text-slate-400 mb-1">Items / Content (One per line)</label>
+                          <label className="block text-[11px] text-slate-600 mb-1">Items / Content (One per line)</label>
                           <textarea
                             value={item.items}
                             onChange={(e) => {
@@ -1768,10 +1768,10 @@ function PortfolioDataReview() {
           )}
 
           {/* Bottom Action Card */}
-          <div className="p-5 rounded-2xl bg-gradient-to-r from-purple-900/10 to-violet-900/10 border border-white/10 flex flex-wrap items-center justify-between gap-4">
+          <div className="p-5 rounded-2xl bg-indigo-50/60 border border-slate-200 flex flex-wrap items-center justify-between gap-4 shadow-sm">
             <div className="space-y-0.5">
-              <p className="text-xs font-semibold text-white">Satisfied with your reviewed data?</p>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-xs font-semibold text-slate-900">Satisfied with your reviewed data?</p>
+              <p className="text-[11px] text-slate-500">
                 You can still edit any detail later inside the live portfolio editor.
               </p>
             </div>
@@ -1781,9 +1781,9 @@ function PortfolioDataReview() {
                 type="button"
                 onClick={() => handleSave(false)}
                 disabled={saving}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-xs font-semibold transition border border-white/10 disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition border border-slate-300 shadow-xs disabled:opacity-50 cursor-pointer"
               >
-                {saving ? <Loader2 size={14} className="animate-spin text-purple-400" /> : <Save size={14} />}
+                {saving ? <Loader2 size={14} className="animate-spin text-indigo-600" /> : <Save size={14} />}
                 Save Details
               </button>
 
@@ -1791,7 +1791,7 @@ function PortfolioDataReview() {
                 type="button"
                 onClick={handleProceed}
                 disabled={saving}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white text-xs font-bold transition shadow-lg shadow-purple-600/30 cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition shadow-sm shadow-indigo-600/20 cursor-pointer disabled:opacity-50"
               >
                 <span>Save & Proceed to Templates</span>
                 <ArrowRight size={14} />

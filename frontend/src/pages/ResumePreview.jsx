@@ -166,10 +166,10 @@ function ResumePreview() {
   // ==========================================================
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#08070d] text-white flex items-center justify-center px-4">
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center px-4">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mx-auto" />
-          <p className="mt-4 text-slate-400 font-medium text-sm">
+          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto" />
+          <p className="mt-4 text-slate-600 font-medium text-sm">
             Loading resume preview...
           </p>
         </div>
@@ -182,25 +182,25 @@ function ResumePreview() {
   // ==========================================================
   if (error || !resume) {
     return (
-      <div className="min-h-screen bg-[#08070d] text-white flex items-center justify-center px-4">
-        <div className="max-w-md w-full p-8 rounded-2xl bg-white/[0.03] border border-red-500/30 text-center shadow-2xl">
-          <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center px-4">
+        <div className="max-w-md w-full p-8 rounded-2xl bg-white border border-red-200 text-center shadow-xl">
+          <div className="w-12 h-12 rounded-full bg-red-50 text-red-600 flex items-center justify-center mx-auto mb-4 border border-red-200">
             <AlertCircle size={24} />
           </div>
-          <h2 className="text-xl font-bold text-white mb-2">Resume Not Found</h2>
-          <p className="text-slate-400 text-sm mb-6">
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Resume Not Found</h2>
+          <p className="text-slate-600 text-sm mb-6">
             {error || "Unable to load resume information. It may have been deleted or never created."}
           </p>
           <div className="flex items-center justify-center gap-3">
             <button
               onClick={() => navigate("/dashboard")}
-              className="px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white text-sm font-medium transition cursor-pointer"
+              className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium transition cursor-pointer border border-slate-300"
             >
               Back to Dashboard
             </button>
             <button
               onClick={() => navigate("/resume/create")}
-              className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium transition cursor-pointer"
+              className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition cursor-pointer shadow-md shadow-indigo-200"
             >
               Create Resume
             </button>
@@ -211,33 +211,33 @@ function ResumePreview() {
   }
 
   return (
-    <div className="min-h-screen bg-[#08070d] text-slate-100 px-4 py-8 md:px-8">
+    <div className="min-h-screen bg-slate-50 text-slate-900 px-4 py-8 md:px-8">
       <div className="max-w-5xl mx-auto">
         {/* ========================================================
             Top Navigation Bar
         ======================================================== */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-200 mb-8">
           <div className="flex items-center gap-4">
             <button
               onClick={() => (templateKey ? navigate(`/resume/templates/${resumeId}`) : navigate("/dashboard"))}
-              className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition text-sm group cursor-pointer"
+              className="inline-flex items-center gap-2 text-slate-500 hover:text-slate-900 transition text-sm group cursor-pointer"
             >
               <ArrowLeft size={16} className="group-hover:-translate-x-1 transition" />
               {templateKey ? "Template Gallery" : "Dashboard"}
             </button>
 
-            <span className="text-slate-600">/</span>
+            <span className="text-slate-300">/</span>
 
             <div className="flex items-center gap-2">
-              <span className="font-mono text-xs px-2.5 py-1 rounded-md bg-purple-500/15 text-purple-300 border border-purple-500/30 font-semibold">
+              <span className="font-mono text-xs px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold">
                 Resume #{resumeId}
               </span>
               {templateKey ? (
-                <span className="text-xs px-2.5 py-1 rounded-md bg-purple-500/20 text-purple-200 border border-purple-500/40 uppercase tracking-wider font-semibold">
+                <span className="text-xs px-2.5 py-1 rounded-md bg-indigo-100 text-indigo-800 border border-indigo-200 uppercase tracking-wider font-semibold">
                   {templateKey} Template
                 </span>
               ) : (
-                <span className="text-xs px-2.5 py-1 rounded-md bg-white/5 text-slate-300 border border-white/10 font-semibold">
+                <span className="text-xs px-2.5 py-1 rounded-md bg-white text-slate-700 border border-slate-200 font-semibold">
                   Basic Preview
                 </span>
               )}
@@ -247,7 +247,7 @@ function ResumePreview() {
           <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={handleEdit}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-sm font-medium transition cursor-pointer border border-white/10"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium transition cursor-pointer border border-slate-300 shadow-sm"
             >
               <Edit3 size={16} />
               Edit Resume
@@ -257,7 +257,7 @@ function ResumePreview() {
               <>
                 <button
                   onClick={() => navigate(`/resume/templates/${resumeId}`)}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-sm font-medium transition cursor-pointer border border-white/10"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium transition cursor-pointer border border-slate-300 shadow-sm"
                 >
                   <LayoutTemplate size={16} />
                   Change Template
@@ -266,7 +266,7 @@ function ResumePreview() {
                 <button
                   onClick={handleDownloadPdf}
                   disabled={downloadingPdf}
-                  className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold transition cursor-pointer shadow-lg shadow-purple-600/25 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition cursor-pointer shadow-md shadow-indigo-200 disabled:opacity-50"
                 >
                   {downloadingPdf ? (
                     <>
@@ -285,7 +285,7 @@ function ResumePreview() {
               <>
                 <button
                   onClick={() => navigate(`/resume/templates/${resumeId}`)}
-                  className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold transition cursor-pointer shadow-lg shadow-purple-600/25"
+                  className="inline-flex items-center gap-2 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold transition cursor-pointer shadow-md shadow-indigo-200"
                 >
                   <LayoutTemplate size={16} />
                   Choose Template
@@ -293,7 +293,7 @@ function ResumePreview() {
                 <button
                   onClick={handleDownloadPdf}
                   disabled={downloadingPdf}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-sm font-medium transition cursor-pointer border border-white/10 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium transition cursor-pointer border border-slate-300 shadow-sm disabled:opacity-50"
                 >
                   {downloadingPdf ? (
                     <>
@@ -316,7 +316,7 @@ function ResumePreview() {
             Resume Document Container (Dedicated Responsive Center Wrapper)
         ======================================================== */}
         <div className="w-full flex justify-center overflow-x-auto pb-4">
-          <div className="rounded-2xl shadow-2xl overflow-hidden border border-white/10 bg-white">
+          <div className="rounded-2xl shadow-xl overflow-hidden border border-slate-300 bg-white">
             <div
               id="resume-print-node"
               ref={resumePrintRef}
@@ -330,9 +330,9 @@ function ResumePreview() {
         {/* ========================================================
             Bottom Action Bar
         ======================================================== */}
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-2xl bg-white/[0.02] border border-white/10">
-          <div className="flex items-center gap-2 text-xs text-slate-400">
-            <FileText size={15} className="text-purple-400" />
+        <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-2xl bg-white border border-slate-200 shadow-sm">
+          <div className="flex items-center gap-2 text-xs text-slate-600">
+            <FileText size={15} className="text-indigo-600" />
             <span>
               {templateKey
                 ? `Template Preview: ${templateKey.toUpperCase()} Layout`
@@ -343,7 +343,7 @@ function ResumePreview() {
           <div className="flex items-center gap-3">
             <button
               onClick={handleEdit}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-xs font-medium transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition cursor-pointer border border-slate-200"
             >
               <Edit3 size={14} />
               Edit Resume
@@ -352,7 +352,7 @@ function ResumePreview() {
             {templateKey ? (
               <button
                 onClick={() => navigate(`/resume/templates/${resumeId}`)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-xs font-medium transition cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition cursor-pointer border border-slate-200"
               >
                 <LayoutTemplate size={14} />
                 Change Template
@@ -360,7 +360,7 @@ function ResumePreview() {
             ) : (
               <button
                 onClick={() => navigate(`/resume/templates/${resumeId}`)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium transition cursor-pointer shadow-lg shadow-purple-600/25"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium transition cursor-pointer shadow-md shadow-indigo-200"
               >
                 <LayoutTemplate size={14} />
                 Choose Template
@@ -370,7 +370,7 @@ function ResumePreview() {
             <button
               onClick={handleDownloadPdf}
               disabled={downloadingPdf}
-              className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-medium transition cursor-pointer shadow-lg shadow-purple-600/25 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium transition cursor-pointer shadow-md shadow-indigo-200 disabled:opacity-50"
             >
               {downloadingPdf ? (
                 <>
@@ -387,7 +387,7 @@ function ResumePreview() {
 
             <button
               onClick={() => navigate("/dashboard")}
-              className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 text-xs font-medium transition cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium transition cursor-pointer border border-slate-200"
             >
               Dashboard
             </button>
