@@ -3,10 +3,17 @@ const router = express.Router();
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+require("dotenv").config({ path: path.join(__dirname, "../.env") });
 
 const db = require("../db");
 const { extractText } = require("../services/pdfService");
-const { analyzeResumeText, extractCleanATSData } = require("../services/atsAnalyzerService");
+const {
+    analyzeResumeText,
+    extractCleanATSData,
+    convertResumeDetailsToATSData,
+    generateNormalizedTextFromData
+} = require("../services/atsAnalyzerService");
+const { parseResume } = require("../services/parserService");
 
 // =====================================
 // Upload Folder Configuration
@@ -61,16 +68,10 @@ router.post("/analyze", upload.single("resume"), async (req, res) => {
         let fileName = "Resume";
         let filePath = "";
         let resumeId = req.body.resume_id ? parseInt(req.body.resume_id, 10) : null;
+        let cleanATSData = null;
 
-        // Case 1: Uploaded file
-        if (req.file) {
-            fileName = req.file.originalname;
-            filePath = req.file.path;
-            console.log(`[ATS] Extracting text from uploaded file: ${fileName} for user ${userId}`);
-            resumeText = await extractText(filePath);
-        }
-        // Case 2: Existing resume ID provided (Enforce ownership verification)
-        else if (resumeId) {
+        // Case 1: Existing resume ID provided (Enforce ownership verification)
+        if (resumeId) {
             console.log(`[ATS] Verifying ownership and analyzing resume ID: ${resumeId} for user ${userId}`);
             const resumeRow = await new Promise((resolve, reject) => {
                 db.get("SELECT * FROM Resume WHERE resume_id = ? AND user_id = ?", [resumeId, userId], (err, row) => {
@@ -88,32 +89,132 @@ router.post("/analyze", upload.single("resume"), async (req, res) => {
             fileName = resumeRow.file_name;
             filePath = resumeRow.file_path;
 
-            if (filePath && fs.existsSync(filePath)) {
-                resumeText = await extractText(filePath);
-            } else {
-                // Fallback: reconstruct text from Resume_Details preserving all sections
-                const detailsRow = await new Promise((resolve, reject) => {
-                    db.get("SELECT * FROM Resume_Details WHERE resume_id = ?", [resumeId], (err, row) => {
-                        if (err) reject(err);
-                        else resolve(row);
-                    });
+            // Reuse existing structured Resume_Details if available
+            const detailsRow = await new Promise((resolve, reject) => {
+                db.get("SELECT * FROM Resume_Details WHERE resume_id = ?", [resumeId], (err, row) => {
+                    if (err) reject(err);
+                    else resolve(row);
                 });
+            });
 
-                if (detailsRow) {
-                    resumeText = [
-                        detailsRow.name,
-                        detailsRow.email,
-                        detailsRow.phone,
-                        detailsRow.about,
-                        detailsRow.skills,
-                        detailsRow.experience,
-                        detailsRow.education,
-                        detailsRow.projects,
-                        detailsRow.certifications,
-                        detailsRow.achievements,
-                        detailsRow.languages,
-                        detailsRow.custom_sections
-                    ].filter(Boolean).join("\n\n");
+            if (detailsRow) {
+                console.log(`[ATS] Reusing validated structured Resume_Details for resume ID ${resumeId}`);
+                cleanATSData = convertResumeDetailsToATSData(detailsRow);
+                resumeText = generateNormalizedTextFromData(cleanATSData);
+            } else if (filePath && fs.existsSync(filePath)) {
+                resumeText = await extractText(filePath);
+            }
+        }
+        // Case 2: Uploaded file
+        else if (req.file) {
+            fileName = req.file.originalname;
+            filePath = req.file.path;
+            console.log(`[ATS] Extracting text from uploaded file: ${fileName} for user ${userId}`);
+            resumeText = await extractText(filePath);
+
+            // Attempt unified parser so Resume and Resume_Details are saved and shared across modules
+            try {
+                const parsedResult = await parseResume(resumeText);
+                if (parsedResult) {
+                    const uploadDate = new Date().toISOString().split("T")[0];
+                    const insertResumeSQL = `
+                        INSERT INTO Resume (user_id, file_name, file_path, upload_date, status)
+                        VALUES (?, ?, ?, ?, 'ATS Analyzed')
+                    `;
+                    resumeId = await new Promise((resolve, reject) => {
+                        db.run(insertResumeSQL, [userId, fileName, filePath, uploadDate], function (err) {
+                            if (err) reject(err);
+                            else resolve(this.lastID);
+                        });
+                    });
+
+                    const metadataToStore = {
+                        title: parsedResult.personal?.title || "",
+                        location: parsedResult.personal?.location || parsedResult.personal?.address || "",
+                        portfolio_url: parsedResult.personal?.portfolio_url || "",
+                        photo_path: parsedResult.personal?.photo || "",
+                        source: "ats_upload",
+                        user_category: req.body.user_category || "Student"
+                    };
+
+                    const detailsSQL = `
+                        INSERT INTO Resume_Details
+                        (resume_id, name, email, phone, education, skills, projects, experience, certifications, achievements, languages, github, linkedin, about, custom_sections, metadata)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    `;
+
+                    await new Promise((resolve, reject) => {
+                        db.run(detailsSQL, [
+                            resumeId,
+                            parsedResult.personal?.name || "",
+                            parsedResult.personal?.email || "",
+                            parsedResult.personal?.phone || "",
+                            JSON.stringify(parsedResult.education || []),
+                            JSON.stringify(parsedResult.skills || []),
+                            JSON.stringify(parsedResult.projects || []),
+                            JSON.stringify(parsedResult.experience || []),
+                            JSON.stringify(parsedResult.certificates || []),
+                            JSON.stringify(parsedResult.achievements || []),
+                            JSON.stringify(parsedResult.languages || []),
+                            parsedResult.personal?.github || "",
+                            parsedResult.personal?.linkedin || "",
+                            parsedResult.about || parsedResult.summary || "",
+                            JSON.stringify(parsedResult.custom_sections || []),
+                            JSON.stringify(metadataToStore)
+                        ], function (err) {
+                            if (err) reject(err);
+                            else resolve(this.lastID);
+                        });
+                    });
+
+                    // Build cleanATSData directly from newly created structured details
+                    const detailsRow = await new Promise((resolve, reject) => {
+                        db.get("SELECT * FROM Resume_Details WHERE resume_id = ?", [resumeId], (err, row) => {
+                            if (err) reject(err);
+                            else resolve(row);
+                        });
+                    });
+                    if (detailsRow) {
+                        cleanATSData = convertResumeDetailsToATSData(detailsRow);
+                        resumeText = generateNormalizedTextFromData(cleanATSData);
+                    }
+                }
+            } catch (parseErr) {
+                console.warn("[ATS] Unified parser notice (using heuristic fallback):", parseErr.message);
+            }
+
+            // If cleanATSData was not generated via parseResume, check for existing validated Resume_Details for this user
+            if (!cleanATSData) {
+                try {
+                    const cleanBase = path.basename(fileName, path.extname(fileName)).toLowerCase().replace(/[^a-z0-9]/g, "");
+                    const existingRow = await new Promise((resolve) => {
+                        db.all(
+                            `SELECT r.resume_id, r.file_name, r.file_path, rd.* 
+                             FROM Resume r 
+                             JOIN Resume_Details rd ON r.resume_id = rd.resume_id 
+                             WHERE r.user_id = ? 
+                             ORDER BY r.resume_id DESC`,
+                            [userId],
+                            (err, rows) => {
+                                if (err || !rows || rows.length === 0) return resolve(null);
+                                const match = rows.find(r => {
+                                    const rf = (r.file_name || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+                                    const rp = (r.file_path || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+                                    return rf.includes(cleanBase) || rp.includes(cleanBase) || cleanBase.includes(rf);
+                                });
+                                resolve(match || null);
+                            }
+                        );
+                    });
+
+                    if (existingRow) {
+                        console.log(`[ATS] Matched existing structured Resume_Details for user ${userId} (resume ${existingRow.resume_id})`);
+                        cleanATSData = convertResumeDetailsToATSData(existingRow);
+                        resumeText = generateNormalizedTextFromData(cleanATSData);
+                        if (!resumeId) resumeId = existingRow.resume_id;
+                    }
+                } catch (reuseErr) {
+                    console.warn("[ATS] Notice checking existing resume details:", reuseErr.message);
                 }
             }
         }
@@ -132,12 +233,14 @@ router.post("/analyze", upload.single("resume"), async (req, res) => {
             });
         }
 
-        // Run 100% heuristic analysis
+        // Run heuristic scoring and extraction
         console.log(`[ATS] Running heuristic analysis for ${fileName}...`);
-        const analysis = analyzeResumeText(resumeText);
-        const cleanATSData = extractCleanATSData(resumeText);
+        const analysis = analyzeResumeText(resumeText, fileName);
+        if (!cleanATSData) {
+            cleanATSData = extractCleanATSData(resumeText);
+        }
 
-        // If new file upload without resumeId, save to Resume table first
+        // If new file upload without resumeId, save to Resume table
         if (!resumeId) {
             const uploadDate = new Date().toISOString().split("T")[0];
             const insertResumeSQL = `

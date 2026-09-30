@@ -266,9 +266,9 @@ function reconstructLayoutFromTSV(tsvString) {
     }
 
     // Step 3: Conservative Column Detection
-    // Test potential column divider between 35% and 65% of page width
-    const minDivider = pageWidth * 0.35;
-    const maxDivider = pageWidth * 0.65;
+    // Test potential column divider between 22% and 78% of page width to catch sidebars
+    const minDivider = pageWidth * 0.22;
+    const maxDivider = pageWidth * 0.78;
     let bestDivider = null;
     let maxScore = -1;
 
@@ -332,6 +332,23 @@ function reconstructLayoutFromTSV(tsvString) {
         leftSegments.sort((a, b) => a.top - b.top);
         rightSegments.sort((a, b) => a.top - b.top);
         footerSegments.sort((a, b) => a.top - b.top);
+
+        // Sidebar vs Main Column Detection:
+        // If left column starts with sidebar sections (CONTACT, SKILLS, LANGUAGES)
+        // and right column starts with candidate name / title before its first section heading,
+        // move candidate header from right column to headerSegments so it reads FIRST.
+        const leftHasSidebarStart = leftSegments.slice(0, 6).some(s =>
+            /@|https?:\/\/|\b\d{7,}\b|^(?:contact|skills|languages|personal|about)\b/i.test(s.text.trim())
+        ) || headerSegments.some(s => /^(?:contact\s*info|contact|skills|languages)\b/i.test(s.text.trim()));
+
+        const firstHeadingIdx = rightSegments.findIndex(s =>
+            /^(?:about\s*me|about|experience|work|employment|education|projects|summary|profile|history|certifications)\b/i.test(s.text.trim())
+        );
+
+        if (leftHasSidebarStart && firstHeadingIdx > 0) {
+            const pulledHeader = rightSegments.splice(0, firstHeadingIdx);
+            headerSegments.unshift(...pulledHeader);
+        }
 
         const sections = [];
         if (headerSegments.length > 0) {

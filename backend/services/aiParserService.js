@@ -3003,8 +3003,18 @@ function normalizeResumeData(
 async function parseWithAI(
     resumeText
 ) {
-    const apiKey =
+    let apiKey =
         process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+        try {
+            const path = require("path");
+            require("dotenv").config({ path: path.join(__dirname, "../.env") });
+            apiKey = process.env.GEMINI_API_KEY;
+        } catch (e) {
+            // ignore
+        }
+    }
 
     if (!apiKey) {
         throw new Error(
