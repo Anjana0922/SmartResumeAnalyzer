@@ -1238,54 +1238,147 @@ async function generateAboutSummary({ style = "professional", resumeData = {}, u
     }
     skillsList = Array.from(new Set(skillsList.map(String).map(s => s.trim()).filter(Boolean)));
 
-    const candidateName = personal.name || "Candidate";
+    const candidateName = personal.name || "";
     const candidateTitle =
         personal.title ||
         metadata.title ||
         metadata.career_target ||
-        (userCategory === "Student" ? "Aspiring Professional" : "Dedicated Professional");
+        "";
 
-    const primaryDegree = education[0]?.degree
-        ? `${education[0].degree}${education[0].institution ? ` from ${education[0].institution}` : ""}`
+    // 1. Synthesize Academic Disciplines & Fields (focusing on domain, avoiding listing schools/marks)
+    const degreeFields = education
+        .map(e => (typeof e === "string" ? e : (e.degree || e.course || "")))
+        .filter(Boolean);
+    const academicSummary = degreeFields.length > 0
+        ? degreeFields.join(" and ")
         : "";
-    const recentRole = experience[0]?.role
-        ? `${experience[0].role}${experience[0].company ? ` at ${experience[0].company}` : ""}`
-        : "";
-    const topProjects = projects.slice(0, 2).map(p => p.title).filter(Boolean).join(", ");
-    const topSkills = skillsList.slice(0, 6).join(", ");
-    const topCerts = certificates.slice(0, 2).map(c => c.name || c.title).filter(Boolean).join(", ");
 
-    // Grounded rule-based fallback based purely on candidate's real data (no software bias)
+    // Clean degree field & academic status
+    const cleanDegreeField = () => {
+        if (degreeFields.length > 0) {
+            const first = degreeFields[0].toLowerCase();
+            if (/master of computer application|mca/i.test(first)) return "computer applications";
+            if (/bachelor of computer application|bca/i.test(first)) return "computer applications";
+            if (/computer science|cse|cs\b/i.test(first)) return "computer science";
+            if (/information technology|it\b/i.test(first)) return "information technology";
+            if (/electronics/i.test(first)) return "electronics and communication";
+            if (/mechanical/i.test(first)) return "mechanical engineering";
+            if (/civil/i.test(first)) return "civil engineering";
+            if (/business|bba|mba|commerce|b\.com/i.test(first)) return "business and commerce";
+            return first.replace(/^(master of|bachelor of|diploma in|associate of|b\.?tech in|m\.?tech in|bca in|mca in)\s*/i, "").trim();
+        }
+        return "";
+    };
+
+    const academicField = cleanDegreeField();
+    const degreeLower = academicSummary.toLowerCase();
+    const isMasterOrPostgrad = /mca|m\.tech|msc|m\.s\.|mba|master|postgraduate|pg\s*diploma/i.test(degreeLower);
+    const isBachelor = /bca|b\.tech|bsc|b\.s\.|bba|b\.e\.|bachelor|undergraduate/i.test(degreeLower);
+    const isPursuing = /pursuing|current|present|studying/i.test(degreeLower) || 
+        education.some(e => {
+            const yr = String(e.year || e.duration || "");
+            const endYr = String(e.end_year || "");
+            return /present|current|-$/i.test(yr) || (!endYr && yr.endsWith("-")) || Number(endYr) >= 2025;
+        });
+
+    let academicLevelDesc = "professional";
+    if (isMasterOrPostgrad) {
+        academicLevelDesc = isPursuing ? "postgraduate student" : "postgraduate";
+    } else if (isBachelor) {
+        academicLevelDesc = isPursuing ? "undergraduate student" : "graduate";
+    } else if (userCategory === "Student") {
+        academicLevelDesc = "student";
+    }
+
+    // 2. Synthesize Professional & Internship Experience Themes
+    const expSummaries = experience
+        .map(exp => {
+            if (typeof exp === "string") return exp;
+            const role = exp.role || exp.title || "";
+            const desc = exp.description || exp.responsibilities || "";
+            const tech = Array.isArray(exp.technologies) ? exp.technologies.slice(0, 4).join(", ") : "";
+            return [role, desc, tech ? `focused in ${tech}` : ""].filter(Boolean).join(" - ");
+        })
+        .filter(Boolean);
+    const experienceSummary = expSummaries.slice(0, 3).join("; ");
+
+    // 3. Synthesize Project Domains & Functional Focus
+    const projSummaries = projects
+        .map(p => {
+            if (typeof p === "string") return p;
+            const title = p.title || p.name || "";
+            const desc = p.description || p.responsibilities || "";
+            const tech = Array.isArray(p.technologies) ? p.technologies.slice(0, 3).join(", ") : (p.technologies || "");
+            return [title, desc, tech ? `utilizing ${tech}` : ""].filter(Boolean).join(" - ");
+        })
+        .filter(Boolean);
+    const projectsSummary = projSummaries.slice(0, 3).join("; ");
+
+    // 4. Synthesize Competency Clusters
+    const skillsSummary = skillsList.slice(0, 12).join(", ");
+
+    // 5. Synthesize Specialized Training & Certifications
+    const certsSummary = certificates
+        .map(c => (typeof c === "string" ? c : (c.name || c.title || "")))
+        .filter(Boolean)
+        .slice(0, 3)
+        .join(", ");
+
+    // 6. Existing Summary or Objective for context
+    const existingSummary = resumeData.about || resumeData.summary || "";
+
+    // 7. Derive Primary Professional Domain & Identity
+    const determinePrimaryDomain = () => {
+        if (candidateTitle) return candidateTitle;
+        const allText = `${academicSummary} ${experienceSummary} ${skillsSummary} ${projectsSummary}`.toLowerCase();
+        if (/web|software|\.net|developer|programmer|engineer|full stack|frontend|backend|sql|javascript|python|java|c#/i.test(allText)) {
+            return "Software & Web Development";
+        }
+        if (/nurs|health|medic|clinic|patient/i.test(allText)) {
+            return "Healthcare & Clinical Practice";
+        }
+        if (/teach|educat|academ|curriculum|pedagog/i.test(allText)) {
+            return "Education & Academic Instruction";
+        }
+        if (/account|finan|tax|audit|bookkeep/i.test(allText)) {
+            return "Accounting & Financial Management";
+        }
+        if (/market|sales|business|brand|growth/i.test(allText)) {
+            return "Business Strategy & Marketing";
+        }
+        if (/design|ui|ux|graphic|creative/i.test(allText)) {
+            return "Digital & Visual Design";
+        }
+        return userCategory === "Student" ? "Applied Technical Studies" : "Professional Practice";
+    };
+
+    const primaryDomain = determinePrimaryDomain();
+    const effectiveTitle = candidateTitle || (userCategory === "Student" ? `Aspiring Specialist in ${primaryDomain}` : `${primaryDomain} Professional`);
+
+    // Grounded Fallback: strictly avoids candidate names, first-person openings, and resume list repetition
     const generateFallback = () => {
+        const fieldStr = academicField || primaryDomain.toLowerCase();
+        const levelStr = academicLevelDesc;
+        const domStr = primaryDomain.toLowerCase();
+
         switch (normalizedStyle) {
             case "simple":
-                if (recentRole) {
-                    return `${candidateTitle} with professional background as ${recentRole}. Skilled in ${topSkills || "effective communication, planning, and execution"}, focused on delivering practical and reliable results.`;
-                } else if (primaryDegree) {
-                    return `${candidateTitle} with a strong foundation in ${primaryDegree}. Dedicated to applying ${topSkills || "core knowledge and practical competencies"} to contribute effectively to team goals.`;
-                }
-                return `${candidateTitle} with a solid foundation in ${topSkills || "essential professional competencies"}. Dedicated to quality outcomes and collaborating effectively on impactful work.`;
+                return `With a background in ${fieldStr}, focused on turning requirements into reliable, well-crafted solutions. Combines steady technical fundamentals with a practical, down-to-earth approach to problem-solving and collaboration. Grounded in clear communication and a strong work ethic, the emphasis is always on delivering dependable results that address real-world needs. Continuously exploring new methodologies and refining core competencies to ensure that every project is built with care, consistency, and lasting value.`;
 
             case "short":
-                if (topSkills && candidateTitle) {
-                    return `${candidateTitle} proficient in ${topSkills}, focused on delivering high-quality outcomes and continuous improvement.`;
-                }
-                return `${candidateTitle} committed to professional excellence, dedication, and measurable impact.`;
+                return `A dedicated ${fieldStr} ${levelStr} focused on ${domStr}. Combining sound theoretical principles with hands-on development, the emphasis is on delivering dependable, well-structured, and high-quality solutions. Driven by continuous learning, disciplined problem-solving, and a commitment to engineering excellence.`;
 
             case "technical":
-                return `Methodical and detail-oriented ${candidateTitle} with hands-on proficiency in ${topSkills || "specialized domain methodologies and tools"}${topProjects ? `, demonstrated through key work including ${topProjects}` : ""}. Adept at rigorous analysis, disciplined execution, and applying industry best practices.`;
+                return `Focused on ${domStr}, combining rigorous analytical training in ${fieldStr} with practical engineering methodologies. Emphasizes structured system architecture, modular design, and robust implementation across diverse functional requirements. Brings a disciplined approach to debugging, algorithmic efficiency, and scalable solution delivery. Committed to maintaining high code quality, adherence to best practices, and systematic problem-solving, with an ongoing drive to master evolving technologies and deploy resilient, high-performance systems.`;
 
             case "career-focused":
-                return `Results-driven ${candidateTitle}${primaryDegree ? ` backgrounded by qualification in ${primaryDegree}` : ""} eager to contribute strong problem-solving abilities, teamwork, and expertise in ${topSkills || "core disciplines"} to achieve high-impact organizational objectives.`;
+                return isPursuing
+                    ? `Currently pursuing advanced studies in ${fieldStr} with a proactive, growth-oriented mindset. Dedicated to bridging academic insights with real-world application, with a strong focus on collaborative teamwork, continuous skill acquisition, and goal-driven execution. Prepared to contribute robust analytical and implementation capabilities to dynamic organizational initiatives while continuously evolving to meet emerging professional and technological standards.`
+                    : `An ambitious ${fieldStr} ${levelStr} with a strong foundation in ${domStr} and a proactive, growth-oriented mindset. Dedicated to bridging academic insights with real-world application, with a strong focus on collaborative teamwork, continuous skill acquisition, and goal-driven execution. Prepared to contribute robust analytical and implementation capabilities to dynamic organizational initiatives while continuously evolving to meet emerging professional and technological standards.`;
 
             case "professional":
             default:
-                if (recentRole) {
-                    return `Accomplished ${candidateTitle} with proven experience as ${recentRole}. Proficient in ${topSkills || "strategic execution and stakeholder collaboration"}, with a track record of delivering high-quality results.`;
-                } else if (primaryDegree) {
-                    return `Proactive ${candidateTitle} holding a qualification in ${primaryDegree}. Combines academic training with practical competence in ${topSkills || "essential industry standards"} to solve real-world challenges.`;
-                }
-                return `Dedicated ${candidateTitle} with strong competencies in ${topSkills || "modern industry practices"}. Committed to operational excellence, integrity, and driving tangible organizational value.`;
+                return `A ${fieldStr} ${levelStr} with a comprehensive background in ${domStr} and modern application architecture. Combining disciplined analytical capabilities with practical project execution, the primary focus centers on designing dependable, high-quality, and user-centered solutions. Demonstrates a strong foundation in structured problem-solving, agile collaboration, and continuous technical growth. With a proactive approach to learning evolving industry standards, the work reflects dedication to clean implementation, performance, and meaningful practical impact across every initiative.`;
         }
     };
 
@@ -1294,52 +1387,165 @@ async function generateAboutSummary({ style = "professional", resumeData = {}, u
         return { about: generateFallback(), style: normalizedStyle, source: "fallback" };
     }
 
-    try {
-        const ai = new GoogleGenAI({ apiKey });
-        const modelName = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+    const getStyleGuide = (st) => {
+        switch (st) {
+            case "simple":
+                return "Use clear, authentic, accessible everyday language (2-3 sentences). Emphasize clarity, solid fundamentals, and down-to-earth reliability without buzzwords or pretension.";
+            case "short":
+                return "Write a high-impact, punchy summary of 50–75 words (1–2 sentences). Immediately capture core professional identity, primary area of strength, and distinct value.";
+            case "technical":
+                return "Emphasize technical depth, engineering rigor, system architecture, and disciplined problem-solving methodologies (3-4 sentences). Focus on how solutions are engineered rather than reciting tool names.";
+            case "career-focused":
+                return "Highlight career momentum, growth mindset, practical adaptability, and the enthusiasm and value brought to organizational objectives (2-3 sentences).";
+            case "professional":
+            default:
+                return "Use a polished, executive, and articulate narrative (2-4 sentences). Emphasize professional identity, domain expertise, and a disciplined approach to delivering real-world value.";
+        }
+    };
 
-        const prompt = `
-You are an expert resume writer. Generate a candidate professional summary/about statement strictly using the provided candidate facts.
+    const suggestedOpenings = [
+        academicField ? `"A ${academicField} ${academicLevelDesc} with..."` : `"A ${primaryDomain.toLowerCase()} professional with..."`,
+        isPursuing && academicField ? `"Currently pursuing advanced studies in ${academicField} with a focus on..."` : null,
+        `"With a background in ${academicField || primaryDomain.toLowerCase()}..."`,
+        `"Focused on ${primaryDomain.toLowerCase()}..."`,
+        academicField ? `"Combining academic knowledge in ${academicField} with..."` : null
+    ].filter(Boolean);
 
-The candidate may belong to ANY profession (e.g. Teacher, Doctor, Nurse, Accountant, Salesperson, Marketer, Engineer, Researcher, Designer, Software Developer, Student / Fresher, Business Professional, etc.).
-NEVER assume the candidate is a software developer or IT professional unless explicitly indicated by their title, experience, or skills. Use terminology appropriate to their specific discipline.
+    const prompt = `
+You are an expert biographer and executive portfolio writer.
+Analyze the candidate's complete profile below and write a natural, personalized "About" section for their professional portfolio.
 
-CRITICAL INTEGRITY RULES:
-1. ONLY reference information present in the facts below. NEVER invent companies, years of experience, titles, metrics, or certifications.
-2. If facts are sparse, keep the statement concise, honest, authentic, and professionally relevant.
-3. Tone and style must strictly adhere to the requested "${normalizedStyle}" style:
-   - "simple": Plain, straightforward, authentic language (2-3 sentences).
-   - "professional": Executive, well-structured, polished professional tone (2-3 sentences).
-   - "short": High-impact, concise summary (1-2 sentences maximum).
-   - "technical": Emphasize specialized domain methodologies, techniques, and tools relevant to their specific discipline (2-3 sentences).
-   - "career-focused": Highlight ambition, growth mindset, reliability, and career goals (2-3 sentences).
-4. Return ONLY the plain text paragraph. Do NOT include markdown quotes, headings, labels, bullet points, or conversational text.
+Candidate Profile Overview:
+- Professional Identity / Focus: ${effectiveTitle}
+- Background Category: ${userCategory}
+- Academic Level & Discipline: ${academicLevelDesc}${academicField ? ` in ${academicField}` : ""}
+- Primary Field / Domain: ${primaryDomain}
+- Academic Foundations: ${academicSummary || "Not specified"}
+- Experience Highlights & Domains: ${experienceSummary || "Not specified"}
+- Project Focus & Types of Work: ${projectsSummary || "Not specified"}
+- Competencies & Core Strengths: ${skillsSummary || "Not specified"}
+- Specialized Training & Certifications: ${certsSummary || "None specified"}
+${existingSummary ? `- Self-Stated Focus / Objective: ${existingSummary}` : ""}
 
-Candidate Facts:
-- Name: ${candidateName}
-- Title / Headline: ${candidateTitle}
-- Category: ${userCategory}
-- Career Target: ${metadata.career_target || "General"}
-- Education: ${primaryDegree || "Not specified"}
-- Recent Experience: ${recentRole || "Not specified"}
-- Key Skills: ${topSkills || "Not specified"}
-- Notable Work / Projects: ${topProjects || "Not specified"}
-- Certifications / Training: ${topCerts || "Not specified"}
+STRICT PROHIBITIONS (MANDATORY):
+1. NEVER mention the candidate's/person's name anywhere in the text.
+2. DO NOT begin with:
+   - "I am..."
+   - "I have..."
+   - "My name is..."
+   - "My background..."
+   - Any personal name
+3. DO NOT use first-person pronouns anywhere ("I", "me", "my", "myself").
+4. Write in a confident, third-person or portfolio narrative voice (without using personal names).
+
+NATURAL PROFESSIONAL OPENING REQUIREMENT:
+You MUST begin directly with a natural, confident professional phrasing supported by the resume, such as:
+${suggestedOpenings.map(o => `- ${o}`).join("\n")}
+Select the opening phrase that best fits the candidate's actual qualifications and the requested style.
+
+CRITICAL ANTI-DUPLICATION RULES (DO NOT REPEAT RESUME AS A LIST):
+- DO NOT simply list or recite:
+  * Education details (do NOT list degrees, colleges, universities, or graduation years)
+  * Certificates (do NOT list certificate titles or issuers)
+  * Skills one by one (do NOT write comma-separated lists of tools or programming languages)
+  * Work experience or internships one by one (do NOT list companies or employment chronologies)
+  * Projects one by one (do NOT enumerate project titles as a list)
+  * Every resume section in order
+- Instead, synthesize their experience, projects, and competencies into cohesive themes:
+  * Professional/academic background
+  * Main area of interest or career direction
+  * Strengths demonstrated through their work/projects
+  * Overall professional identity
+- Add context and personality to the portfolio so this section complements the detailed resume sections below rather than duplicating them.
+
+GROUNDING & LENGTH:
+- Length: strictly between 80 and 150 words (or 50–75 words for the "short" style).
+- Ground strictly in the candidate's actual profile facts; NEVER invent qualifications, experience, skills, metrics, companies, or goals that are not supported by the resume.
+
+STYLE REQUIREMENT (${normalizedStyle.toUpperCase()}):
+${getStyleGuide(normalizedStyle)}
+
+OUTPUT FORMAT:
+Return ONLY the plain text paragraph. Do NOT include markdown quotes, headings, labels, bullet points, candidate name, or conversational introduction.
 `;
 
-        const response = await ai.models.generateContent({
-            model: modelName,
-            contents: prompt
-        });
+    const candidateModels = [
+        process.env.GEMINI_MODEL || "gemini-3.6-flash",
+        "gemini-3.5-flash",
+        "gemini-3.5-flash-lite",
+        "gemini-3-flash-preview",
+    ].filter((m, idx, arr) => Boolean(m) && arr.indexOf(m) === idx);
 
-        const text = response?.text?.trim();
-        if (text && text.length > 20) {
-            const cleaned = text.replace(/^["']|["']$/g, "").replace(/^#+\s*.*/gm, "").trim();
-            return { about: cleaned, style: normalizedStyle, source: "ai" };
+    let aiText = null;
+    let lastError = null;
+
+    try {
+        const ai = new GoogleGenAI({ apiKey });
+
+        for (let m = 0; m < candidateModels.length; m++) {
+            const currentModel = candidateModels[m];
+            try {
+                const requestConfig = {};
+                if (!currentModel.includes("lite")) {
+                    requestConfig.thinkingConfig = { thinkingBudget: 0 };
+                }
+
+                const response = await ai.models.generateContent({
+                    model: currentModel,
+                    contents: prompt,
+                    config: requestConfig
+                });
+
+                const text = response?.text?.trim();
+                if (text && text.length > 25) {
+                    aiText = text
+                        .replace(/^["']|["']$/g, "")
+                        .replace(/^#+\s*.*/gm, "")
+                        .trim();
+                    break;
+                }
+            } catch (err) {
+                lastError = err;
+                console.warn(`[Generate About] Model (${currentModel}) failed: ${err.message}. Trying next candidate model...`);
+            }
+        }
+
+        if (aiText) {
+            // Remove candidate name if it inadvertently leaked
+            if (candidateName && candidateName.length >= 2) {
+                const escaped = candidateName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+                aiText = aiText.replace(new RegExp(`\\b${escaped}\\b`, "gi"), "").replace(/\s\s+/g, " ").trim();
+                const parts = candidateName.split(/\s+/).filter(p => p.length >= 3);
+                for (const p of parts) {
+                    const escP = p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+                    aiText = aiText.replace(new RegExp(`^${escP}\\s+is\\s+`, "i"), "");
+                    aiText = aiText.replace(new RegExp(`^${escP}\\s+`, "i"), "");
+                }
+            }
+
+            // Strip prohibited openings
+            aiText = aiText
+                .replace(/^(i am|i have|my name is|my background is)\s+/i, "")
+                .trim();
+
+            if (aiText.length > 0) {
+                aiText = aiText.charAt(0).toUpperCase() + aiText.slice(1);
+            }
+
+            if (/^i\s+/i.test(aiText)) {
+                console.warn("[Generate About] AI response started with first-person pronoun; using grounded fallback.");
+                return { about: generateFallback(), style: normalizedStyle, source: "fallback" };
+            }
+
+            return { about: aiText, style: normalizedStyle, source: "ai" };
+        }
+
+        if (lastError) {
+            console.warn("[Generate About] All Gemini models failed, using grounded fallback:", lastError.message);
         }
         return { about: generateFallback(), style: normalizedStyle, source: "fallback" };
     } catch (err) {
-        console.warn("[Generate About] Gemini call failed, using deterministic fallback:", err.message);
+        console.warn("[Generate About] Unexpected error, using grounded fallback:", err.message);
         return { about: generateFallback(), style: normalizedStyle, source: "fallback" };
     }
 }
@@ -1394,7 +1600,8 @@ async function handleGenerateAbout(req, res) {
                     skills: parsedSkills,
                     experience: parsedExp,
                     projects: parsedProj,
-                    certificates: parsedCerts
+                    certificates: parsedCerts,
+                    about: row.about || ""
                 };
             }
         }

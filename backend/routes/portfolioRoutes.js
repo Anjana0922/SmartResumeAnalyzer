@@ -334,6 +334,15 @@ router.post("/", (req, res) => {
 
             // Consolidate personal details
             const incomingPersonal = req.body.personal || {};
+            let rawLinkedin = String(incomingPersonal.linkedin || details.linkedin || "").trim();
+            let cleanLinkedin = "";
+            if (rawLinkedin) {
+                const clean = rawLinkedin.replace(/^https?:\/\//i, "").replace(/^\/+/, "");
+                if (/^([a-zA-Z0-9-]+\.)*linkedin\.com(\/.*)?$/i.test(clean)) {
+                    cleanLinkedin = /^https?:\/\//i.test(rawLinkedin) ? rawLinkedin : `https://${clean}`;
+                }
+            }
+
             const personal = {
                 name: incomingPersonal.name || details.name || meta.name || "",
                 title: incomingPersonal.title || meta.title || "",
@@ -341,7 +350,7 @@ router.post("/", (req, res) => {
                 phone: incomingPersonal.phone || details.phone || "",
                 location: incomingPersonal.location || meta.location || "",
                 github: incomingPersonal.github || details.github || "",
-                linkedin: incomingPersonal.linkedin || details.linkedin || "",
+                linkedin: cleanLinkedin,
                 portfolio_url: incomingPersonal.portfolio_url || meta.portfolio_url || "",
                 photo: photo_path || incomingPersonal.photo || meta.photo_path || null
             };
@@ -875,7 +884,12 @@ router.post("/ai-suggestions", async (req, res) => {
         }
 
         // 5. Contact & Social Links
-        const hasLinkedIn = Boolean(personal.linkedin && personal.linkedin.trim());
+        const rawPortfolioLinkedin = String(personal.linkedin || "").trim();
+        const cleanPortfolioLinkedin = rawPortfolioLinkedin.replace(/^https?:\/\//i, "").replace(/^\/+/, "");
+        const hasLinkedIn = Boolean(
+            rawPortfolioLinkedin &&
+            /^([a-zA-Z0-9-]+\.)*linkedin\.com(\/.*)?$/i.test(cleanPortfolioLinkedin)
+        );
         const hasEmail = Boolean(personal.email && personal.email.trim());
         const hasPhone = Boolean(personal.phone && personal.phone.trim());
 

@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const bcrypt = require("bcryptjs");
 
 const db = require("../db");
 
@@ -36,7 +37,7 @@ router.post("/", (req, res) => {
         WHERE email = ?
     `;
 
-    db.get(checkSQL, [email], (err, user) => {
+    db.get(checkSQL, [email], async (err, user) => {
 
         if (err) {
 
@@ -58,61 +59,72 @@ router.post("/", (req, res) => {
 
         }
 
-        // Insert new user
-        const sql = `
-            INSERT INTO Users
-            (
-                full_name,
-                email,
-                password,
-                phone,
-                user_category,
-                created_at
-            )
-            VALUES (?, ?, ?, ?, ?, ?)
-        `;
+        try {
+            const saltRounds = 10;
+            const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-        const created_at = new Date().toISOString();
+            // Insert new user
+            const sql = `
+                INSERT INTO Users
+                (
+                    full_name,
+                    email,
+                    password,
+                    phone,
+                    user_category,
+                    created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?)
+            `;
 
-        db.run(
-            sql,
-            [
-                full_name,
-                email,
-                password,
-                phone || "",
-                category,
-                created_at
-            ],
-            function (err) {
+            const created_at = new Date().toISOString();
 
-                if (err) {
+            db.run(
+                sql,
+                [
+                    full_name,
+                    email,
+                    hashedPassword,
+                    phone || "",
+                    category,
+                    created_at
+                ],
+                function (err) {
 
-                    console.error(err);
+                    if (err) {
 
-                    return res.status(500).json({
-                        message: "User insertion failed.",
-                        error: err.message
+                        console.error(err);
+
+                        return res.status(500).json({
+                            message: "User insertion failed.",
+                            error: err.message
+                        });
+
+                    }
+
+                    return res.status(201).json({
+
+                        message: "User registered successfully!",
+
+                        user: {
+                            user_id: this.lastID,
+                            full_name: full_name,
+                            email: email,
+                            phone: phone || "",
+                            user_category: category
+                        }
+
                     });
 
                 }
-
-                return res.status(201).json({
-
-                    message: "User registered successfully!",
-
-                    user: {
-                        user_id: this.lastID,
-                        full_name: full_name,
-                        email: email,
-                        phone: phone || "",
-                        user_category: category
-                    }
-
-                });
-
-            }
-        );
+            );
+        } catch (hashErr) {
+            console.error(hashErr);
+            return res.status(500).json({
+                message: "Registration failed.",
+                error: hashErr.message
+            });
+        }
 
     });
 
@@ -145,20 +157,19 @@ router.post("/login", (req, res) => {
             user_id,
             full_name,
             email,
+            password,
             phone,
             user_category
         FROM Users
         WHERE email = ?
-        AND password = ?
     `;
 
     db.get(
         sql,
         [
-            email,
-            password
+            email
         ],
-        (err, user) => {
+        async (err, user) => {
 
             if (err) {
 
@@ -171,7 +182,7 @@ router.post("/login", (req, res) => {
 
             }
 
-            // Invalid login
+            // User not found
             if (!user) {
 
                 return res.status(401).json({
@@ -180,14 +191,46 @@ router.post("/login", (req, res) => {
 
             }
 
-            // Login successful
-            return res.status(200).json({
+            try {
+                // Verify entered password with stored hash
+                const isMatch = await bcrypt.compare(password, user.password);
 
-                message: "Login successful.",
+                if (!isMatch) {
 
-                user: user
+                    return res.status(401).json({
+                        message: "Invalid email or password."
+                    });
 
-            });
+                }
+
+                // Strip password from returned user object
+                const safeUser = {
+                    user_id: user.user_id,
+                    full_name: user.full_name,
+                    email: user.email,
+                    phone: user.phone,
+                    user_category: user.user_category
+                };
+
+                // Login successful
+                return res.status(200).json({
+
+                    message: "Login successful.",
+
+                    user: safeUser
+
+                });
+
+            } catch (compareErr) {
+
+                console.error(compareErr);
+
+                return res.status(500).json({
+                    message: "Authentication error.",
+                    error: compareErr.message
+                });
+
+            }
 
         }
     );

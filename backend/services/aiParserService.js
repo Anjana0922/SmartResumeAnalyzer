@@ -1565,174 +1565,49 @@ function validateAIResult(
         );
     }
 
-    const requiredTopLevel = [
-        "metadata",
-        "personal",
-        "summary",
-        "education",
-        "experience",
-        "skills",
-        "projects",
-        "certificates",
-        "achievements",
-        "languages",
-        "custom_sections",
-    ];
-
-    for (
-        const field of requiredTopLevel
-    ) {
-        if (!(field in raw)) {
-            throw new Error(
-                `[AI Parser] Gemini response missing required field: ${field}`
-            );
-        }
-    }
-
-    if (
-        !raw.personal ||
-        typeof raw.personal !== "object" ||
-        Array.isArray(raw.personal)
-    ) {
-        throw new Error(
-            "[AI Parser] Gemini response contains invalid personal data."
-        );
-    }
-
-    if (!Array.isArray(raw.education)) {
-        throw new Error(
-            "[AI Parser] Gemini response contains invalid education data."
-        );
-    }
-
-    if (!Array.isArray(raw.experience)) {
-        throw new Error(
-            "[AI Parser] Gemini response contains invalid experience data."
-        );
-    }
-
-    if (!Array.isArray(raw.projects)) {
-        throw new Error(
-            "[AI Parser] Gemini response contains invalid projects data."
-        );
-    }
-
-    if (!Array.isArray(raw.certificates)) {
-        throw new Error(
-            "[AI Parser] Gemini response contains invalid certificates data."
-        );
-    }
-
-    if (!Array.isArray(raw.achievements)) {
-        throw new Error(
-            "[AI Parser] Gemini response contains invalid achievements data."
-        );
-    }
-
-    if (!Array.isArray(raw.languages)) {
-        throw new Error(
-            "[AI Parser] Gemini response contains invalid languages data."
-        );
-    }
-
-    if (!Array.isArray(raw.custom_sections)) {
-        throw new Error(
-            "[AI Parser] Gemini response contains invalid custom_sections data."
-        );
-    }
-
-    if (
-        !raw.skills ||
-        typeof raw.skills !== "object" ||
-        Array.isArray(raw.skills)
-    ) {
-        throw new Error(
-            "[AI Parser] Gemini response contains invalid skills data."
-        );
-    }
+    // Ensure all canonical containers exist rather than throwing errors
+    // when sections are omitted, missing from the resume, or returned as null.
+    raw.metadata = (typeof raw.metadata === "object" && raw.metadata !== null && !Array.isArray(raw.metadata)) ? raw.metadata : {};
+    raw.personal = (typeof raw.personal === "object" && raw.personal !== null && !Array.isArray(raw.personal)) ? raw.personal : {};
+    raw.summary = typeof raw.summary === "string" ? raw.summary : (raw.about || raw.profile || "");
+    raw.education = Array.isArray(raw.education) ? raw.education : [];
+    raw.experience = Array.isArray(raw.experience) ? raw.experience : [];
+    raw.skills = (typeof raw.skills === "object" && raw.skills !== null && !Array.isArray(raw.skills)) ? raw.skills : { all: [] };
+    raw.projects = Array.isArray(raw.projects) ? raw.projects : [];
+    raw.certificates = Array.isArray(raw.certificates) ? raw.certificates : [];
+    raw.achievements = Array.isArray(raw.achievements) ? raw.achievements : [];
+    raw.languages = Array.isArray(raw.languages) ? raw.languages : [];
+    raw.custom_sections = Array.isArray(raw.custom_sections) ? raw.custom_sections : [];
 
     const source = String(
         rawText || ""
     );
 
-    // ---------------------------------------------------------
-    // Contact information checks
-    // ---------------------------------------------------------
-
-    if (
-        hasEmailEvidence(source) &&
-        !String(
-            raw.personal.email || ""
-        ).trim()
-    ) {
-        throw new Error(
-            "[AI Parser] Gemini failed to extract an email that is present in the resume."
-        );
+    // If personal name is missing, attempt recovery from early lines of rawText
+    if (!raw.personal.name || typeof raw.personal.name !== "string" || !raw.personal.name.trim()) {
+        const lines = source.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+        for (const line of lines.slice(0, 5)) {
+            if (!/@|www\.|\.com|\.in|\+?\d{8,}|resume|curriculum vitae|biodata|objective|profile/i.test(line) && line.length < 50 && line.length > 2) {
+                raw.personal.name = line;
+                break;
+            }
+        }
     }
 
-    if (
-        hasPhoneEvidence(source) &&
-        !String(
-            raw.personal.phone || ""
-        ).trim()
-    ) {
-        throw new Error(
-            "[AI Parser] Gemini failed to extract a phone number that is present in the resume."
-        );
+    // Recover email from source if present and not captured
+    if (!String(raw.personal.email || "").trim() && hasEmailEvidence(source)) {
+        const emailMatch = source.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+        if (emailMatch) {
+            raw.personal.email = emailMatch[0].trim().toLowerCase();
+        }
     }
 
-    // ---------------------------------------------------------
-    // Semantic section checks
-    // ---------------------------------------------------------
-
-    if (
-        hasEducationEvidence(source) &&
-        raw.education.length === 0
-    ) {
-        throw new Error(
-            "[AI Parser] Gemini failed to extract education information that appears to exist in the resume."
-        );
-    }
-
-    if (
-        hasExperienceEvidence(source) &&
-        raw.experience.length === 0
-    ) {
-        throw new Error(
-            "[AI Parser] Gemini failed to extract experience information that appears to exist in the resume."
-        );
-    }
-
-    if (
-        hasProjectEvidence(source) &&
-        raw.projects.length === 0
-    ) {
-        throw new Error(
-            "[AI Parser] Gemini failed to extract project information that appears to exist in the resume."
-        );
-    }
-
-    if (
-        hasSkillEvidence(source) &&
-        (
-            !Array.isArray(
-                raw.skills.all
-            ) ||
-            raw.skills.all.length === 0
-        )
-    ) {
-        throw new Error(
-            "[AI Parser] Gemini failed to extract skills information that appears to exist in the resume."
-        );
-    }
-
-    if (
-        hasCertificateEvidence(source) &&
-        raw.certificates.length === 0
-    ) {
-        throw new Error(
-            "[AI Parser] Gemini failed to extract certificate information that appears to exist in the resume."
-        );
+    // Recover phone from source if present and not captured
+    if (!String(raw.personal.phone || "").trim() && hasPhoneEvidence(source)) {
+        const phoneMatch = source.match(/(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}|\+?\d{10,14}/);
+        if (phoneMatch) {
+            raw.personal.phone = phoneMatch[0].trim();
+        }
     }
 
     return true;
@@ -1816,12 +1691,21 @@ function normalizeResumeData(
             ""
     ).trim();
 
-    const linkedin = String(
+    let linkedin = String(
         rawPersonal.linkedin ||
             rawPersonal.linkedin_url ||
             safeObj.linkedin ||
             ""
     ).trim();
+
+    if (linkedin) {
+        const clean = linkedin.replace(/^https?:\/\//i, "").replace(/^\/+/, "");
+        if (/^([a-zA-Z0-9-]+\.)*linkedin\.com(\/.*)?$/i.test(clean)) {
+            linkedin = /^https?:\/\//i.test(linkedin) ? linkedin : `https://${clean}`;
+        } else {
+            linkedin = "";
+        }
+    }
 
     const portfolio_url =
         String(
@@ -3033,9 +2917,18 @@ async function parseWithAI(
         );
     }
 
-    const modelName =
+    const primaryModel =
         process.env.GEMINI_MODEL ||
         "gemini-3.6-flash";
+
+    const candidateModels = [
+        primaryModel,
+        "gemini-3.5-flash",
+        "gemini-3.5-flash-lite",
+        "gemini-3-flash-preview",
+    ].filter(
+        (m, idx, arr) => Boolean(m) && arr.indexOf(m) === idx
+    );
 
     const ai =
         new GoogleGenAI({
@@ -3083,99 +2976,131 @@ ${resumeText}
 END RESUME TEXT
 `;
 
-    console.log(
-        `[AI Parser] Sending text to Gemini model (${modelName}) with responseSchema...`
-    );
-
     let response;
     let lastError;
 
-    const maxRetries = 3;
-
-    for (
-        let attempt = 1;
-        attempt <= maxRetries;
-        attempt++
-    ) {
-        try {
-            response =
-                await ai.models.generateContent(
-                    {
-                        model:
-                            modelName,
-
-                        contents:
-                            prompt,
-
-                        config: {
-                            systemInstruction:
-                                AI_PARSER_SYSTEM_PROMPT,
-
-                            responseMimeType:
-                                "application/json",
-
-                            responseSchema:
-                                RESUME_RESPONSE_SCHEMA,
-
-                            thinkingConfig: {
-                                thinkingBudget: 0,
-                            },
-                        },
-                    }
-                );
-
-            if (
-                response &&
-                response.text
-            ) {
-                break;
-            }
-        } catch (err) {
-            lastError = err;
-
-            console.warn(
-                `[AI Parser] Attempt ${attempt} failed: ${err.message}`
-            );
-
-            const isTransient =
-                err.status === 503 ||
+    const isQuotaOrUnavailableError = (err) => {
+        return Boolean(
+            err &&
+            (err.status === 503 ||
                 err.status === 429 ||
-                err.message?.includes(
-                    "503"
-                ) ||
-                err.message?.includes(
-                    "429"
-                ) ||
-                err.message?.includes(
-                    "high demand"
-                ) ||
-                err.message?.includes(
-                    "UNAVAILABLE"
+                err.message?.includes("503") ||
+                err.message?.includes("429") ||
+                err.message?.includes("high demand") ||
+                err.message?.includes("UNAVAILABLE") ||
+                err.message?.includes("RESOURCE_EXHAUSTED") ||
+                err.message?.includes("Quota exceeded") ||
+                err.message?.includes("quota") ||
+                err.message?.includes("rate limit"))
+        );
+    };
+
+    const isTransientError = (err) => {
+        return Boolean(
+            err &&
+            (isQuotaOrUnavailableError(err) ||
+                err.message?.includes("ETIMEDOUT") ||
+                err.message?.includes("ECONNRESET") ||
+                err.message?.includes("fetch failed"))
+        );
+    };
+
+    for (let m = 0; m < candidateModels.length; m++) {
+        const currentModel = candidateModels[m];
+        const hasFallback = m < candidateModels.length - 1;
+        const maxAttemptsPerModel = 2;
+
+        console.log(
+            `[AI Parser] Sending text to Gemini model (${currentModel}) with responseSchema...`
+        );
+
+        let modelSuccess = false;
+
+        for (
+            let attempt = 1;
+            attempt <= maxAttemptsPerModel;
+            attempt++
+        ) {
+            try {
+                const requestConfig = {
+                    systemInstruction:
+                        AI_PARSER_SYSTEM_PROMPT,
+
+                    responseMimeType:
+                        "application/json",
+
+                    responseSchema:
+                        RESUME_RESPONSE_SCHEMA,
+                };
+
+                if (!currentModel.includes("lite")) {
+                    requestConfig.thinkingConfig = {
+                        thinkingBudget: 0,
+                    };
+                }
+
+                response =
+                    await ai.models.generateContent(
+                        {
+                            model:
+                                currentModel,
+
+                            contents:
+                                prompt,
+
+                            config:
+                                requestConfig,
+                        }
+                    );
+
+                if (
+                    response &&
+                    response.text
+                ) {
+                    modelSuccess = true;
+                    break;
+                }
+            } catch (err) {
+                lastError = err;
+
+                console.warn(
+                    `[AI Parser] Model (${currentModel}) attempt ${attempt} failed: ${err.message}`
                 );
 
-            if (
-                attempt <
-                    maxRetries &&
-                isTransient
-            ) {
-                const delay =
-                    attempt *
-                    2000;
+                // If 503/UNAVAILABLE or 429/RESOURCE_EXHAUSTED (quota exceeded or high demand)
+                // and a fallback model is available, switch to fallback model immediately.
+                if (isQuotaOrUnavailableError(err) && hasFallback) {
+                    console.warn(
+                        `[AI Parser] Model (${currentModel}) encountered quota/demand limit. Switching to fallback model (${candidateModels[m + 1]})...`
+                    );
+                    break;
+                }
 
-                console.log(
-                    `[AI Parser] Retrying in ${delay}ms...`
-                );
-
-                await new Promise(
-                    (resolve) =>
-                        setTimeout(
-                            resolve,
-                            delay
-                        )
-                );
-            } else {
-                throw err;
+                // For other temporary failures, perform a small retry before giving up on this model.
+                if (
+                    attempt < maxAttemptsPerModel &&
+                    isTransientError(err)
+                ) {
+                    const delay = attempt * 1500;
+                    console.log(
+                        `[AI Parser] Temporary failure on model (${currentModel}). Retrying in ${delay}ms...`
+                    );
+                    await new Promise((resolve) =>
+                        setTimeout(resolve, delay)
+                    );
+                } else if (hasFallback) {
+                    console.warn(
+                        `[AI Parser] Model (${currentModel}) exhausted attempts. Switching to fallback model (${candidateModels[m + 1]})...`
+                    );
+                    break;
+                } else {
+                    throw err;
+                }
             }
+        }
+
+        if (modelSuccess && response?.text) {
+            break;
         }
     }
 
@@ -3207,12 +3132,19 @@ END RESUME TEXT
             )
             .trim();
 
+    let jsonStringToParse = cleanedJson;
+    const firstBrace = jsonStringToParse.indexOf("{");
+    const lastBrace = jsonStringToParse.lastIndexOf("}");
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+        jsonStringToParse = jsonStringToParse.substring(firstBrace, lastBrace + 1);
+    }
+
     let rawParsed;
 
     try {
         rawParsed =
             JSON.parse(
-                cleanedJson
+                jsonStringToParse
             );
     } catch (error) {
         throw new Error(
@@ -3256,116 +3188,74 @@ END RESUME TEXT
         );
 
     // ---------------------------------------------------------
-    // Final normalized validation
+    // Final normalized validation & defensive field recovery
     // ---------------------------------------------------------
 
     if (
-        !normalized.personal
-            .name &&
+        !normalized.personal.name &&
         rawParsed.personal?.name
     ) {
-        throw new Error(
-            "[AI Parser] Normalization unexpectedly removed the candidate name."
-        );
+        normalized.personal.name = rawParsed.personal.name;
     }
 
     if (
-        hasEmailEvidence(
-            resumeText
-        ) &&
-        !normalized.personal
-            .email
+        !normalized.personal.email &&
+        rawParsed.personal?.email
     ) {
-        throw new Error(
-            "[AI Parser] Normalization unexpectedly removed the candidate email."
-        );
+        normalized.personal.email = rawParsed.personal.email;
     }
 
     if (
-        hasPhoneEvidence(
-            resumeText
-        ) &&
-        !normalized.personal
-            .phone
+        !normalized.personal.phone &&
+        rawParsed.personal?.phone
     ) {
-        throw new Error(
-            "[AI Parser] Normalization unexpectedly removed the candidate phone number."
-        );
+        normalized.personal.phone = rawParsed.personal.phone;
     }
 
     // ---------------------------------------------------------
     // Verify that extracted information was not accidentally
-    // discarded during normalization.
+    // discarded during normalization; recover safely if needed.
     // ---------------------------------------------------------
 
     if (
-        Array.isArray(
-            rawParsed.skills?.all
-        ) &&
-        rawParsed.skills.all.length >
-            0 &&
-        normalized.skills.all
-            .length === 0
+        Array.isArray(rawParsed.skills?.all) &&
+        rawParsed.skills.all.length > 0 &&
+        (!normalized.skills?.all || normalized.skills.all.length === 0)
     ) {
-        throw new Error(
-            "[AI Parser] Normalization unexpectedly removed all extracted skills."
-        );
+        if (!normalized.skills) normalized.skills = {};
+        normalized.skills.all = rawParsed.skills.all;
     }
 
     if (
-        Array.isArray(
-            rawParsed.education
-        ) &&
-        rawParsed.education.length >
-            0 &&
-        normalized.education
-            .length === 0
+        Array.isArray(rawParsed.education) &&
+        rawParsed.education.length > 0 &&
+        (!normalized.education || normalized.education.length === 0)
     ) {
-        throw new Error(
-            "[AI Parser] Normalization unexpectedly removed education information."
-        );
+        normalized.education = rawParsed.education;
     }
 
     if (
-        Array.isArray(
-            rawParsed.experience
-        ) &&
-        rawParsed.experience.length >
-            0 &&
-        normalized.experience
-            .length === 0
+        Array.isArray(rawParsed.experience) &&
+        rawParsed.experience.length > 0 &&
+        (!normalized.experience || normalized.experience.length === 0)
     ) {
-        throw new Error(
-            "[AI Parser] Normalization unexpectedly removed experience information."
-        );
+        normalized.experience = rawParsed.experience;
     }
 
     if (
-        Array.isArray(
-            rawParsed.projects
-        ) &&
-        rawParsed.projects.length >
-            0 &&
-        normalized.projects
-            .length === 0
+        Array.isArray(rawParsed.projects) &&
+        rawParsed.projects.length > 0 &&
+        (!normalized.projects || normalized.projects.length === 0)
     ) {
-        throw new Error(
-            "[AI Parser] Normalization unexpectedly removed project information."
-        );
+        normalized.projects = rawParsed.projects;
     }
 
     if (
-        Array.isArray(
-            rawParsed.certificates
-        ) &&
-        rawParsed.certificates.length >
-            0 &&
-        normalized.certificates
-            .length === 0
+        Array.isArray(rawParsed.certificates) &&
+        rawParsed.certificates.length > 0 &&
+        (!normalized.certificates || normalized.certificates.length === 0)
     ) {
-        throw new Error(
-            "[AI Parser] Normalization unexpectedly removed certificate information."
-        );
+        normalized.certificates = rawParsed.certificates;
     }
 
     console.log(
