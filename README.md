@@ -1,12 +1,12 @@
-# Profile Builder
+# Smart Resume Analyzer and Portfolio Generator
 
-### Create, Improve, Analyze and Present Your Professional Profile
+### Analyze your resume, improve its ATS compatibility, and generate a professional portfolio from your resume.
 
-**Profile Builder** is a web-based career profile platform that brings multiple resume and professional-profile tools together in one application.
+**Smart Resume Analyzer and Portfolio Generator** is a web-based career platform that brings multiple resume and professional portfolio tools together in one application.
 
 The system allows users to create and manage resumes, upload and analyze existing resumes, evaluate ATS compatibility, receive improvement suggestions, generate an ATS-friendly version of a resume, and create a professional portfolio from resume information.
 
-Instead of using separate applications for each task, Profile Builder provides these activities through a single platform.
+Instead of using separate applications for each task, Smart Resume Analyzer and Portfolio Generator provides these activities through a single platform.
 
 ---
 
@@ -23,13 +23,13 @@ A resume should:
 - Maintain a professional format.
 - Represent the candidate consistently across different platforms.
 
-Profile Builder addresses these requirements by combining **resume creation, resume analysis, ATS optimization and portfolio generation** into one application.
+Smart Resume Analyzer and Portfolio Generator addresses these requirements by combining **resume creation, resume analysis, ATS optimization and portfolio generation** into one application.
 
 ---
 
 ## 🎯 Objectives
 
-The main objectives of Profile Builder are:
+The main objectives of Smart Resume Analyzer and Portfolio Generator are:
 
 1. To provide a simple platform for creating and managing resumes.
 2. To extract structured information from uploaded resumes.
@@ -114,7 +114,7 @@ The purpose is to help users understand areas that may be improved rather than s
 
 ### 5. ATS-Friendly Resume Generation
 
-Profile Builder can generate an ATS-friendly version of an uploaded resume.
+Smart Resume Analyzer and Portfolio Generator can generate an ATS-friendly version of an uploaded resume.
 
 The generated version:
 
@@ -183,10 +183,10 @@ Users are required to go through the login interface rather than being automatic
 
 ## 🔄 Complete Application Workflow
 
-The overall Profile Builder workflow can be represented as:
+The overall application workflow can be represented as:
 
 ```text
-                 PROFILE BUILDER
+       SMART RESUME ANALYZER & PORTFOLIO GENERATOR
                        │
              ┌─────────┴─────────┐
              │                   │
@@ -406,9 +406,9 @@ The Vite development server will provide the local frontend URL.
 
 ## ▶️ How to Use
 
-### Step 1 — Open Profile Builder
+### Step 1 — Open the Application
 
-Open the application and view the Profile Builder landing page.
+Open the application and view the Smart Resume Analyzer and Portfolio Generator landing page.
 
 ### Step 2 — Login or Sign Up
 
@@ -458,7 +458,7 @@ A `.gitignore` file should be used to exclude environment files and temporary up
 User
  │
  ▼
-Profile Builder
+Smart Resume Analyzer
  │
  ▼
 Login / Sign Up
@@ -495,7 +495,7 @@ Professional Profile
 
 **Project Type:** MCA Mini Project
 
-**Project Name:** Profile Builder
+**Project Name:** Smart Resume Analyzer and Portfolio Generator
 
 The project demonstrates the integration of:
 
@@ -530,7 +530,7 @@ Possible future improvements include:
 
 ## ⚠️ Current Scope
 
-Profile Builder is designed as an academic project demonstrating an integrated approach to resume creation, resume analysis, ATS optimization and portfolio generation.
+Smart Resume Analyzer and Portfolio Generator is designed as an academic project demonstrating an integrated approach to resume creation, resume analysis, ATS optimization and portfolio generation.
 
 The ATS score and recommendations should be treated as guidance rather than a guarantee of acceptance by any particular company's Applicant Tracking System.
 
