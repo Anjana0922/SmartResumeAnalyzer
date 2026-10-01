@@ -133,19 +133,18 @@ const Auth = () => {
 
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold uppercase tracking-wider mb-6">
               <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />
-              Profile Builder
+              Smart Resume Analyzer
             </div>
 
-            <h1 className="text-5xl font-bold leading-tight text-slate-900">
-              Create, improve, and present your
+            <h1 className="text-4xl lg:text-5xl font-bold leading-tight text-slate-900">
+              Analyze, improve, and present your
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">
                 {" "}professional profile.
               </span>
             </h1>
 
-            <p className="text-slate-600 text-lg mt-6 max-w-lg leading-relaxed">
-              Build your resume, check its ATS compatibility, improve it,
-              and turn it into a professional portfolio.
+            <p className="text-slate-600 text-base lg:text-lg mt-6 max-w-lg leading-relaxed">
+              Analyze your resume, improve its ATS compatibility, and generate a professional portfolio from your resume.
             </p>
 
           </div>
@@ -225,7 +224,7 @@ const Auth = () => {
 
               <h2 className="text-2xl font-bold text-slate-900">
                 {isLogin
-                  ? "Login to Profile Builder"
+                  ? "Login to Smart Resume Analyzer"
                   : "Create your account"}
               </h2>
 
@@ -401,7 +400,7 @@ const Auth = () => {
           </div>
 
           <p className="text-center text-xs text-slate-500 mt-5">
-            Profile Builder • Professional Profile Platform
+            Smart Resume Analyzer and Portfolio Generator
           </p>
 
         </div>

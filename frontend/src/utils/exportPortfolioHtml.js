@@ -14,6 +14,17 @@ function escapeHtml(str) {
     .replace(/'/g, "&#039;");
 }
 
+function formatLinkedInUrl(url) {
+  if (!url || typeof url !== "string") return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  const clean = trimmed.replace(/^https?:\/\//i, "").replace(/^\/+/, "");
+  if (!/^([a-zA-Z0-9-]+\.)*linkedin\.com(\/.*)?$/i.test(clean)) {
+    return null;
+  }
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${clean}`;
+}
+
 export function exportPortfolioToHtml(portfolio, options = {}) {
   if (!portfolio) return;
 
@@ -24,7 +35,7 @@ export function exportPortfolioToHtml(portfolio, options = {}) {
   const phone = personal.phone || "";
   const location = personal.location || "";
   const website = personal.portfolio_url || "";
-  const linkedin = personal.linkedin || "";
+  const linkedin = formatLinkedInUrl(personal.linkedin);
   const github = personal.github || "";
   const photo = options.photo || portfolio.photo_path || personal.photo || null;
   const template = options.template || portfolio.template_name || "professional";

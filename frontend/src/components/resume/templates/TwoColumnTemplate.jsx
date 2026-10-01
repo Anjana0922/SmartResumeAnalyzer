@@ -56,7 +56,7 @@ export default function TwoColumnTemplate({ resume }) {
   return (
     <div className="resume-print-root bg-white text-slate-800 font-sans w-[794px] min-h-[1123px] mx-auto text-sm leading-normal flex flex-row box-border">
       {/* Left Sidebar (270px) */}
-      <aside className="w-[270px] shrink-0 bg-slate-50 border-r border-slate-200 p-6 flex flex-col justify-between box-border">
+      <aside className="w-[270px] shrink-0 bg-slate-50 border-r border-slate-200 p-6 box-border">
         <div className="space-y-5">
           {/* Photo */}
           {photoUrl && (
@@ -191,10 +191,6 @@ export default function TwoColumnTemplate({ resume }) {
             </div>
           )}
         </div>
-
-        <div className="pt-4 text-[10px] text-slate-500 border-t border-slate-200">
-          Generated via SmartResume
-        </div>
       </aside>
 
       {/* Right Content Area (524px) */}
@@ -202,7 +198,7 @@ export default function TwoColumnTemplate({ resume }) {
         {/* Name & Title Header */}
         <div className="border-b-2 border-purple-600 pb-3 resume-section-block pdf-avoid-break">
           <h1 className="text-3xl font-extrabold text-slate-950 tracking-tight">
-            {personal.name || "Candidate Name"}
+            {personal.name || ""}
           </h1>
           {personal.title && (
             <p className="text-base text-purple-700 font-semibold mt-0.5">

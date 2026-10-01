@@ -58,13 +58,6 @@ export default function MinimalTemplate({ resume }) {
       {/* Header */}
       <header className="pb-6 mb-6 border-b border-zinc-200 flex flex-row items-start justify-between gap-6 resume-section-block pdf-avoid-break">
         <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-zinc-400"></span>
-            <span className="text-xs uppercase tracking-widest text-zinc-600 font-medium">
-              Curriculum Vitae
-            </span>
-          </div>
-
           <h1 className="text-3xl font-light tracking-tight text-zinc-950">
             {personal.name ? (
               <>
@@ -72,7 +65,7 @@ export default function MinimalTemplate({ resume }) {
                 {personal.name.split(" ").slice(1).join(" ")}
               </>
             ) : (
-              "Candidate Name"
+              ""
             )}
           </h1>
 

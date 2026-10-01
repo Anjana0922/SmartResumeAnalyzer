@@ -6,15 +6,16 @@ import {
   ArrowUpRight,
   Globe,
 } from "lucide-react";
-import { Linkedin, Github } from "../SocialIcons";
+import { Linkedin, Github, formatLinkedInUrl } from "../SocialIcons";
 
 function DarkTemplate({
   resume,
   photo,
-  sections,
+  sections = [],
   theme,
 }) {
   const personal = resume?.personal || {};
+  const linkedInUrl = formatLinkedInUrl(personal.linkedin);
   const isDark = theme === "dark";
 
   // =========================================================
@@ -89,16 +90,18 @@ function DarkTemplate({
     title,
   }) => (
     <div className="flex items-center gap-5 mb-10">
-      <span
-        className={`
-          text-[10px]
-          font-bold
-          tracking-[0.25em]
-          ${accent}
-        `}
-      >
-        {number}
-      </span>
+      {number && (
+        <span
+          className={`
+            text-[10px]
+            font-bold
+            tracking-[0.25em]
+            ${accent}
+          `}
+        >
+          {number}
+        </span>
+      )}
 
       <div
         className={`
@@ -126,73 +129,45 @@ function DarkTemplate({
   // =========================================================
 
   const renderPhoto = () => {
-    if (photo) {
-      return (
-        <div className="relative inline-block">
-          <div
-            className={`
-              absolute
-              -inset-2
-              border
-              ${border}
-              rotate-3
-            `}
-          />
-
-          <img
-            src={photo}
-            alt={personal.name || "Profile"}
-            className="
-              relative
-              w-36
-              h-36
-              md:w-44
-              md:h-44
-              object-cover
-              grayscale
-              contrast-125
-            "
-          />
-
-          <div
-            className={`
-              absolute
-              -bottom-2
-              -right-2
-              w-5
-              h-5
-              ${accentBg}
-            `}
-          />
-        </div>
-      );
-    }
+    if (!photo) return null;
 
     return (
-      <div
-        className={`
-          relative
-          w-36
-          h-36
-          md:w-44
-          md:h-44
-          border
-          ${border}
-          flex
-          items-center
-          justify-center
-        `}
-      >
-        <span
+      <div className="relative inline-block">
+        <div
           className={`
-            text-[9px]
-            uppercase
-            tracking-[0.3em]
-            ${faint}
+            absolute
+            -inset-2
+            border
+            ${border}
+            rotate-3
           `}
-        >
-          Add Photo
-        </span>
+        />
+
+        <img
+          src={photo}
+          alt={personal.name || ""}
+          className="
+            relative
+            w-36
+            h-36
+            md:w-44
+            md:h-44
+            object-cover
+            grayscale
+            contrast-125
+          "
+        />
+
+        <div
+          className={`
+            absolute
+            -bottom-2
+            -right-2
+            w-5
+            h-5
+            ${accentBg}
+          `}
+        />
       </div>
     );
   };
@@ -201,52 +176,57 @@ function DarkTemplate({
   // ABOUT
   // =========================================================
 
-  const renderAbout = () => (
-    <section
-      id="about"
-      className="py-20 scroll-mt-24"
-    >
-      <SectionHeading
-        number="01"
-        title="About"
-      />
+  const renderAbout = () => {
+    const aboutText = resume?.about || resume?.summary || personal.summary;
+    if (!aboutText) return null;
 
-      <div
-        className="
-          grid
-          lg:grid-cols-[180px_1fr]
-          gap-10
-        "
+    return (
+      <section
+        id="about"
+        className="py-20 scroll-mt-24"
       >
-        <div>
-          <span
+        <SectionHeading
+          number="01"
+          title="About"
+        />
+
+        <div
+          className="
+            grid
+            lg:grid-cols-[180px_1fr]
+            gap-10
+          "
+        >
+          <div>
+            <span
+              className={`
+                text-[10px]
+                uppercase
+                tracking-[0.2em]
+                ${faint}
+              `}
+            >
+              Introduction
+            </span>
+          </div>
+
+          <p
             className={`
-              text-[10px]
-              uppercase
-              tracking-[0.2em]
-              ${faint}
+              text-2xl
+              md:text-3xl
+              leading-relaxed
+              font-light
+              max-w-4xl
+              ${secondary}
+              whitespace-pre-line
             `}
           >
-            Introduction
-          </span>
+            {aboutText}
+          </p>
         </div>
-
-        <p
-          className={`
-            text-2xl
-            md:text-3xl
-            leading-relaxed
-            font-light
-            max-w-4xl
-            ${secondary}
-          `}
-        >
-          {resume.about ||
-            "A motivated professional interested in technology, continuous learning and creating meaningful digital solutions."}
-        </p>
-      </div>
-    </section>
-  );
+      </section>
+    );
+  };
 
   // =========================================================
   // EDUCATION
@@ -291,24 +271,24 @@ function DarkTemplate({
                     ${faint}
                   `}
                 >
-                  {item.year || "—"}
+                  {item.year || item.duration || "—"}
                 </span>
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold">
-                  {item.degree ||
-                    item.course ||
-                    "Degree"}
-                </h3>
+                {(item.degree || item.course) && (
+                  <h3 className="text-xl font-semibold">
+                    {item.degree || item.course}
+                  </h3>
+                )}
 
-                <p
-                  className={`mt-2 text-sm ${secondary}`}
-                >
-                  {item.institution ||
-                    item.institute ||
-                    "Institution"}
-                </p>
+                {(item.institution || item.institute) && (
+                  <p
+                    className={`mt-2 text-sm ${secondary}`}
+                  >
+                    {item.institution || item.institute}
+                  </p>
+                )}
 
                 {item.score && (
                   <span
@@ -392,13 +372,17 @@ function DarkTemplate({
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold">
-                  {item.role || item.title || "Role"}
-                </h3>
+                {(item.role || item.title) && (
+                  <h3 className="text-xl font-semibold">
+                    {item.role || item.title}
+                  </h3>
+                )}
 
-                <p className={`mt-1 text-sm font-medium ${secondary}`}>
-                  {item.company || item.organization || "Organization"}
-                </p>
+                {(item.company || item.organization) && (
+                  <p className={`mt-1 text-sm font-medium ${secondary}`}>
+                    {item.company || item.organization}
+                  </p>
+                )}
 
                 {item.description && (
                   <p className={`mt-3 text-sm leading-relaxed ${secondary}`}>
@@ -426,11 +410,15 @@ function DarkTemplate({
   // =========================================================
 
   const renderSkills = () => {
-    if (!resume.skills) return null;
+    if (!resume?.skills) return null;
 
     const skillGroups = Array.isArray(resume.skills)
       ? [["Skills", resume.skills]]
-      : Object.entries(resume.skills);
+      : typeof resume.skills === "object"
+      ? Object.entries(resume.skills)
+      : [];
+
+    if (!skillGroups.length) return null;
 
     return (
       <section
@@ -443,7 +431,7 @@ function DarkTemplate({
         `}
       >
         <SectionHeading
-          number="03"
+          number="04"
           title="Skills"
         />
 
@@ -477,24 +465,28 @@ function DarkTemplate({
 
                   <div className="flex flex-wrap gap-2 mt-5">
                     {values.map(
-                      (skill, index) => (
-                        <span
-                          key={index}
-                          className={`
-                            px-4
-                            py-2
-                            border
-                            ${border}
-                            ${panel}
-                            text-xs
-                            hover:${accent}
-                            hover:border-current
-                            transition
-                          `}
-                        >
-                          {skill}
-                        </span>
-                      )
+                      (skill, index) => {
+                        const val = typeof skill === "string" ? skill : skill?.name || skill?.value;
+                        if (!val) return null;
+                        return (
+                          <span
+                            key={index}
+                            className={`
+                              px-4
+                              py-2
+                              border
+                              ${border}
+                              ${panel}
+                              text-xs
+                              hover:${accent}
+                              hover:border-current
+                              transition
+                            `}
+                          >
+                            {val}
+                          </span>
+                        );
+                      }
                     )}
                   </div>
                 </div>
@@ -524,7 +516,7 @@ function DarkTemplate({
         `}
       >
         <SectionHeading
-          number="04"
+          number="05"
           title="Projects"
         />
 
@@ -567,22 +559,25 @@ function DarkTemplate({
                   </span>
 
                   <div>
-                    <h3 className="text-2xl font-semibold">
-                      {project.title ||
-                        "Project"}
-                    </h3>
+                    {project.title && (
+                      <h3 className="text-2xl font-semibold">
+                        {project.title}
+                      </h3>
+                    )}
 
-                    <p
-                      className={`
-                        mt-4
-                        max-w-3xl
-                        text-sm
-                        leading-7
-                        ${secondary}
-                      `}
-                    >
-                      {project.description}
-                    </p>
+                    {project.description && (
+                      <p
+                        className={`
+                          mt-4
+                          max-w-3xl
+                          text-sm
+                          leading-7
+                          ${secondary}
+                        `}
+                      >
+                        {project.description}
+                      </p>
+                    )}
 
                     {project.technologies
                       ?.length > 0 && (
@@ -643,8 +638,8 @@ function DarkTemplate({
         `}
       >
         <SectionHeading
-          number="05"
-          title="Certificates"
+          number="06"
+          title="Certifications"
         />
 
         <div className="grid md:grid-cols-2 gap-5">
@@ -659,38 +654,37 @@ function DarkTemplate({
                   ${panel}
                 `}
               >
-                <span
-                  className={`
-                    text-[9px]
-                    uppercase
-                    tracking-[0.25em]
-                    ${accent}
-                  `}
-                >
-                  {certificate.year ||
-                    `Certificate ${String(
-                      index + 1
-                    ).padStart(2, "0")}`}
-                </span>
+                {certificate.year && (
+                  <span
+                    className={`
+                      text-[9px]
+                      uppercase
+                      tracking-[0.25em]
+                      ${accent}
+                    `}
+                  >
+                    {certificate.year}
+                  </span>
+                )}
 
-                <h3 className="mt-5 text-lg font-semibold">
-                  {certificate.name ||
-                    certificate.title ||
-                    "Certificate"}
-                </h3>
+                {(certificate.name || certificate.title) && (
+                  <h3 className="mt-5 text-lg font-semibold">
+                    {certificate.name || certificate.title}
+                  </h3>
+                )}
 
-                <p
-                  className={`
-                    mt-3
-                    text-sm
-                    leading-6
-                    ${secondary}
-                  `}
-                >
-                  {certificate.issuer ||
-                    certificate.description ||
-                    ""}
-                </p>
+                {(certificate.issuer || certificate.description) && (
+                  <p
+                    className={`
+                      mt-3
+                      text-sm
+                      leading-6
+                      ${secondary}
+                    `}
+                  >
+                    {certificate.issuer || certificate.description}
+                  </p>
+                )}
               </div>
             )
           )}
@@ -717,7 +711,7 @@ function DarkTemplate({
         `}
       >
         <SectionHeading
-          number="06"
+          number="07"
           title="Achievements"
         />
 
@@ -727,7 +721,9 @@ function DarkTemplate({
               const text =
                 typeof achievement === "string"
                   ? achievement
-                  : achievement.description;
+                  : achievement.description || achievement.title;
+
+              if (!text) return null;
 
               return (
                 <div
@@ -789,7 +785,7 @@ function DarkTemplate({
         `}
       >
         <SectionHeading
-          number="07"
+          number="08"
           title="Languages"
         />
 
@@ -799,12 +795,14 @@ function DarkTemplate({
               const name =
                 typeof language === "string"
                   ? language
-                  : language.name;
+                  : language.name || language.language;
 
               const level =
-                typeof language === "string"
-                  ? ""
-                  : language.level;
+                typeof language === "object"
+                  ? language?.level
+                  : null;
+
+              if (!name) return null;
 
               return (
                 <div
@@ -847,9 +845,12 @@ function DarkTemplate({
       <div className="space-y-0">
         {custom_sections.map((sec, sIdx) => {
           const items = toArray(sec.items);
+          const title = sec.title || sec.heading;
           return (
             <section key={sIdx} id={`custom-${sIdx}`} className={`py-20 border-t ${border} scroll-mt-24`}>
-              <SectionHeading number={String(8 + sIdx).padStart(2, "0")} title={sec.title || sec.heading || "Additional Information"} />
+              {title && (
+                <SectionHeading number={String(9 + sIdx).padStart(2, "0")} title={title} />
+              )}
               {items.length > 0 ? (
                 <div className="space-y-0">
                   {items.map((it, iIdx) => (
@@ -858,7 +859,9 @@ function DarkTemplate({
                         {it.date && <span className={`text-xs font-mono ${faint}`}>{it.date}</span>}
                       </div>
                       <div>
-                        <h3 className="text-xl font-semibold">{it.title || it.name || "Item"}</h3>
+                        {(it.title || it.name) && (
+                          <h3 className="text-xl font-semibold">{it.title || it.name}</h3>
+                        )}
                         {it.subtitle && <p className={`mt-1 text-sm font-medium ${secondary}`}>{it.subtitle}</p>}
                         {it.description && <p className={`mt-3 text-sm leading-relaxed ${secondary}`}>{it.description}</p>}
                       </div>
@@ -885,7 +888,7 @@ function DarkTemplate({
     education: "Education",
     skills: "Skills",
     projects: "Projects",
-    certificates: "Certificates",
+    certificates: "Certifications",
     achievements: "Achievements",
     languages: "Languages",
   };
@@ -943,8 +946,7 @@ function DarkTemplate({
               ${accent}
             `}
           >
-            {personal.name ||
-              "Portfolio"}
+            {personal.name || ""}
           </a>
 
           <div className="hidden lg:flex items-center gap-8">
@@ -974,7 +976,7 @@ function DarkTemplate({
               ${faint}
             `}
           >
-            2026
+            {new Date().getFullYear()}
           </span>
         </div>
       </nav>
@@ -1004,41 +1006,29 @@ function DarkTemplate({
           "
         >
           {/* CENTERED PHOTO */}
-
-          <div className="mb-12">
-            {renderPhoto()}
-          </div>
-
-          {/* SMALL LABEL */}
-
-          <p
-            className={`
-              text-[9px]
-              uppercase
-              tracking-[0.4em]
-              ${accent}
-            `}
-          >
-            Portfolio / 2026
-          </p>
+          {photo && (
+            <div className="mb-12">
+              {renderPhoto()}
+            </div>
+          )}
 
           {/* NAME */}
-
-          <h1
-            className="
-              mt-6
-              text-6xl
-              sm:text-7xl
-              md:text-8xl
-              lg:text-[9rem]
-              font-black
-              tracking-[-0.06em]
-              leading-[0.8]
-            "
-          >
-            {personal.name ||
-              "Your Name"}
-          </h1>
+          {personal.name && (
+            <h1
+              className="
+                mt-6
+                text-6xl
+                sm:text-7xl
+                md:text-8xl
+                lg:text-[9rem]
+                font-black
+                tracking-[-0.06em]
+                leading-[0.8]
+              "
+            >
+              {personal.name}
+            </h1>
+          )}
 
           {personal.title && (
             <p className={`mt-4 text-xl md:text-2xl font-mono ${accent}`}>
@@ -1046,19 +1036,25 @@ function DarkTemplate({
             </p>
           )}
 
-          {/* ACCENT LINE */}
+          {(personal.summary || resume?.summary) && (
+            <p className={`mt-4 max-w-2xl text-sm md:text-base leading-relaxed ${secondary}`}>
+              {personal.summary || resume?.summary}
+            </p>
+          )}
 
-          <div
-            className={`
-              mt-10
-              w-24
-              h-1
-              ${accentBg}
-            `}
-          />
+          {/* ACCENT LINE */}
+          {(personal.name || personal.title) && (
+            <div
+              className={`
+                mt-10
+                w-24
+                h-1
+                ${accentBg}
+              `}
+            />
+          )}
 
           {/* CONTACT */}
-
           <div
             className={`
               flex
@@ -1094,38 +1090,39 @@ function DarkTemplate({
           </div>
 
           {/* SOCIAL LINKS */}
+          {(linkedInUrl || personal.github) && (
+            <div className="flex gap-5 mt-6">
+              {linkedInUrl && (
+                <a
+                  href={linkedInUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`
+                    ${faint}
+                    hover:${accent}
+                    transition
+                  `}
+                >
+                  <Linkedin size={17} />
+                </a>
+              )}
 
-          <div className="flex gap-5 mt-6">
-            {personal.linkedin && (
-              <a
-                href={personal.linkedin}
-                target="_blank"
-                rel="noreferrer"
-                className={`
-                  ${faint}
-                  hover:${accent}
-                  transition
-                `}
-              >
-                <Linkedin size={17} />
-              </a>
-            )}
-
-            {personal.github && (
-              <a
-                href={personal.github}
-                target="_blank"
-                rel="noreferrer"
-                className={`
-                  ${faint}
-                  hover:${accent}
-                  transition
-                `}
-              >
-                <Github size={17} />
-              </a>
-            )}
-          </div>
+              {personal.github && (
+                <a
+                  href={personal.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`
+                    ${faint}
+                    hover:${accent}
+                    transition
+                  `}
+                >
+                  <Github size={17} />
+                </a>
+              )}
+            </div>
+          )}
         </div>
       </header>
 
@@ -1204,16 +1201,19 @@ function DarkTemplate({
           "
         >
           <div>
-            <p className="font-semibold text-sm">
-              {personal.name ||
-                "Portfolio"}
-            </p>
+            {personal.name && (
+              <p className="font-semibold text-sm">
+                {personal.name}
+              </p>
+            )}
 
-            <p
-              className={`text-[10px] mt-1 ${faint}`}
-            >
-              Personal Portfolio
-            </p>
+            {personal.title && (
+              <p
+                className={`text-[10px] mt-1 ${faint}`}
+              >
+                {personal.title}
+              </p>
+            )}
           </div>
 
           <p
@@ -1224,7 +1224,7 @@ function DarkTemplate({
               ${faint}
             `}
           >
-            Designed with intention
+            © {new Date().getFullYear()} {personal.name || ""}
           </p>
         </div>
       </footer>

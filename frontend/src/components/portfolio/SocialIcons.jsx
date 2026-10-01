@@ -1,4 +1,15 @@
-﻿import React from "react";
+import React from "react";
+
+export function formatLinkedInUrl(url) {
+  if (!url || typeof url !== "string") return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  const clean = trimmed.replace(/^https?:\/\//i, "").replace(/^\/+/, "");
+  if (!/^([a-zA-Z0-9-]+\.)*linkedin\.com(\/.*)?$/i.test(clean)) {
+    return null;
+  }
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${clean}`;
+}
 
 export function Linkedin({ size = 16, className = "" }) {
   return (

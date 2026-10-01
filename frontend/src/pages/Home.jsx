@@ -40,10 +40,10 @@ function Home() {
             </div>
             <div>
               <h1 className="font-bold text-lg text-slate-900 leading-tight">
-                Profile Builder
+                Smart Resume Analyzer
               </h1>
               <p className="text-xs text-slate-500 font-medium">
-                Career & Profile Platform
+                &amp; Portfolio Generator
               </p>
             </div>
           </div>
@@ -160,22 +160,22 @@ function Home() {
             {/* Pill Badge */}
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-indigo-200 bg-indigo-50 text-indigo-700 text-xs font-semibold tracking-wide mb-6">
               <Sparkles size={14} />
-              <span>Career & Profile Platform</span>
+              <span>Smart Resume &amp; Portfolio Platform</span>
             </div>
 
             {/* Project Title */}
-            <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-slate-900 leading-tight">
-              Profile Builder
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 leading-tight">
+              Smart Resume Analyzer and Portfolio Generator
             </h1>
 
             {/* Main Tagline */}
             <p className="mt-5 text-xl sm:text-2xl md:text-3xl font-semibold text-slate-800 leading-snug">
-              Create, improve, and present your professional profile in one place.
+              Analyze your resume, improve its ATS compatibility, and generate a professional portfolio from your resume.
             </p>
 
             {/* Supporting Line */}
             <p className="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto">
-              Build your resume, check its ATS compatibility, improve it, and turn it into a professional portfolio.
+              Build your resume, check its ATS compatibility, improve it with ATS-friendly formatting, and turn it into a professional portfolio.
             </p>
 
             {/* Action Buttons */}
@@ -318,7 +318,7 @@ function Home() {
               Everything you need for your career profile.
             </h2>
             <p className="text-slate-600 mt-3 text-sm md:text-base leading-relaxed">
-              Profile Builder unifies resume creation, ATS compliance, and web portfolio presentation in one place.
+              Smart Resume Analyzer and Portfolio Generator unifies resume creation, ATS compliance, and web portfolio presentation in one place.
             </p>
           </div>
 
@@ -439,7 +439,7 @@ function Home() {
                 onClick={handleGetStarted}
                 className="w-full sm:w-auto px-7 py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition cursor-pointer text-sm"
               >
-                Start with Profile Builder
+                Get Started with Smart Resume Analyzer
               </button>
 
               <button
@@ -461,7 +461,7 @@ function Home() {
               <Sparkles size={14} />
             </div>
             <span className="font-bold text-sm text-slate-900">
-              Profile Builder
+              Smart Resume Analyzer and Portfolio Generator
             </span>
           </div>
 

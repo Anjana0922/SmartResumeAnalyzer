@@ -5,19 +5,19 @@ import {
   MapPin,
   ArrowUpRight,
   Terminal,
-  Code2,
   ExternalLink,
   Globe,
 } from "lucide-react";
-import { Linkedin, Github } from "../SocialIcons";
+import { Linkedin, Github, formatLinkedInUrl } from "../SocialIcons";
 
 function TechTemplate({
   resume,
   photo,
-  sections,
+  sections = [],
   theme,
 }) {
   const personal = resume?.personal || {};
+  const linkedInUrl = formatLinkedInUrl(personal.linkedin);
   const isDark = theme === "dark";
 
   // =========================================================
@@ -81,11 +81,13 @@ function TechTemplate({
     return [];
   };
 
-  const formatSectionName = (section) => {
-    return section
-      .replace(/([A-Z])/g, " $1")
-      .replace(/^./, (char) => char.toUpperCase());
-  };
+  const education = toArray(resume?.education);
+  const experience = toArray(resume?.experience);
+  const projects = toArray(resume?.projects);
+  const certificates = toArray(resume?.certificates);
+  const achievements = toArray(resume?.achievements);
+  const languages = toArray(resume?.languages);
+  const custom_sections = toArray(resume?.custom_sections);
 
   const sectionNumber = (section) => {
     const index = sections?.indexOf(section);
@@ -102,50 +104,34 @@ function TechTemplate({
   // =========================================================
 
   const renderPhoto = () => {
-    if (photo) {
-      return (
-        <div className="relative w-full max-w-[260px]">
-          {/* offset decoration */}
-          <div
-            className={`absolute -left-4 -bottom-4 w-full h-full border ${accentBorder} rounded-3xl`}
-          />
-
-          <div
-            className={`absolute -right-3 -top-3 w-16 h-16 border-t-2 border-r-2 ${
-              isDark ? "border-[#6ee7b7]" : "border-[#187452]"
-            }`}
-          />
-
-          <img
-            src={photo}
-            alt={personal.name || "Profile"}
-            className={`relative w-full aspect-[4/5] object-cover rounded-3xl border ${border}`}
-          />
-
-          {/* developer label */}
-          <div
-            className={`absolute -bottom-5 -right-5 px-4 py-2 rounded-xl border ${accentBorder} ${accentBg} ${accent} font-mono text-xs`}
-          >
-            PROFILE_IMAGE
-          </div>
-        </div>
-      );
-    }
+    if (!photo) return null;
 
     return (
-      <div
-        className={`relative w-full max-w-[260px] aspect-[4/5] rounded-3xl border ${border} ${soft} flex flex-col items-center justify-center`}
-      >
-        <Terminal
-          size={38}
-          className={`${accent} mb-4`}
+      <div className="relative w-full max-w-[260px]">
+        {/* offset decoration */}
+        <div
+          className={`absolute -left-4 -bottom-4 w-full h-full border ${accentBorder} rounded-3xl`}
         />
 
-        <span
-          className={`font-mono text-xs uppercase tracking-widest ${faint}`}
-        >
-          / add_photo
-        </span>
+        <div
+          className={`absolute -right-3 -top-3 w-16 h-16 border-t-2 border-r-2 ${
+            isDark ? "border-[#6ee7b7]" : "border-[#187452]"
+          }`}
+        />
+
+        <img
+          src={photo}
+          alt={personal.name || ""}
+          className={`relative w-full aspect-[4/5] object-cover rounded-3xl border ${border}`}
+        />
+
+        {personal.title && (
+          <div
+            className={`absolute -bottom-5 -right-5 px-4 py-2 rounded-xl border ${accentBorder} ${accentBg} ${accent} font-mono text-xs max-w-[200px] truncate`}
+          >
+            {personal.title}
+          </div>
+        )}
       </div>
     );
   };
@@ -157,11 +143,13 @@ function TechTemplate({
   const Heading = ({ number, title, command }) => (
     <div className="mb-8">
       <div className="flex items-center gap-3">
-        <span
-          className={`font-mono text-xs ${accent}`}
-        >
-          {number}
-        </span>
+        {number && (
+          <span
+            className={`font-mono text-xs ${accent}`}
+          >
+            {number}
+          </span>
+        )}
 
         <span className={`font-mono text-sm ${faint}`}>
           /
@@ -185,6 +173,13 @@ function TechTemplate({
   // =========================================================
 
   const renderAbout = () => {
+    const aboutText = resume?.about || resume?.summary || personal.summary;
+    if (!aboutText) return null;
+
+    const fileName = personal.name
+      ? `${personal.name.toLowerCase().replace(/[^a-z0-9]+/g, "_")}.md`
+      : "about.md";
+
     return (
       <section
         id="about"
@@ -192,8 +187,8 @@ function TechTemplate({
       >
         <Heading
           number={sectionNumber("about")}
-          title="Profile"
-          command="about_me"
+          title="About"
+          command="about"
         />
 
         <div
@@ -210,22 +205,15 @@ function TechTemplate({
             <span
               className={`ml-3 font-mono text-xs ${faint}`}
             >
-              profile.md
+              {fileName}
             </span>
           </div>
 
           <div className="pt-7">
-            <div
-              className={`font-mono text-xs ${accent} mb-4`}
-            >
-              $ cat about.txt
-            </div>
-
             <p
-              className={`text-lg md:text-xl leading-8 max-w-4xl ${muted}`}
+              className={`text-lg md:text-xl leading-8 max-w-4xl ${muted} whitespace-pre-line`}
             >
-              {resume?.about ||
-                "A motivated professional interested in technology, continuous learning and building meaningful digital solutions."}
+              {aboutText}
             </p>
           </div>
         </div>
@@ -238,7 +226,6 @@ function TechTemplate({
   // =========================================================
 
   const renderExperience = () => {
-    const experience = Array.isArray(resume?.experience) ? resume.experience : [];
     if (!experience.length) return null;
 
     return (
@@ -249,7 +236,7 @@ function TechTemplate({
         <Heading
           number={sectionNumber("experience")}
           title="Experience"
-          command="work_history"
+          command="experience"
         />
 
         <div className="space-y-6">
@@ -260,17 +247,23 @@ function TechTemplate({
             >
               <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 pb-4 border-b border-white/5">
                 <div>
-                  <h3 className="text-xl font-bold tracking-tight">
-                    {item.role || item.title || "Role"}
-                  </h3>
-                  <p className={`font-mono text-sm ${accent} mt-1`}>
-                    {item.company || item.organization || "Organization"}
-                  </p>
+                  {(item.role || item.title) && (
+                    <h3 className="text-xl font-bold tracking-tight">
+                      {item.role || item.title}
+                    </h3>
+                  )}
+                  {(item.company || item.organization) && (
+                    <p className={`font-mono text-sm ${accent} mt-1`}>
+                      {item.company || item.organization}
+                    </p>
+                  )}
                 </div>
                 <div className="font-mono text-xs sm:text-right">
-                  <span className={muted}>
-                    {item.duration || item.year || ""}
-                  </span>
+                  {(item.duration || item.year) && (
+                    <span className={muted}>
+                      {item.duration || item.year}
+                    </span>
+                  )}
                   {item.location && (
                     <span className={`block ${faint}`}>{item.location}</span>
                   )}
@@ -312,7 +305,7 @@ function TechTemplate({
   // =========================================================
 
   const renderEducation = () => {
-    if (!resume.education?.length) return null;
+    if (!education.length) return null;
 
     return (
       <section
@@ -326,7 +319,7 @@ function TechTemplate({
         />
 
         <div className="space-y-4">
-          {resume.education.map((item, index) => (
+          {education.map((item, index) => (
             <div
               key={index}
               className={`group grid md:grid-cols-[120px_1fr_auto] gap-5 items-center p-6 rounded-2xl border ${border} ${card}`}
@@ -334,30 +327,42 @@ function TechTemplate({
               <div
                 className={`font-mono text-xs ${accent}`}
               >
-                0{index + 1}
+                {String(index + 1).padStart(2, "0")}
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold">
-                  {item.course ||
-                    item.degree ||
-                    "Degree"}
-                </h3>
+                {(item.course || item.degree) && (
+                  <h3 className="text-xl font-semibold">
+                    {item.course || item.degree}
+                  </h3>
+                )}
 
-                <p
-                  className={`mt-2 ${muted}`}
+                {(item.institute || item.institution) && (
+                  <p
+                    className={`mt-2 ${muted}`}
+                  >
+                    {item.institute || item.institution}
+                  </p>
+                )}
+
+                {item.score && (
+                  <span
+                    className={`inline-block mt-3 px-3 py-1 rounded-md text-xs font-mono ${accentBg} ${accent}`}
+                  >
+                    {typeof item.score === "object" && item.score !== null
+                      ? `${item.score.label || "Score"}: ${item.score.value || ""}`
+                      : String(item.score)}
+                  </span>
+                )}
+              </div>
+
+              {(item.year || item.duration) && (
+                <div
+                  className={`font-mono text-xs ${faint}`}
                 >
-                  {item.institute ||
-                    item.institution ||
-                    ""}
-                </p>
-              </div>
-
-              <div
-                className={`font-mono text-xs ${faint}`}
-              >
-                {item.year || ""}
-              </div>
+                  {item.year || item.duration}
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -370,7 +375,7 @@ function TechTemplate({
   // =========================================================
 
   const renderSkills = () => {
-    if (!resume.skills) return null;
+    if (!resume?.skills) return null;
 
     const skills = Array.isArray(resume.skills)
       ? resume.skills
@@ -385,41 +390,40 @@ function TechTemplate({
       >
         <Heading
           number={sectionNumber("skills")}
-          title="Tech Stack"
+          title="Skills"
           command="skills"
         />
 
         <div
           className={`rounded-2xl border ${border} ${card} p-7`}
         >
-          <div
-            className={`font-mono text-xs ${accent} mb-6`}
-          >
-            $ ls ./skills
-          </div>
-
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {skills.map((skill, index) => (
-              <div
-                key={index}
-                className={`group px-4 py-4 rounded-xl border ${accentBorder} ${soft} transition-all duration-300 hover:-translate-y-1`}
-              >
-                <div
-                  className={`font-mono text-xs ${faint}`}
-                >
-                  {String(index + 1).padStart(
-                    2,
-                    "0"
-                  )}
-                </div>
+            {skills.map((skill, index) => {
+              const val = typeof skill === "string" ? skill : skill?.name || skill?.value;
+              if (!val) return null;
 
+              return (
                 <div
-                  className={`mt-2 font-mono text-sm ${accent}`}
+                  key={index}
+                  className={`group px-4 py-4 rounded-xl border ${accentBorder} ${soft} transition-all duration-300 hover:-translate-y-1`}
                 >
-                  {skill}
+                  <div
+                    className={`font-mono text-xs ${faint}`}
+                  >
+                    {String(index + 1).padStart(
+                      2,
+                      "0"
+                    )}
+                  </div>
+
+                  <div
+                    className={`mt-2 font-mono text-sm ${accent}`}
+                  >
+                    {val}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -431,7 +435,7 @@ function TechTemplate({
   // =========================================================
 
   const renderProjects = () => {
-    if (!resume.projects?.length) return null;
+    if (!projects.length) return null;
 
     return (
       <section
@@ -445,7 +449,7 @@ function TechTemplate({
         />
 
         <div className="space-y-5">
-          {resume.projects.map((project, index) => (
+          {projects.map((project, index) => (
             <article
               key={index}
               className={`group relative rounded-2xl border ${border} ${card} p-7 md:p-9 overflow-hidden`}
@@ -458,33 +462,27 @@ function TechTemplate({
               </div>
 
               <div className="relative">
-                <div className="flex items-center gap-3">
-                  <Code2
-                    size={17}
-                    className={accent}
-                  />
-
-                  <span
-                    className={`font-mono text-xs ${accent}`}
-                  >
-                    project_{index + 1}
-                  </span>
-                </div>
-
-                <h3 className="text-2xl md:text-3xl font-bold mt-5 max-w-3xl">
-                  {project.title ||
-                    "Untitled Project"}
-                </h3>
-
-                <p
-                  className={`mt-5 max-w-4xl leading-7 ${muted}`}
+                <span
+                  className={`font-mono text-xs ${accent}`}
                 >
-                  {project.description ||
-                    "Project description"}
-                </p>
+                  [{String(index + 1).padStart(2, "0")}]
+                </span>
 
-                {project.technologies?.length >
-                  0 && (
+                {project.title && (
+                  <h3 className="text-2xl md:text-3xl font-bold mt-3 max-w-3xl">
+                    {project.title}
+                  </h3>
+                )}
+
+                {project.description && (
+                  <p
+                    className={`mt-5 max-w-4xl leading-7 ${muted}`}
+                  >
+                    {project.description}
+                  </p>
+                )}
+
+                {project.technologies?.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-7">
                     {project.technologies.map(
                       (tech, techIndex) => (
@@ -499,16 +497,22 @@ function TechTemplate({
                   </div>
                 )}
 
-                <div
-                  className={`mt-7 flex items-center gap-2 font-mono text-xs ${faint} group-hover:${accent}`}
-                >
-                  <span>$ ./open-project</span>
-
-                  <ArrowUpRight
-                    size={15}
-                    className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1"
-                  />
-                </div>
+                {(project.link || project.url) && (
+                  <div className="mt-7">
+                    <a
+                      href={project.link || project.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={`inline-flex items-center gap-2 font-mono text-xs ${accent} hover:underline`}
+                    >
+                      <span>View Project</span>
+                      <ArrowUpRight
+                        size={15}
+                        className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1"
+                      />
+                    </a>
+                  </div>
+                )}
               </div>
             </article>
           ))}
@@ -522,7 +526,7 @@ function TechTemplate({
   // =========================================================
 
   const renderCertificates = () => {
-    if (!resume.certificates?.length) return null;
+    if (!certificates.length) return null;
 
     return (
       <section
@@ -531,52 +535,45 @@ function TechTemplate({
       >
         <Heading
           number={sectionNumber("certificates")}
-          title="Certificates"
-          command="certificates"
+          title="Certifications"
+          command="certifications"
         />
 
         <div className="grid md:grid-cols-2 gap-4">
-          {resume.certificates.map(
+          {certificates.map(
             (certificate, index) => (
               <div
                 key={index}
                 className={`p-6 rounded-2xl border ${border} ${card}`}
               >
-                <div className="flex justify-between">
+                <div className="flex justify-between items-center">
                   <span
                     className={`font-mono text-xs ${accent}`}
                   >
-                    CERT_{String(
-                      index + 1
-                    ).padStart(2, "0")}
+                    [{String(index + 1).padStart(2, "0")}]
                   </span>
 
-                  <ExternalLink
-                    size={15}
-                    className={faint}
-                  />
+                  {certificate.year && (
+                    <span
+                      className={`font-mono text-xs ${accent}`}
+                    >
+                      {certificate.year}
+                    </span>
+                  )}
                 </div>
 
-                <h3 className="text-xl font-semibold mt-6">
-                  {certificate.title ||
-                    certificate.name ||
-                    "Certificate"}
-                </h3>
+                {(certificate.title || certificate.name) && (
+                  <h3 className="text-xl font-semibold mt-4">
+                    {certificate.title || certificate.name}
+                  </h3>
+                )}
 
-                <p
-                  className={`mt-3 leading-6 ${muted}`}
-                >
-                  {certificate.description ||
-                    certificate.issuer ||
-                    ""}
-                </p>
-
-                {certificate.year && (
-                  <span
-                    className={`inline-block mt-5 font-mono text-xs ${accent}`}
+                {(certificate.description || certificate.issuer) && (
+                  <p
+                    className={`mt-3 leading-6 ${muted}`}
                   >
-                    {certificate.year}
-                  </span>
+                    {certificate.description || certificate.issuer}
+                  </p>
                 )}
               </div>
             )
@@ -591,7 +588,7 @@ function TechTemplate({
   // =========================================================
 
   const renderAchievements = () => {
-    if (!resume.achievements?.length) return null;
+    if (!achievements.length) return null;
 
     return (
       <section
@@ -607,31 +604,38 @@ function TechTemplate({
         <div
           className={`rounded-2xl border ${border} ${card} overflow-hidden`}
         >
-          {resume.achievements.map(
-            (achievement, index) => (
-              <div
-                key={index}
-                className={`flex gap-5 p-6 ${
-                  index !==
-                  resume.achievements.length - 1
-                    ? `border-b ${border}`
-                    : ""
-                }`}
-              >
-                <span
-                  className={`font-mono text-xs ${accent}`}
-                >
-                  [{String(index + 1).padStart(2, "0")}]
-                </span>
+          {achievements.map(
+            (achievement, index) => {
+              const text =
+                typeof achievement === "string"
+                  ? achievement
+                  : achievement.description || achievement.title;
 
-                <p
-                  className={`leading-7 ${muted}`}
+              if (!text) return null;
+
+              return (
+                <div
+                  key={index}
+                  className={`flex gap-5 p-6 ${
+                    index !== achievements.length - 1
+                      ? `border-b ${border}`
+                      : ""
+                  }`}
                 >
-                  {achievement.description ||
-                    achievement}
-                </p>
-              </div>
-            )
+                  <span
+                    className={`font-mono text-xs ${accent}`}
+                  >
+                    [{String(index + 1).padStart(2, "0")}]
+                  </span>
+
+                  <p
+                    className={`leading-7 ${muted}`}
+                  >
+                    {text}
+                  </p>
+                </div>
+              );
+            }
           )}
         </div>
       </section>
@@ -643,7 +647,7 @@ function TechTemplate({
   // =========================================================
 
   const renderLanguages = () => {
-    if (!resume.languages?.length) return null;
+    if (!languages.length) return null;
 
     return (
       <section
@@ -657,26 +661,39 @@ function TechTemplate({
         />
 
         <div className="flex flex-wrap gap-3">
-          {resume.languages.map(
-            (language, index) => (
-              <div
-                key={index}
-                className={`px-5 py-4 rounded-xl border ${border} ${card}`}
-              >
-                <span className="font-mono text-sm">
-                  {language.name ||
-                    language}
-                </span>
+          {languages.map(
+            (language, index) => {
+              const name =
+                typeof language === "string"
+                  ? language
+                  : language.name || language.language;
 
-                {language.level && (
-                  <span
-                    className={`ml-3 font-mono text-xs ${faint}`}
-                  >
-                    // {language.level}
+              const level =
+                typeof language === "object"
+                  ? language?.level
+                  : null;
+
+              if (!name) return null;
+
+              return (
+                <div
+                  key={index}
+                  className={`px-5 py-4 rounded-xl border ${border} ${card}`}
+                >
+                  <span className="font-mono text-sm">
+                    {name}
                   </span>
-                )}
-              </div>
-            )
+
+                  {level && (
+                    <span
+                      className={`ml-3 font-mono text-xs ${faint}`}
+                    >
+                      // {level}
+                    </span>
+                  )}
+                </div>
+              );
+            }
           )}
         </div>
       </section>
@@ -688,26 +705,30 @@ function TechTemplate({
   // =========================================================
 
   const renderCustomSections = () => {
-    const customSecs = toArray(resume?.custom_sections);
-    if (!customSecs.length) return null;
+    if (!custom_sections.length) return null;
 
     return (
       <div className="space-y-16">
-        {customSecs.map((sec, sIdx) => {
+        {custom_sections.map((sec, sIdx) => {
           const items = toArray(sec.items);
+          const title = sec.title || sec.heading;
           return (
             <section key={sIdx} id={`custom-${sIdx}`} className={`py-16 border-t ${border} scroll-mt-24`}>
-              <Heading
-                number={String(8 + sIdx).padStart(2, "0")}
-                title={sec.title || sec.heading || "Additional Information"}
-                command={`custom_${sIdx + 1}`}
-              />
+              {title && (
+                <Heading
+                  number={String(9 + sIdx).padStart(2, "0")}
+                  title={title}
+                  command={`custom_${sIdx + 1}`}
+                />
+              )}
               {items.length > 0 ? (
                 <div className="space-y-4">
                   {items.map((it, iIdx) => (
                     <div key={iIdx} className={`p-6 rounded-2xl border ${border} ${card}`}>
                       <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
-                        <h3 className="font-mono text-base font-semibold">{it.title || it.name || "Item"}</h3>
+                        {(it.title || it.name) && (
+                          <h3 className="font-mono text-base font-semibold">{it.title || it.name}</h3>
+                        )}
                         {it.date && <span className={`font-mono text-xs ${faint}`}>{it.date}</span>}
                       </div>
                       {it.subtitle && <p className={`font-mono text-sm ${accent} mt-1`}>{it.subtitle}</p>}
@@ -783,7 +804,7 @@ function TechTemplate({
         } backdrop-blur-xl`}
       >
         <div className="max-w-[1500px] mx-auto px-6 md:px-10 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <a href="#top" className="flex items-center gap-3">
             <Terminal
               size={18}
               className={accent}
@@ -792,16 +813,16 @@ function TechTemplate({
             <span
               className={`font-mono text-sm ${accent}`}
             >
-              portfolio.dev
+              {personal.name || ""}
             </span>
-          </div>
+          </a>
 
           <div className="hidden lg:flex items-center gap-6">
             {sections.map((section) => (
               <a
                 key={section}
                 href={`#${section}`}
-                className={`font-mono text-xs ${muted} hover:${accent} transition`}
+                className={`font-mono text-xs capitalize ${muted} hover:${accent} transition`}
               >
                 {section}
               </a>
@@ -811,7 +832,7 @@ function TechTemplate({
           <span
             className={`font-mono text-xs ${faint}`}
           >
-            v1.0
+            {new Date().getFullYear()}
           </span>
         </div>
       </nav>
@@ -821,50 +842,41 @@ function TechTemplate({
       ===================================================== */}
 
       <header className="max-w-[1500px] mx-auto px-6 md:px-10 py-20 md:py-28">
-        <div className="grid lg:grid-cols-[280px_1fr] gap-14 lg:gap-20 items-center">
+        <div className={`grid ${photo ? "lg:grid-cols-[280px_1fr] gap-14 lg:gap-20" : "max-w-4xl"} items-center`}>
 
           {/* PHOTO LEFT */}
-
-          <div className="flex justify-center lg:justify-start order-1">
-            {renderPhoto()}
-          </div>
+          {photo && (
+            <div className="flex justify-center lg:justify-start order-1">
+              {renderPhoto()}
+            </div>
+          )}
 
           {/* CONTENT RIGHT */}
-
           <div className="order-2">
-            <div
-              className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border ${accentBorder} ${accentBg} ${accent} font-mono text-xs`}
-            >
-              <span className="w-2 h-2 rounded-full bg-current animate-pulse" />
-
-              AVAILABLE_FOR_OPPORTUNITIES
-            </div>
-
-            <div
-              className={`font-mono text-sm ${faint} mt-8`}
-            >
-              &gt; whoami
-            </div>
-
-            <h1 className="mt-3 text-5xl sm:text-6xl md:text-7xl xl:text-8xl font-black tracking-tight leading-[0.9]">
-              {personal.name ||
-                "Your Name"}
-            </h1>
-
             {personal.title && (
-              <p className={`mt-4 font-mono text-xl md:text-2xl ${accent}`}>
+              <div
+                className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border ${accentBorder} ${accentBg} ${accent} font-mono text-xs`}
+              >
+                <span className="w-2 h-2 rounded-full bg-current" />
                 {personal.title}
+              </div>
+            )}
+
+            {personal.name && (
+              <h1 className="mt-4 text-5xl sm:text-6xl md:text-7xl xl:text-8xl font-black tracking-tight leading-[0.9]">
+                {personal.name}
+              </h1>
+            )}
+
+            {(personal.summary || resume?.summary) && (
+              <p
+                className={`mt-6 text-lg md:text-xl max-w-3xl leading-relaxed ${muted}`}
+              >
+                {personal.summary || resume?.summary}
               </p>
             )}
 
-            <p
-              className={`mt-6 text-lg md:text-xl max-w-3xl leading-relaxed ${muted}`}
-            >
-              {personal.title ? `Specialized in ${personal.title} with a focus on delivering high-impact results.` : "Dedicated to building practical and meaningful solutions."}
-            </p>
-
             {/* CONTACT */}
-
             <div className="flex flex-wrap gap-x-6 gap-y-3 mt-9">
               {personal.email && (
                 <a
@@ -896,56 +908,42 @@ function TechTemplate({
             </div>
 
             {/* SOCIAL LINKS */}
+            {(personal.github || linkedInUrl) && (
+              <div className="flex gap-3 mt-8">
+                {personal.github && (
+                  <a
+                    href={personal.github}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border ${border} ${card} ${muted} hover:${accent} transition`}
+                  >
+                    <Github size={15} />
+                    <span className="font-mono text-xs">
+                      GitHub
+                    </span>
+                  </a>
+                )}
 
-            <div className="flex gap-3 mt-8">
-              {personal.github && (
-                <a
-                  href={personal.github}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border ${border} ${card} ${muted} hover:${accent} transition`}
-                >
-                  <Github size={15} />
-                  <span className="font-mono text-xs">
-                    GitHub
-                  </span>
-                </a>
-              )}
-
-              {personal.linkedin && (
-                <a
-                  href={personal.linkedin}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border ${border} ${card} ${muted} hover:${accent} transition`}
-                >
-                  <Linkedin size={15} />
-                  <span className="font-mono text-xs">
-                    LinkedIn
-                  </span>
-                </a>
-              )}
-            </div>
+                {linkedInUrl && (
+                  <a
+                    href={linkedInUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border ${border} ${card} ${muted} hover:${accent} transition`}
+                  >
+                    <Linkedin size={15} />
+                    <span className="font-mono text-xs">
+                      LinkedIn
+                    </span>
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* COMMAND LINE */}
-
-        <div
-          className={`mt-20 border-t ${border} pt-5 flex justify-between`}
-        >
-          <span
-            className={`font-mono text-xs ${faint}`}
-          >
-            ~/portfolio
-          </span>
-
-          <span
-            className={`font-mono text-xs ${accent}`}
-          >
-            $ ./start
-          </span>
-        </div>
+        {/* DIVIDER */}
+        <div className={`mt-16 border-t ${border}`} />
       </header>
 
       {/* =====================================================
@@ -968,26 +966,29 @@ function TechTemplate({
       <footer
         className={`border-t ${border} ${panel} py-10`}
       >
-        <div className="max-w-[1200px] mx-auto px-6 md:px-10 flex flex-col md:flex-row justify-between gap-4">
+        <div className="max-w-[1200px] mx-auto px-6 md:px-10 flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
-            <p
-              className={`font-mono text-sm ${accent}`}
-            >
-              {personal.name ||
-                "Portfolio"}
-            </p>
+            {personal.name && (
+              <p
+                className={`font-mono text-sm ${accent}`}
+              >
+                {personal.name}
+              </p>
+            )}
 
-            <p
-              className={`font-mono text-xs ${faint} mt-2`}
-            >
-              &gt; end_of_portfolio
-            </p>
+            {personal.title && (
+              <p
+                className={`font-mono text-xs ${faint} mt-1`}
+              >
+                {personal.title}
+              </p>
+            )}
           </div>
 
           <p
             className={`font-mono text-xs ${faint}`}
           >
-            Created with SmartResumeAnalyzer
+            © {new Date().getFullYear()} {personal.name || ""}
           </p>
         </div>
       </footer>

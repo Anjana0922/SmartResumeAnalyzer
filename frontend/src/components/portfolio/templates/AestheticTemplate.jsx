@@ -7,7 +7,7 @@ import {
   Sparkles,
   Globe,
 } from "lucide-react";
-import { Linkedin, Github } from "../SocialIcons";
+import { Linkedin, Github, formatLinkedInUrl } from "../SocialIcons";
 
 function AestheticTemplate({
   resume,
@@ -117,11 +117,13 @@ function AestheticTemplate({
   }) => (
     <div className="mb-12">
       <div className="flex items-end gap-5">
-        <span
-          className={`font-serif italic text-5xl md:text-6xl ${accent} leading-none`}
-        >
-          {number}
-        </span>
+        {number && (
+          <span
+            className={`font-serif italic text-5xl md:text-6xl ${accent} leading-none`}
+          >
+            {number}
+          </span>
+        )}
 
         <div>
           <h2 className="font-serif text-4xl md:text-5xl tracking-tight">
@@ -149,65 +151,26 @@ function AestheticTemplate({
   // =========================================================
 
   const renderPhoto = () => {
-    if (photo) {
-      return (
-        <div className="relative w-full max-w-[330px]">
-          {/* Decorative shape */}
-          <div
-            className={`absolute -top-6 -left-6 w-20 h-20 rounded-full ${decorative}`}
-          />
-
-          <div
-            className={`absolute -bottom-7 -right-7 w-28 h-28 rounded-[2rem] ${accentBg}`}
-          />
-
-          <div className="relative">
-            <img
-              src={photo}
-              alt={personal.name || "Profile"}
-              className={`w-full aspect-[4/5] object-cover rounded-[45%_45%_18%_18%] border-4 ${border} shadow-xl`}
-            />
-
-            {/* Small decorative label */}
-            <div
-              className={`absolute -bottom-5 left-6 px-5 py-3 rounded-full ${surface} border ${border} shadow-lg`}
-            >
-              <div className="flex items-center gap-2">
-                <Sparkles
-                  size={15}
-                  className={accent}
-                />
-
-                <span
-                  className={`text-xs tracking-widest uppercase ${muted}`}
-                >
-                  Portfolio
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
+    if (!photo) return null;
 
     return (
-      <div
-        className={`relative w-full max-w-[330px] aspect-[4/5] rounded-[45%_45%_18%_18%] border-4 ${border} ${softSurface} flex flex-col items-center justify-center`}
-      >
+      <div className="relative w-full max-w-[330px]">
+        {/* Decorative shape */}
         <div
-          className={`w-20 h-20 rounded-full ${accentBg} flex items-center justify-center`}
-        >
-          <Sparkles
-            size={30}
-            className={accent}
+          className={`absolute -top-6 -left-6 w-20 h-20 rounded-full ${decorative}`}
+        />
+
+        <div
+          className={`absolute -bottom-7 -right-7 w-28 h-28 rounded-[2rem] ${accentBg}`}
+        />
+
+        <div className="relative">
+          <img
+            src={photo}
+            alt={personal.name || "Profile"}
+            className={`w-full aspect-[4/5] object-cover rounded-[45%_45%_18%_18%] border-4 ${border} shadow-xl`}
           />
         </div>
-
-        <p
-          className={`mt-5 text-xs tracking-widest uppercase ${faint}`}
-        >
-          Add Photo
-        </p>
       </div>
     );
   };
@@ -216,33 +179,38 @@ function AestheticTemplate({
   // SOCIAL LINKS
   // =========================================================
 
-  const SocialLinks = () => (
-    <div className="flex flex-wrap gap-3 mt-7">
-      {personal.linkedin && (
-        <a
-          href={personal.linkedin}
-          target="_blank"
-          rel="noreferrer"
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border ${border} ${surface} ${muted} hover:${accent} transition`}
-        >
-          <Linkedin size={15} />
-          LinkedIn
-        </a>
-      )}
+  const SocialLinks = () => {
+    const linkedInUrl = formatLinkedInUrl(personal.linkedin);
+    if (!linkedInUrl && !personal.github) return null;
 
-      {personal.github && (
-        <a
-          href={personal.github}
-          target="_blank"
-          rel="noreferrer"
-          className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border ${border} ${surface} ${muted} transition`}
-        >
-          <Github size={15} />
-          GitHub
-        </a>
-      )}
-    </div>
-  );
+    return (
+      <div className="flex flex-wrap gap-3 mt-7">
+        {linkedInUrl && (
+          <a
+            href={linkedInUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border ${border} ${surface} ${muted} hover:${accent} transition`}
+          >
+            <Linkedin size={15} />
+            LinkedIn
+          </a>
+        )}
+
+        {personal.github && (
+          <a
+            href={personal.github}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border ${border} ${surface} ${muted} transition`}
+          >
+            <Github size={15} />
+            GitHub
+          </a>
+        )}
+      </div>
+    );
+  };
 
   // =========================================================
   // SECTION RENDERING
@@ -254,7 +222,10 @@ function AestheticTemplate({
       // ABOUT
       // =====================================================
 
-      case "about":
+      case "about": {
+        const aboutText = resume?.about || resume?.summary || personal.summary;
+        if (!aboutText) return null;
+
         return (
           <section
             key="about"
@@ -263,32 +234,21 @@ function AestheticTemplate({
           >
             <SectionHeading
               number="01"
-              title="A little about me"
-              subtitle="The person behind the work"
+              title="About"
             />
 
-            <div className="grid md:grid-cols-[0.7fr_1.3fr] gap-12 items-start">
-              <div>
-                <p
-                  className={`font-serif italic text-3xl leading-relaxed ${accent}`}
-                >
-                  "Ideas become meaningful when they are turned into something useful."
-                </p>
-              </div>
-
-              <div
-                className={`p-8 md:p-10 rounded-[2rem] ${surface} border ${border}`}
+            <div
+              className={`p-8 md:p-10 rounded-[2rem] ${surface} border ${border}`}
+            >
+              <p
+                className={`text-lg leading-8 ${muted} whitespace-pre-line`}
               >
-                <p
-                  className={`text-lg leading-8 ${muted}`}
-                >
-                  {resume.about ||
-                    "I am a motivated professional with an interest in technology, continuous learning and building meaningful solutions."}
-                </p>
-              </div>
+                {aboutText}
+              </p>
             </div>
           </section>
         );
+      }
 
       // =====================================================
       // EXPERIENCE
@@ -305,8 +265,7 @@ function AestheticTemplate({
           >
             <SectionHeading
               number="02"
-              title="Experience & Work History"
-              subtitle="Professional journey and career achievements"
+              title="Experience"
             />
 
             <div className="relative">
@@ -336,7 +295,7 @@ function AestheticTemplate({
                         <span
                           className={`font-mono text-xs ${accent}`}
                         >
-                          0{index + 1}
+                          {String(index + 1).padStart(2, "0")}
                         </span>
 
                         <div className="flex items-center gap-2">
@@ -364,14 +323,18 @@ function AestheticTemplate({
                         </div>
                       </div>
 
-                      <h3 className="font-serif text-2xl mt-4">
-                        {item?.role || item?.title || "Role"}
-                      </h3>
+                      {(item?.role || item?.title) && (
+                        <h3 className="font-serif text-2xl mt-4">
+                          {item.role || item.title}
+                        </h3>
+                      )}
 
-                      <p className={`text-sm mt-1 font-medium ${accent}`}>
-                        {item?.company || item?.organization || "Organization"}
-                        {item?.location && ` · ${item.location}`}
-                      </p>
+                      {(item?.company || item?.organization) && (
+                        <p className={`text-sm mt-1 font-medium ${accent}`}>
+                          {item.company || item.organization}
+                          {item?.location && ` · ${item.location}`}
+                        </p>
+                      )}
 
                       {item?.description && (
                         <p className={`mt-4 text-sm leading-7 ${muted}`}>
@@ -408,9 +371,8 @@ function AestheticTemplate({
             className="py-24 scroll-mt-24"
           >
             <SectionHeading
-              number="02"
+              number="03"
               title="Education"
-              subtitle="Learning and growing along the way"
             />
 
             <div className="relative">
@@ -451,8 +413,7 @@ function AestheticTemplate({
                           <span
                             className={`font-mono text-xs ${accent}`}
                           >
-                            0
-                            {index + 1}
+                            {String(index + 1).padStart(2, "0")}
                           </span>
 
                           {item?.year && (
@@ -464,15 +425,19 @@ function AestheticTemplate({
                           )}
                         </div>
 
-                        <h3 className="font-serif text-2xl mt-4">
-                          {degree}
-                        </h3>
+                        {degree && (
+                          <h3 className="font-serif text-2xl mt-4">
+                            {degree}
+                          </h3>
+                        )}
 
-                        <p
-                          className={`mt-2 ${muted}`}
-                        >
-                          {institution}
-                        </p>
+                        {institution && (
+                          <p
+                            className={`mt-2 ${muted}`}
+                          >
+                            {institution}
+                          </p>
+                        )}
 
                         {item?.score && (
                           <span
@@ -506,9 +471,8 @@ function AestheticTemplate({
             className="py-24 scroll-mt-24"
           >
             <SectionHeading
-              number="03"
-              title="Things I work with"
-              subtitle="Tools, technologies and abilities"
+              number="04"
+              title="Skills"
             />
 
             <div className="flex flex-wrap gap-3">
@@ -547,9 +511,8 @@ function AestheticTemplate({
             className="py-24 scroll-mt-24"
           >
             <SectionHeading
-              number="04"
-              title="Selected work"
-              subtitle="A few things I have built"
+              number="05"
+              title="Projects"
             />
 
             <div className="grid md:grid-cols-2 gap-7">
@@ -572,7 +535,7 @@ function AestheticTemplate({
                       <span
                         className={`font-serif italic text-3xl ${accent}`}
                       >
-                        0{index + 1}
+                        {String(index + 1).padStart(2, "0")}
                       </span>
 
                       <ArrowUpRight
@@ -581,17 +544,19 @@ function AestheticTemplate({
                       />
                     </div>
 
-                    <h3 className="font-serif text-3xl mt-8">
-                      {project?.title ||
-                        "Untitled Project"}
-                    </h3>
+                    {project?.title && (
+                      <h3 className="font-serif text-3xl mt-8">
+                        {project.title}
+                      </h3>
+                    )}
 
-                    <p
-                      className={`mt-5 leading-7 ${muted}`}
-                    >
-                      {project?.description ||
-                        "Project description"}
-                    </p>
+                    {project?.description && (
+                      <p
+                        className={`mt-5 leading-7 ${muted}`}
+                      >
+                        {project.description}
+                      </p>
+                    )}
 
                     {project?.technologies?.length >
                       0 && (
@@ -629,9 +594,8 @@ function AestheticTemplate({
             className="py-24 scroll-mt-24"
           >
             <SectionHeading
-              number="05"
-              title="Certificates"
-              subtitle="Milestones worth keeping"
+              number="06"
+              title="Certifications"
             />
 
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -647,11 +611,11 @@ function AestheticTemplate({
                       {index + 1}
                     </div>
 
-                    <h3 className="font-serif text-xl mt-6">
-                      {certificate?.name ||
-                        certificate?.title ||
-                        "Certificate"}
-                    </h3>
+                    {(certificate?.name || certificate?.title) && (
+                      <h3 className="font-serif text-xl mt-6">
+                        {certificate.name || certificate.title}
+                      </h3>
+                    )}
 
                     {(certificate?.issuer ||
                       certificate?.description) && (
@@ -691,9 +655,8 @@ function AestheticTemplate({
             className="py-24 scroll-mt-24"
           >
             <SectionHeading
-              number="06"
-              title="Little wins"
-              subtitle="Achievements and moments that matter"
+              number="07"
+              title="Achievements"
             />
 
             <div className="space-y-5">
@@ -755,9 +718,8 @@ function AestheticTemplate({
             className="py-24 scroll-mt-24"
           >
             <SectionHeading
-              number="07"
+              number="08"
               title="Languages"
-              subtitle="Words connect people"
             />
 
             <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -808,19 +770,23 @@ function AestheticTemplate({
           <div key="custom_sections" className="space-y-16">
             {custom_sections.map((sec, sIdx) => {
               const items = safeArray(sec.items);
+              const sectionTitle = sec.title || sec.heading || "";
               return (
                 <section key={sIdx} id={`custom-${sIdx}`} className="py-24 scroll-mt-24">
-                  <SectionHeading
-                    number={String(8 + sIdx).padStart(2, "0")}
-                    title={sec.title || sec.heading || "Additional Information"}
-                    subtitle="Selected details and contributions"
-                  />
+                  {sectionTitle && (
+                    <SectionHeading
+                      number={String(9 + sIdx).padStart(2, "0")}
+                      title={sectionTitle}
+                    />
+                  )}
                   {items.length > 0 ? (
                     <div className="space-y-6">
                       {items.map((it, iIdx) => (
                         <div key={iIdx} className={`p-8 rounded-[1.75rem] border ${border} ${surface}`}>
                           <div className="flex flex-wrap items-center justify-between gap-2">
-                            <h3 className="font-serif text-2xl">{it.title || it.name || "Item"}</h3>
+                            {(it.title || it.name) && (
+                              <h3 className="font-serif text-2xl">{it.title || it.name}</h3>
+                            )}
                             {it.date && (
                               <span className={`text-xs px-3 py-1 rounded-full ${decorative} ${muted}`}>
                                 {it.date}
@@ -870,7 +836,7 @@ function AestheticTemplate({
             href="#top"
             className={`font-serif italic text-xl ${accent}`}
           >
-            {personal.name || "Portfolio"}
+            {personal.name || ""}
           </a>
 
           <div className="hidden md:flex items-center gap-7">
@@ -888,7 +854,7 @@ function AestheticTemplate({
           <span
             className={`font-serif italic text-lg ${faint}`}
           >
-            '26
+            '{new Date().getFullYear().toString().slice(-2)}
           </span>
         </div>
       </nav>
@@ -901,27 +867,22 @@ function AestheticTemplate({
         id="top"
         className="max-w-7xl mx-auto px-6 md:px-10 py-20 md:py-28"
       >
-        <div className="grid lg:grid-cols-[330px_1fr] gap-16 lg:gap-24 items-center">
+        <div className={`grid ${photo ? "lg:grid-cols-[330px_1fr] gap-16 lg:gap-24" : "max-w-3xl"} items-center`}>
           {/* PHOTO LEFT */}
-
-          <div className="flex justify-center lg:justify-start">
-            {renderPhoto()}
-          </div>
+          {photo && (
+            <div className="flex justify-center lg:justify-start">
+              {renderPhoto()}
+            </div>
+          )}
 
           {/* CONTENT RIGHT */}
 
           <div>
-            <div
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border ${accentBorder} ${accentBg} ${accent} text-xs tracking-widest uppercase`}
-            >
-              <Sparkles size={13} />
-              Personal Portfolio
-            </div>
-
-            <h1 className="font-serif text-6xl sm:text-7xl md:text-8xl lg:text-[7rem] leading-[0.9] tracking-tight mt-7">
-              {personal.name ||
-                "Your Name"}
-            </h1>
+            {personal.name && (
+              <h1 className="font-serif text-6xl sm:text-7xl md:text-8xl lg:text-[7rem] leading-[0.9] tracking-tight">
+                {personal.name}
+              </h1>
+            )}
 
             {personal.title && (
               <p className={`font-serif italic text-2xl md:text-3xl mt-4 ${accent}`}>
@@ -929,11 +890,13 @@ function AestheticTemplate({
               </p>
             )}
 
-            <p
-              className={`font-serif italic text-xl md:text-2xl mt-6 max-w-2xl ${accent}`}
-            >
-              {personal.title ? `Dedicated to excellence and innovation as a ${personal.title}.` : "Dedicated to learning, creating, and delivering meaningful work."}
-            </p>
+            {(personal.summary || resume?.summary) && (
+              <p
+                className={`font-serif italic text-xl md:text-2xl mt-6 max-w-2xl ${accent}`}
+              >
+                {personal.summary || resume?.summary}
+              </p>
+            )}
 
             <div
               className={`mt-9 flex flex-col gap-3 text-sm ${muted}`}
@@ -979,16 +942,6 @@ function AestheticTemplate({
             className={`h-px flex-1 ${border}`}
           />
 
-          <span
-            className={`font-serif italic text-sm ${faint}`}
-          >
-            scroll to explore
-          </span>
-
-          <div
-            className={`h-px flex-1 ${border}`}
-          />
-
           <div
             className={`w-3 h-3 rounded-full ${accentBg}`}
           />
@@ -1014,48 +967,42 @@ function AestheticTemplate({
         <div className="max-w-7xl mx-auto px-6 md:px-10">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div>
-              <p
-                className={`font-serif italic text-2xl ${accent}`}
-              >
-                {personal.name ||
-                  "Your Name"}
-              </p>
+              {personal.name && (
+                <p
+                  className={`font-serif italic text-2xl ${accent}`}
+                >
+                  {personal.name}
+                </p>
+              )}
 
-              <p
-                className={`mt-2 text-sm ${muted}`}
-              >
-                A collection of work, ideas and experiences.
-              </p>
+              {personal.title && (
+                <p
+                  className={`mt-1 text-sm ${muted}`}
+                >
+                  {personal.title}
+                </p>
+              )}
             </div>
 
-            <div className="text-left md:text-right">
-              <p
-                className={`text-xs uppercase tracking-widest ${faint}`}
-              >
-                Created with
-              </p>
-
-              <p
-                className={`font-serif mt-1 ${muted}`}
-              >
-                SmartResumeAnalyzer
-              </p>
-            </div>
+            {personal.email && (
+              <div className="text-left md:text-right">
+                <a
+                  href={`mailto:${personal.email}`}
+                  className={`text-sm ${muted} hover:${accent} transition`}
+                >
+                  {personal.email}
+                </a>
+              </div>
+            )}
           </div>
 
           <div
-            className={`mt-10 pt-6 border-t ${border} flex justify-between`}
+            className={`mt-10 pt-6 border-t ${border} flex justify-between items-center`}
           >
             <span
               className={`text-xs ${faint}`}
             >
-              © 2026
-            </span>
-
-            <span
-              className={`font-serif italic text-sm ${accent}`}
-            >
-              Keep creating.
+              © {new Date().getFullYear()} {personal.name || ""}
             </span>
           </div>
         </div>

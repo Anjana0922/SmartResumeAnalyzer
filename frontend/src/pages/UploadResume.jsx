@@ -253,7 +253,7 @@ const UploadResume = () => {
           </div>
 
           <p className="text-center text-xs text-slate-500 mt-6">
-            Profile Builder • Professional Profile Platform
+            Smart Resume Analyzer and Portfolio Generator
           </p>
 
         </div>

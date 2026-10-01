@@ -8,20 +8,19 @@ import {
   GraduationCap,
   Award,
   Code2,
-  User,
   Trophy,
   Languages,
-  Globe,
 } from "lucide-react";
-import { Linkedin, Github } from "../SocialIcons";
+import { Linkedin, Github, formatLinkedInUrl } from "../SocialIcons";
 
 function ProfessionalTemplate({
   resume,
   photo,
-  sections,
+  sections = [],
   theme,
 }) {
   const personal = resume?.personal || {};
+  const linkedInUrl = formatLinkedInUrl(personal.linkedin);
   const isDark = theme === "dark";
 
   const toArray = (val) => {
@@ -36,6 +35,14 @@ function ProfessionalTemplate({
     }
     return [];
   };
+
+  const education = toArray(resume?.education);
+  const experience = toArray(resume?.experience);
+  const projects = toArray(resume?.projects);
+  const certificates = toArray(resume?.certificates);
+  const achievements = toArray(resume?.achievements);
+  const languages = toArray(resume?.languages);
+  const custom_sections = toArray(resume?.custom_sections);
 
   // ==========================================================
   // COLORS
@@ -108,20 +115,14 @@ function ProfessionalTemplate({
   // ==========================================================
 
   const renderPhoto = () => {
-    if (photo) {
-      return (
-        <img
-          src={photo}
-          alt={personal.name || "Profile"}
-          className="w-32 h-32 rounded-full object-cover border-4 border-white/20 shadow-xl"
-        />
-      );
-    }
+    if (!photo) return null;
 
     return (
-      <div className="w-32 h-32 rounded-full border-2 border-white/20 bg-white/10 flex items-center justify-center">
-        <User size={36} className="text-white/70" />
-      </div>
+      <img
+        src={photo}
+        alt={personal.name || ""}
+        className="w-32 h-32 rounded-full object-cover border-4 border-white/20 shadow-xl"
+      />
     );
   };
 
@@ -130,7 +131,8 @@ function ProfessionalTemplate({
   // ==========================================================
 
   const renderAbout = () => {
-    if (!resume?.about) return null;
+    const aboutText = resume?.about || resume?.summary || personal.summary;
+    if (!aboutText) return null;
 
     return (
       <section
@@ -139,13 +141,13 @@ function ProfessionalTemplate({
       >
         <SectionTitle
           icon={BriefcaseBusiness}
-          title="Professional Profile"
+          title="About"
         />
 
         <p
-          className={`text-base md:text-lg leading-8 max-w-4xl ${muted}`}
+          className={`text-base md:text-lg leading-8 max-w-4xl ${muted} whitespace-pre-line`}
         >
-          {resume.about}
+          {aboutText}
         </p>
       </section>
     );
@@ -156,7 +158,6 @@ function ProfessionalTemplate({
   // ==========================================================
 
   const renderExperience = () => {
-    const experience = toArray(resume?.experience);
     if (!experience.length) return null;
 
     return (
@@ -166,7 +167,7 @@ function ProfessionalTemplate({
       >
         <SectionTitle
           icon={Briefcase}
-          title="Experience & Work History"
+          title="Experience"
         />
 
         <div className="space-y-6">
@@ -177,17 +178,23 @@ function ProfessionalTemplate({
             >
               <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
                 <div>
-                  <h3 className="text-lg font-semibold tracking-tight">
-                    {item.role || item.title || "Role"}
-                  </h3>
-                  <p className={`text-sm font-medium ${accent} mt-0.5`}>
-                    {item.company || item.organization || "Organization"}
-                  </p>
+                  {(item.role || item.title) && (
+                    <h3 className="text-lg font-semibold tracking-tight">
+                      {item.role || item.title}
+                    </h3>
+                  )}
+                  {(item.company || item.organization) && (
+                    <p className={`text-sm font-medium ${accent} mt-0.5`}>
+                      {item.company || item.organization}
+                    </p>
+                  )}
                 </div>
                 <div className="text-xs sm:text-right">
-                  <span className={`inline-block font-mono ${muted}`}>
-                    {item.duration || item.year || ""}
-                  </span>
+                  {(item.duration || item.year) && (
+                    <span className={`inline-block font-mono ${muted}`}>
+                      {item.duration || item.year}
+                    </span>
+                  )}
                   {item.location && (
                     <span className={`block ${faint}`}>{item.location}</span>
                   )}
@@ -229,7 +236,7 @@ function ProfessionalTemplate({
   // ==========================================================
 
   const renderEducation = () => {
-    if (!resume?.education?.length) return null;
+    if (!education.length) return null;
 
     return (
       <section
@@ -251,7 +258,7 @@ function ProfessionalTemplate({
           />
 
           <div className="space-y-9">
-            {resume.education.map((item, index) => (
+            {education.map((item, index) => (
               <div
                 key={index}
                 className="relative pl-10"
@@ -266,24 +273,24 @@ function ProfessionalTemplate({
 
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
                   <div>
-                    <h3 className="text-lg font-semibold">
-                      {item.course ||
-                        item.degree ||
-                        "Education"}
-                    </h3>
+                    {(item.course || item.degree) && (
+                      <h3 className="text-lg font-semibold">
+                        {item.course || item.degree}
+                      </h3>
+                    )}
 
-                    <p className={`mt-1 ${muted}`}>
-                      {item.institute ||
-                        item.institution}
-                    </p>
+                    {(item.institute || item.institution) && (
+                      <p className={`mt-1 ${muted}`}>
+                        {item.institute || item.institution}
+                      </p>
+                    )}
                   </div>
 
                   {(item.year || item.duration) && (
                     <span
                       className={`text-xs font-medium ${accent}`}
                     >
-                      {item.year ||
-                        item.duration}
+                      {item.year || item.duration}
                     </span>
                   )}
                 </div>
@@ -314,7 +321,9 @@ function ProfessionalTemplate({
 
     const skills = Array.isArray(resume.skills)
       ? resume.skills
-      : Object.values(resume.skills).flat();
+      : typeof resume.skills === "object"
+      ? Object.values(resume.skills).flat()
+      : [];
 
     if (!skills.length) return null;
 
@@ -325,7 +334,7 @@ function ProfessionalTemplate({
       >
         <SectionTitle
           icon={Code2}
-          title="Core Competencies"
+          title="Skills"
         />
 
         <div
@@ -349,7 +358,7 @@ function ProfessionalTemplate({
               >
                 {typeof skill === "string"
                   ? skill
-                  : skill.name || skill.title}
+                  : skill.name || skill.title || skill.value}
               </span>
             </div>
           ))}
@@ -363,7 +372,7 @@ function ProfessionalTemplate({
   // ==========================================================
 
   const renderProjects = () => {
-    if (!resume?.projects?.length) return null;
+    if (!projects.length) return null;
 
     return (
       <section
@@ -372,11 +381,11 @@ function ProfessionalTemplate({
       >
         <SectionTitle
           icon={BriefcaseBusiness}
-          title="Selected Projects"
+          title="Projects"
         />
 
         <div className="space-y-5">
-          {resume.projects.map((project, index) => (
+          {projects.map((project, index) => (
             <article
               key={index}
               className={`group p-6 md:p-7 rounded-xl border ${border} ${whiteCard} transition-all duration-300 hover:-translate-y-1 hover:shadow-lg`}
@@ -390,10 +399,11 @@ function ProfessionalTemplate({
 
                 <div className="flex-1">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                    <h3 className="text-lg md:text-xl font-semibold">
-                      {project.title ||
-                        "Project"}
-                    </h3>
+                    {project.title && (
+                      <h3 className="text-lg md:text-xl font-semibold">
+                        {project.title}
+                      </h3>
+                    )}
 
                     {project.year && (
                       <span
@@ -404,11 +414,13 @@ function ProfessionalTemplate({
                     )}
                   </div>
 
-                  <p
-                    className={`mt-3 leading-7 text-sm md:text-base ${muted}`}
-                  >
-                    {project.description}
-                  </p>
+                  {project.description && (
+                    <p
+                      className={`mt-3 leading-7 text-sm md:text-base ${muted}`}
+                    >
+                      {project.description}
+                    </p>
+                  )}
 
                   {project.technologies?.length >
                     0 && (
@@ -443,7 +455,7 @@ function ProfessionalTemplate({
   // ==========================================================
 
   const renderCertificates = () => {
-    if (!resume?.certificates?.length) return null;
+    if (!certificates.length) return null;
 
     return (
       <section
@@ -456,7 +468,7 @@ function ProfessionalTemplate({
         />
 
         <div className="grid md:grid-cols-2 gap-5">
-          {resume.certificates.map(
+          {certificates.map(
             (certificate, index) => (
               <div
                 key={index}
@@ -473,11 +485,11 @@ function ProfessionalTemplate({
                   </div>
 
                   <div>
-                    <h3 className="font-semibold">
-                      {certificate.title ||
-                        certificate.name ||
-                        "Certificate"}
-                    </h3>
+                    {(certificate.title || certificate.name) && (
+                      <h3 className="font-semibold">
+                        {certificate.title || certificate.name}
+                      </h3>
+                    )}
 
                     {(certificate.issuer ||
                       certificate.organization) && (
@@ -519,7 +531,7 @@ function ProfessionalTemplate({
   // ==========================================================
 
   const renderAchievements = () => {
-    if (!resume?.achievements?.length) return null;
+    if (!achievements.length) return null;
 
     return (
       <section
@@ -532,32 +544,37 @@ function ProfessionalTemplate({
         />
 
         <div className="space-y-4">
-          {resume.achievements.map(
-            (achievement, index) => (
-              <div
-                key={index}
-                className={`flex gap-4 p-5 rounded-xl border ${border} ${whiteCard}`}
-              >
-                <div
-                  className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center ${accentBg}`}
-                >
-                  <Trophy
-                    size={16}
-                    className={accent}
-                  />
-                </div>
+          {achievements.map(
+            (achievement, index) => {
+              const text =
+                typeof achievement === "string"
+                  ? achievement
+                  : achievement.description || achievement.title;
 
-                <p
-                  className={`text-sm md:text-base leading-7 ${muted}`}
+              if (!text) return null;
+
+              return (
+                <div
+                  key={index}
+                  className={`flex gap-4 p-5 rounded-xl border ${border} ${whiteCard}`}
                 >
-                  {typeof achievement ===
-                  "string"
-                    ? achievement
-                    : achievement.description ||
-                      achievement.title}
-                </p>
-              </div>
-            )
+                  <div
+                    className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center ${accentBg}`}
+                  >
+                    <Trophy
+                      size={16}
+                      className={accent}
+                    />
+                  </div>
+
+                  <p
+                    className={`text-sm md:text-base leading-7 ${muted}`}
+                  >
+                    {text}
+                  </p>
+                </div>
+              );
+            }
           )}
         </div>
       </section>
@@ -569,7 +586,7 @@ function ProfessionalTemplate({
   // ==========================================================
 
   const renderLanguages = () => {
-    if (!resume?.languages?.length) return null;
+    if (!languages.length) return null;
 
     return (
       <section
@@ -582,17 +599,19 @@ function ProfessionalTemplate({
         />
 
         <div className="grid sm:grid-cols-2 gap-4">
-          {resume.languages.map(
+          {languages.map(
             (language, index) => {
               const name =
                 typeof language === "string"
                   ? language
-                  : language.name;
+                  : language.name || language.language;
 
               const level =
                 typeof language === "object"
                   ? language.level
                   : null;
+
+              if (!name) return null;
 
               return (
                 <div
@@ -624,25 +643,29 @@ function ProfessionalTemplate({
   // ==========================================================
 
   const renderCustomSections = () => {
-    const customSecs = toArray(resume?.custom_sections);
-    if (!customSecs.length) return null;
+    if (!custom_sections.length) return null;
 
     return (
       <div className="space-y-16 mb-16">
-        {customSecs.map((sec, sIdx) => {
+        {custom_sections.map((sec, sIdx) => {
           const items = toArray(sec.items);
+          const title = sec.title || sec.heading;
           return (
             <section key={sIdx} id={`custom-${sIdx}`} className="scroll-mt-28">
-              <SectionTitle
-                icon={BriefcaseBusiness}
-                title={sec.title || sec.heading || "Additional Information"}
-              />
+              {title && (
+                <SectionTitle
+                  icon={BriefcaseBusiness}
+                  title={title}
+                />
+              )}
               {items.length > 0 ? (
                 <div className="space-y-4">
                   {items.map((it, iIdx) => (
                     <div key={iIdx} className={`p-5 rounded-xl border ${border} ${whiteCard}`}>
                       <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-1">
-                        <h3 className="text-base font-semibold tracking-tight">{it.title || it.name || "Item"}</h3>
+                        {(it.title || it.name) && (
+                          <h3 className="text-base font-semibold tracking-tight">{it.title || it.name}</h3>
+                        )}
                         {it.date && <span className={`text-xs font-mono ${muted}`}>{it.date}</span>}
                       </div>
                       {it.subtitle && <p className={`text-sm font-medium ${accent} mt-0.5`}>{it.subtitle}</p>}
@@ -714,23 +737,22 @@ function ProfessionalTemplate({
         className={`${sidebar} text-white`}
       >
         <div className="max-w-7xl mx-auto px-6 md:px-10 py-12">
-          <div className="grid lg:grid-cols-[auto_1fr] gap-10 items-center">
+          <div className={`grid ${photo ? "lg:grid-cols-[auto_1fr]" : ""} gap-10 items-center`}>
             
             {/* PHOTO - LEFT */}
-            <div className="flex justify-center lg:justify-start">
-              {renderPhoto()}
-            </div>
+            {photo && (
+              <div className="flex justify-center lg:justify-start">
+                {renderPhoto()}
+              </div>
+            )}
 
             {/* PERSONAL INFO - RIGHT */}
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-white/50 mb-4">
-                Professional Portfolio
-              </p>
-
-              <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight">
-                {personal.name ||
-                  "Your Name"}
-              </h1>
+              {personal.name && (
+                <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl font-semibold tracking-tight">
+                  {personal.name}
+                </h1>
+              )}
 
               {personal.title && (
                 <p className="mt-2 text-lg text-[#8fb7df] font-medium">
@@ -738,11 +760,15 @@ function ProfessionalTemplate({
                 </p>
               )}
 
-              <div className="mt-4 w-20 h-1 bg-[#8fb7df]" />
+              {(personal.name || personal.title) && (
+                <div className="mt-4 w-20 h-1 bg-[#8fb7df]" />
+              )}
 
-              <p className="mt-5 text-white/60 max-w-2xl text-sm md:text-base leading-7">
-                Professional profile and selected work.
-              </p>
+              {(personal.summary || resume?.summary) && (
+                <p className="mt-5 text-white/60 max-w-2xl text-sm md:text-base leading-7">
+                  {personal.summary || resume?.summary}
+                </p>
+              )}
 
               {/* CONTACT */}
               <div className="flex flex-wrap gap-x-6 gap-y-3 mt-7 text-sm text-white/70">
@@ -769,29 +795,31 @@ function ProfessionalTemplate({
               </div>
 
               {/* SOCIAL LINKS */}
-              <div className="flex gap-3 mt-6">
-                {personal.linkedin && (
-                  <a
-                    href={personal.linkedin}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition"
-                  >
-                    <Linkedin size={16} />
-                  </a>
-                )}
+              {(linkedInUrl || personal.github) && (
+                <div className="flex gap-3 mt-6">
+                  {linkedInUrl && (
+                    <a
+                      href={linkedInUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition"
+                    >
+                      <Linkedin size={16} />
+                    </a>
+                  )}
 
-                {personal.github && (
-                  <a
-                    href={personal.github}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition"
-                  >
-                    <Github size={16} />
-                  </a>
-                )}
-              </div>
+                  {personal.github && (
+                    <a
+                      href={personal.github}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition"
+                    >
+                      <Github size={16} />
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -844,37 +872,48 @@ function ProfessionalTemplate({
                   isDark
                     ? "border-[#39526d]"
                     : "border-[#315b87]"
-                } pl-6`}
+                } pl-6 space-y-6`}
               >
-                <p
-                  className={`text-xs uppercase tracking-[0.2em] ${faint}`}
-                >
-                  Professional Portfolio
-                </p>
+                {personal.name && (
+                  <div>
+                    <p
+                      className={`text-xs uppercase tracking-[0.2em] font-semibold ${faint}`}
+                    >
+                      {personal.name}
+                    </p>
+                    {personal.title && (
+                      <p className={`mt-1 text-sm ${accent}`}>
+                        {personal.title}
+                      </p>
+                    )}
+                  </div>
+                )}
 
-                <p
-                  className={`mt-4 text-sm leading-7 ${muted}`}
-                >
-                  A structured presentation of
-                  education, skills, projects and
-                  professional achievements.
-                </p>
+                <div className="space-y-2">
+                  {sections.map((section) => (
+                    <a
+                      key={section}
+                      href={`#${section}`}
+                      className={`block text-xs capitalize ${muted} hover:${accent} transition`}
+                    >
+                      {section}
+                    </a>
+                  ))}
+                </div>
 
                 <div
-                  className={`mt-8 pt-6 border-t ${border}`}
+                  className={`pt-6 border-t ${border}`}
                 >
                   <span
                     className={`font-serif text-3xl ${accent}`}
                   >
-                    {String(
-                      sections.length
-                    ).padStart(2, "0")}
+                    {String(sections.length).padStart(2, "0")}
                   </span>
 
                   <p
                     className={`mt-1 text-xs ${faint}`}
                   >
-                    Portfolio sections
+                    Sections
                   </p>
                 </div>
               </div>
@@ -890,13 +929,15 @@ function ProfessionalTemplate({
       <footer
         className={`${sidebar} text-white py-8`}
       >
-        <div className="max-w-7xl mx-auto px-6 md:px-10 flex flex-col sm:flex-row justify-between gap-4">
-          <p className="text-sm font-serif">
-            {personal.name || "Portfolio"}
-          </p>
+        <div className="max-w-7xl mx-auto px-6 md:px-10 flex flex-col sm:flex-row justify-between items-center gap-4">
+          {personal.name && (
+            <p className="text-sm font-serif">
+              {personal.name}
+            </p>
+          )}
 
           <p className="text-xs text-white/40">
-            Professional Portfolio · 2026
+            © {new Date().getFullYear()} {personal.name || ""}
           </p>
         </div>
       </footer>

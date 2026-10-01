@@ -5,15 +5,16 @@ import {
   MapPin,
   Globe,
 } from "lucide-react";
-import { Linkedin, Github } from "../SocialIcons";
+import { Linkedin, Github, formatLinkedInUrl } from "../SocialIcons";
 
 function MinimalTemplate({
   resume,
   photo,
-  sections,
+  sections = [],
   theme,
 }) {
   const personal = resume?.personal || {};
+  const linkedInUrl = formatLinkedInUrl(personal.linkedin);
   const isDark = theme === "dark";
 
   // =========================================================
@@ -75,7 +76,7 @@ function MinimalTemplate({
     resume?.skills && !Array.isArray(resume.skills)
       ? resume.skills
       : {
-          technical: toArray(resume?.skills),
+          skills: toArray(resume?.skills),
         };
 
   // =========================================================
@@ -84,11 +85,13 @@ function MinimalTemplate({
 
   const SectionHeading = ({ number, title }) => (
     <div className="flex items-baseline gap-4 mb-8">
-      <span
-        className={`text-xs tracking-[0.25em] font-medium ${accent}`}
-      >
-        {number}
-      </span>
+      {number && (
+        <span
+          className={`text-xs tracking-[0.25em] font-medium ${accent}`}
+        >
+          {number}
+        </span>
+      )}
 
       <h2 className="font-serif text-2xl md:text-3xl tracking-tight">
         {title}
@@ -101,59 +104,36 @@ function MinimalTemplate({
   // =========================================================
 
   const renderPhoto = () => {
-    if (photo) {
-      return (
-        <div className="relative">
-          <img
-            src={photo}
-            alt={personal.name || "Profile"}
-            className="
-              w-36
-              h-48
-              md:w-44
-              md:h-56
-              object-cover
-              grayscale
-              rounded-sm
-            "
-          />
-
-          <div
-            className={`
-              absolute
-              -bottom-3
-              -right-3
-              w-full
-              h-full
-              border
-              ${line}
-              -z-10
-            `}
-          />
-        </div>
-      );
-    }
+    if (!photo) return null;
 
     return (
-      <div
-        className={`
-          w-36
-          h-48
-          md:w-44
-          md:h-56
-          border
-          ${line}
-          flex
-          items-center
-          justify-center
-          rounded-sm
-        `}
-      >
-        <span
-          className={`text-[10px] tracking-[0.3em] uppercase ${faint}`}
-        >
-          Photo
-        </span>
+      <div className="relative">
+        <img
+          src={photo}
+          alt={personal.name || ""}
+          className="
+            w-36
+            h-48
+            md:w-44
+            md:h-56
+            object-cover
+            grayscale
+            rounded-sm
+          "
+        />
+
+        <div
+          className={`
+            absolute
+            -bottom-3
+            -right-3
+            w-full
+            h-full
+            border
+            ${line}
+            -z-10
+          `}
+        />
       </div>
     );
   };
@@ -162,29 +142,34 @@ function MinimalTemplate({
   // ABOUT
   // =========================================================
 
-  const renderAbout = () => (
-    <section
-      id="about"
-      className={`py-16 border-b ${line} scroll-mt-24`}
-    >
-      <SectionHeading number="01" title="Profile" />
+  const renderAbout = () => {
+    const aboutText = resume?.about || resume?.summary || personal.summary;
+    if (!aboutText) return null;
 
-      <div className="max-w-3xl">
-        <p
-          className={`
-            font-serif
-            text-xl
-            md:text-2xl
-            leading-relaxed
-            ${secondary}
-          `}
-        >
-          {resume.about ||
-            "A motivated individual with an interest in learning, developing meaningful solutions and continuously growing through new experiences."}
-        </p>
-      </div>
-    </section>
-  );
+    return (
+      <section
+        id="about"
+        className={`py-16 border-b ${line} scroll-mt-24`}
+      >
+        <SectionHeading number="01" title="About" />
+
+        <div className="max-w-3xl">
+          <p
+            className={`
+              font-serif
+              text-xl
+              md:text-2xl
+              leading-relaxed
+              ${secondary}
+              whitespace-pre-line
+            `}
+          >
+            {aboutText}
+          </p>
+        </div>
+      </section>
+    );
+  };
 
   // =========================================================
   // EDUCATION
@@ -210,22 +195,22 @@ function MinimalTemplate({
                 <span
                   className={`text-xs tracking-widest ${faint}`}
                 >
-                  {item.year || "—"}
+                  {item.year || item.duration || "—"}
                 </span>
               </div>
 
               <div>
-                <h3 className="font-serif text-xl">
-                  {item.degree ||
-                    item.course ||
-                    "Degree"}
-                </h3>
+                {(item.degree || item.course) && (
+                  <h3 className="font-serif text-xl">
+                    {item.degree || item.course}
+                  </h3>
+                )}
 
-                <p className={`mt-2 text-sm ${secondary}`}>
-                  {item.institution ||
-                    item.institute ||
-                    "Institution"}
-                </p>
+                {(item.institution || item.institute) && (
+                  <p className={`mt-2 text-sm ${secondary}`}>
+                    {item.institution || item.institute}
+                  </p>
+                )}
 
                 {item.score && (
                   <p
@@ -286,13 +271,17 @@ function MinimalTemplate({
               </div>
 
               <div>
-                <h3 className="font-serif text-xl">
-                  {item.role || item.title || "Role / Position"}
-                </h3>
+                {(item.role || item.title) && (
+                  <h3 className="font-serif text-xl">
+                    {item.role || item.title}
+                  </h3>
+                )}
 
-                <p className={`mt-1 text-sm font-medium ${secondary}`}>
-                  {item.company || item.organization || "Organization"}
-                </p>
+                {(item.company || item.organization) && (
+                  <p className={`mt-1 text-sm font-medium ${secondary}`}>
+                    {item.company || item.organization}
+                  </p>
+                )}
 
                 {item.description && (
                   <p className={`mt-3 text-sm leading-relaxed ${secondary}`}>
@@ -320,18 +309,22 @@ function MinimalTemplate({
   // =========================================================
 
   const renderSkills = () => {
-    if (!resume.skills) return null;
+    if (!resume?.skills) return null;
 
     const skillEntries = Array.isArray(resume.skills)
       ? [["Skills", resume.skills]]
-      : Object.entries(resume.skills);
+      : typeof resume.skills === "object"
+      ? Object.entries(resume.skills)
+      : [];
+
+    if (!skillEntries.length) return null;
 
     return (
       <section
         id="skills"
         className={`py-16 border-b ${line} scroll-mt-24`}
       >
-        <SectionHeading number="03" title="Expertise" />
+        <SectionHeading number="04" title="Skills" />
 
         <div className="space-y-8">
           {skillEntries.map(([category, values]) => {
@@ -352,14 +345,18 @@ function MinimalTemplate({
                 </span>
 
                 <div className="flex flex-wrap gap-x-6 gap-y-3">
-                  {values.map((skill, index) => (
-                    <span
-                      key={index}
-                      className={`text-sm ${secondary}`}
-                    >
-                      {skill}
-                    </span>
-                  ))}
+                  {values.map((skill, index) => {
+                    const val = typeof skill === "string" ? skill : skill?.name || skill?.value;
+                    if (!val) return null;
+                    return (
+                      <span
+                        key={index}
+                        className={`text-sm ${secondary}`}
+                      >
+                        {val}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             );
@@ -381,7 +378,7 @@ function MinimalTemplate({
         id="projects"
         className={`py-16 border-b ${line} scroll-mt-24`}
       >
-        <SectionHeading number="04" title="Selected Work" />
+        <SectionHeading number="05" title="Projects" />
 
         <div className="space-y-12">
           {projects.map((project, index) => (
@@ -393,27 +390,30 @@ function MinimalTemplate({
                 <span
                   className={`font-serif text-lg ${accent}`}
                 >
-                  0{index + 1}
+                  {String(index + 1).padStart(2, "0")}
                 </span>
               </div>
 
               <div>
-                <h3 className="font-serif text-2xl">
-                  {project.title ||
-                    "Untitled Project"}
-                </h3>
+                {project.title && (
+                  <h3 className="font-serif text-2xl">
+                    {project.title}
+                  </h3>
+                )}
 
-                <p
-                  className={`
-                    mt-4
-                    max-w-3xl
-                    text-sm
-                    leading-7
-                    ${secondary}
-                  `}
-                >
-                  {project.description}
-                </p>
+                {project.description && (
+                  <p
+                    className={`
+                      mt-4
+                      max-w-3xl
+                      text-sm
+                      leading-7
+                      ${secondary}
+                    `}
+                  >
+                    {project.description}
+                  </p>
+                )}
 
                 {project.technologies?.length > 0 && (
                   <div className="flex flex-wrap gap-3 mt-5">
@@ -454,7 +454,7 @@ function MinimalTemplate({
         id="certificates"
         className={`py-16 border-b ${line} scroll-mt-24`}
       >
-        <SectionHeading number="05" title="Certificates" />
+        <SectionHeading number="06" title="Certifications" />
 
         <div className="space-y-6">
           {certificates.map((certificate, index) => (
@@ -469,11 +469,11 @@ function MinimalTemplate({
               </span>
 
               <div>
-                <h3 className="font-serif text-lg">
-                  {certificate.name ||
-                    certificate.title ||
-                    "Certificate"}
-                </h3>
+                {(certificate.name || certificate.title) && (
+                  <h3 className="font-serif text-lg">
+                    {certificate.name || certificate.title}
+                  </h3>
+                )}
 
                 {(certificate.issuer ||
                   certificate.description) && (
@@ -504,27 +504,34 @@ function MinimalTemplate({
         id="achievements"
         className={`py-16 border-b ${line} scroll-mt-24`}
       >
-        <SectionHeading number="06" title="Achievements" />
+        <SectionHeading number="07" title="Achievements" />
 
         <div className="max-w-3xl space-y-5">
-          {achievements.map((achievement, index) => (
-            <div
-              key={index}
-              className="flex gap-5"
-            >
-              <span
-                className={`mt-1 w-2 h-2 rounded-full ${accentLine}`}
-              />
+          {achievements.map((achievement, index) => {
+            const text =
+              typeof achievement === "string"
+                ? achievement
+                : achievement.description || achievement.title;
 
-              <p
-                className={`text-sm leading-7 ${secondary}`}
+            if (!text) return null;
+
+            return (
+              <div
+                key={index}
+                className="flex gap-5"
               >
-                {typeof achievement === "string"
-                  ? achievement
-                  : achievement.description}
-              </p>
-            </div>
-          ))}
+                <span
+                  className={`mt-1 w-2 h-2 rounded-full ${accentLine}`}
+                />
+
+                <p
+                  className={`text-sm leading-7 ${secondary}`}
+                >
+                  {text}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </section>
     );
@@ -542,19 +549,21 @@ function MinimalTemplate({
         id="languages"
         className={`py-16 scroll-mt-24`}
       >
-        <SectionHeading number="07" title="Languages" />
+        <SectionHeading number="08" title="Languages" />
 
         <div className="flex flex-wrap gap-x-10 gap-y-4">
           {languages.map((language, index) => {
             const name =
               typeof language === "string"
                 ? language
-                : language.name;
+                : language.name || language.language;
 
             const level =
-              typeof language === "string"
-                ? ""
-                : language.level;
+              typeof language === "object"
+                ? language?.level
+                : null;
+
+            if (!name) return null;
 
             return (
               <div key={index}>
@@ -588,9 +597,12 @@ function MinimalTemplate({
       <div className="space-y-16">
         {custom_sections.map((sec, sIdx) => {
           const items = toArray(sec.items);
+          const title = sec.title || sec.heading;
           return (
             <section key={sIdx} id={`custom-${sIdx}`} className={`py-16 border-b ${line} scroll-mt-24`}>
-              <SectionHeading number={String(8 + sIdx).padStart(2, "0")} title={sec.title || sec.heading || "Additional Information"} />
+              {title && (
+                <SectionHeading number={String(9 + sIdx).padStart(2, "0")} title={title} />
+              )}
               {items.length > 0 ? (
                 <div className="space-y-8">
                   {items.map((it, iIdx) => (
@@ -599,7 +611,9 @@ function MinimalTemplate({
                         {it.date && <span className={`text-xs tracking-widest ${faint}`}>{it.date}</span>}
                       </div>
                       <div>
-                        <h3 className="font-serif text-xl">{it.title || it.name || "Item"}</h3>
+                        {(it.title || it.name) && (
+                          <h3 className="font-serif text-xl">{it.title || it.name}</h3>
+                        )}
                         {it.subtitle && <p className={`mt-1 text-sm ${secondary}`}>{it.subtitle}</p>}
                         {it.description && <p className={`mt-2 text-sm leading-relaxed ${secondary}`}>{it.description}</p>}
                       </div>
@@ -621,12 +635,12 @@ function MinimalTemplate({
   // =========================================================
 
   const sectionNames = {
-    about: "Profile",
+    about: "About",
     experience: "Experience",
     education: "Education",
-    skills: "Expertise",
-    projects: "Work",
-    certificates: "Certificates",
+    skills: "Skills",
+    projects: "Projects",
+    certificates: "Certifications",
     achievements: "Achievements",
     languages: "Languages",
   };
@@ -679,7 +693,7 @@ function MinimalTemplate({
             href="#top"
             className="font-serif text-lg"
           >
-            {personal.name || "Portfolio"}
+            {personal.name || ""}
           </a>
 
           <div className="hidden md:flex items-center gap-7">
@@ -705,7 +719,7 @@ function MinimalTemplate({
           <span
             className={`text-xs ${faint}`}
           >
-            2026
+            {new Date().getFullYear()}
           </span>
         </div>
       </nav>
@@ -727,49 +741,36 @@ function MinimalTemplate({
         "
       >
         <div
-          className="
+          className={`
             grid
-            md:grid-cols-[auto_1fr]
-            gap-12
-            md:gap-16
+            ${photo ? "md:grid-cols-[auto_1fr] gap-12 md:gap-16" : ""}
             items-center
-          "
+          `}
         >
           {/* PHOTO LEFT */}
-
-          <div className="flex justify-center md:justify-start">
-            {renderPhoto()}
-          </div>
+          {photo && (
+            <div className="flex justify-center md:justify-start">
+              {renderPhoto()}
+            </div>
+          )}
 
           {/* INFORMATION RIGHT */}
-
           <div>
-            <p
-              className={`
-                text-[10px]
-                uppercase
-                tracking-[0.3em]
-                ${accent}
-                mb-5
-              `}
-            >
-              Curriculum Vitae
-            </p>
-
-            <h1
-              className="
-                font-serif
-                text-5xl
-                sm:text-6xl
-                md:text-7xl
-                lg:text-8xl
-                leading-[0.9]
-                tracking-tight
-              "
-            >
-              {personal.name ||
-                "Your Name"}
-            </h1>
+            {personal.name && (
+              <h1
+                className="
+                  font-serif
+                  text-5xl
+                  sm:text-6xl
+                  md:text-7xl
+                  lg:text-8xl
+                  leading-[0.9]
+                  tracking-tight
+                "
+              >
+                {personal.name}
+              </h1>
+            )}
 
             {personal.title && (
               <p className={`mt-3 font-serif text-xl md:text-2xl ${secondary}`}>
@@ -777,14 +778,22 @@ function MinimalTemplate({
               </p>
             )}
 
-            <div
-              className={`
-                mt-6
-                w-16
-                h-px
-                ${accentLine}
-              `}
-            />
+            {(personal.name || personal.title) && (
+              <div
+                className={`
+                  mt-6
+                  w-16
+                  h-px
+                  ${accentLine}
+                `}
+              />
+            )}
+
+            {(personal.summary || resume?.summary) && (
+              <p className={`mt-4 max-w-2xl text-sm leading-relaxed ${secondary}`}>
+                {personal.summary || resume?.summary}
+              </p>
+            )}
 
             <div
               className={`
@@ -819,29 +828,31 @@ function MinimalTemplate({
               )}
             </div>
 
-            <div className="flex gap-5 mt-6">
-              {personal.linkedin && (
-                <a
-                  href={personal.linkedin}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={`text-xs ${faint} hover:${accent} transition`}
-                >
-                  <Linkedin size={16} />
-                </a>
-              )}
+            {(linkedInUrl || personal.github) && (
+              <div className="flex gap-5 mt-6">
+                {linkedInUrl && (
+                  <a
+                    href={linkedInUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`text-xs ${faint} hover:${accent} transition`}
+                  >
+                    <Linkedin size={16} />
+                  </a>
+                )}
 
-              {personal.github && (
-                <a
-                  href={personal.github}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={`text-xs ${faint} hover:${accent} transition`}
-                >
-                  <Github size={16} />
-                </a>
-              )}
-            </div>
+                {personal.github && (
+                  <a
+                    href={personal.github}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`text-xs ${faint} hover:${accent} transition`}
+                  >
+                    <Github size={16} />
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -916,17 +927,20 @@ function MinimalTemplate({
             flex-col
             md:flex-row
             justify-between
+            items-center
             gap-3
           "
         >
-          <p className="font-serif text-sm">
-            {personal.name || "Portfolio"}
-          </p>
+          {personal.name && (
+            <p className="font-serif text-sm">
+              {personal.name}
+            </p>
+          )}
 
           <p
             className={`text-[10px] uppercase tracking-[0.2em] ${faint}`}
           >
-            Personal Portfolio
+            © {new Date().getFullYear()} {personal.name || ""}
           </p>
         </div>
       </footer>

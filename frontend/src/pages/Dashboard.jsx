@@ -14,7 +14,7 @@ function Dashboard() {
         {/* Header */}
         <div className="mb-12">
           <p className="text-indigo-600 text-sm font-semibold tracking-wide uppercase mb-2">
-            Profile Builder
+            Smart Resume Analyzer and Portfolio Generator
           </p>
 
           <h1 className="text-4xl font-bold text-slate-900 tracking-tight">
@@ -22,7 +22,7 @@ function Dashboard() {
           </h1>
 
           <p className="text-slate-600 mt-2">
-            Create, analyze, and build your professional portfolio.
+            Analyze your resume, improve its ATS compatibility, and generate a professional portfolio from your resume.
           </p>
 
           <div className="mt-4">
